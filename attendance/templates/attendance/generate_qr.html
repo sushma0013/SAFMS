@@ -4,12 +4,15 @@
   <title>Generate QR Code</title>
 </head>
 <body>
-  <h2>Generate QR for Class</h2>
-  <form method="POST">
-    {% csrf_token %}
-    <label>Subject:</label>
-    <input type="text" name="subject" required>
-    <button type="submit">Generate QR</button>
-  </form>
+  <h2>QR for {{ subject.name }}</h2>
+  <p>Teacher: {{ teacher.get_full_name }}</p>
+
+  {% if qr_url %}
+      <h3>Scan this QR to mark attendance:</h3>
+      <img src="{{ qr_url }}" alt="QR Code">
+      <p>Valid until: {{ valid_until }}</p>
+  {% else %}
+      <p>No QR available today.</p>
+  {% endif %}
 </body>
 </html>

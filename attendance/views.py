@@ -1,25 +1,74 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 import qrcode
 from io import BytesIO
 from django.core.files import File
 from django.http import HttpResponse
-from .models import QRSession
+from .models import QRSession, AttendanceRecord,Subject
+from django.utils import timezone
 
 # --- QR Views ---
 @login_required
 def generate_qr(request):
-    if request.method == 'POST':
-        subject = request.POST.get('subject')
-        session = QRSession.objects.create(teacher=request.user, subject=subject)
-        data = f"Teacher: {request.user.username}, Subject: {subject}, Date: {session.date}"
-        qr_img = qrcode.make(data)
-        buffer = BytesIO()
-        qr_img.save(buffer, 'PNG')
-        file_name = f"qr_{session.id}.png"
-        session.qr_code.save(file_name, File(buffer), save=True)
-        return redirect('show_qr', session_id=session.id)
-    return render(request, 'attendance/generate_qr.html')
+    teacher = request.user
+    subjects = Subject.objects.filter(teacher=teacher)
+
+    if not subjects.exists():
+        return render(request, 'attendance/no_subject.html', {'teacher': teacher})
+
+    # Pick first subject for today (or add subject selection later)
+    subject = subjects.first()
+
+    # Check if today's QR exists and is still valid
+    qr_today = QRSession.objects.filter(
+        created_by=teacher,
+        subject=subject,
+        session_date=timezone.now().date(),
+        valid_until__gt=timezone.now()
+    ).first()
+
+    if qr_today:
+        # qr_url = qr_today.qr_code.url
+        session = qr_today
+    else:
+        session = QRSession.objects.create(
+            created_by=teacher,
+            subject=subject,
+            session_date=timezone.now().date()
+        )
+        # Generate QR using model method
+        session.generate_qr(request_domain='http://192.168.1.5:8000')
+        # qr_url = session.qr_code.url
+
+    return render(request, 'attendance/generate_qr.html', {
+        'qr_url': session.qr_code.url,
+        'teacher': teacher,
+        'subject': subject,
+        'valid_until': session.valid_until
+    })
+
+
+
+
+
+
+        # Generate QR image
+        # data = f"http://192.168.1.5:8000/attendance/mark/{session.uuid}/"  # replace with your local IP
+        # qr_img = qrcode.make(data)
+        # buffer = BytesIO()
+        # qr_img.save(buffer, format='PNG')
+        # file_name = f"qr_{session.uuid}.png"
+        # session.qr_code.save(file_name, File(buffer), save=True)
+        # qr_url = session.qr_code.url
+
+    # return render(request, 'attendance/generate_qr.html', {
+    #     'qr_url': qr_url,
+    #     'teacher': teacher,
+    #     'subject': subject,
+    #     'valid_until': session.valid_until
+    # })
+
+
 
 
 def show_qr(request, session_id):
@@ -27,16 +76,35 @@ def show_qr(request, session_id):
     return render(request, 'attendance/show_qr.html', {'session': session})
 
 
-# --- Attendance App Views ---
+
+
+@login_required
+def mark_attendance(request, uuid):
+    session = get_object_or_404(QRSession, uuid=uuid)
+
+    # Check if QR is still valid
+    if session.valid_until < timezone.now():
+        return HttpResponse("<h2>This QR code has expired.</h2>")
+
+    # Prevent duplicate attendance
+    if not AttendanceRecord.objects.filter(student=request.user, session=session).exists():
+        AttendanceRecord.objects.create(
+            student=request.user,
+            session=session,
+            status='Present'
+        )
+
+    return HttpResponse("<h2>Attendance marked successfully!</h2>")
+
+
+
+
+# --- Other Views ---
 def attendance_home(request):
     return HttpResponse("<h2>Attendance Home Page</h2>")
 
 def attendance_list(request):
     return HttpResponse("<h2>Attendance List Page</h2>")
 
-def mark_attendance(request, student_id):
-    return HttpResponse(f"<h2>Mark Attendance for Student {student_id}</h2>")
-
-# --- Project-level Home View ---
 def home(request):
     return HttpResponse("<h2>Smart Attendance System is working!</h2>")
