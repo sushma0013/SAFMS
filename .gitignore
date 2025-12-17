@@ -3,7 +3,7 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 
-# Virtual env
+# Virtual environments
 venv/
 env/
 .venv/
@@ -14,10 +14,13 @@ media/
 staticfiles/
 *.log
 
-# Env and secrets
+# Node / Tailwind
+node_modules/
+
+# Environment & secrets
 .env
 secrets.json
 
-# IDE
+# IDE / Editors
 .vscode/
 .idea/
