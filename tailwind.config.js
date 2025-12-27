@@ -1,11 +1,11 @@
-/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    './templates/**/*.html',       // All HTML templates
-    './attendance/**/*.html',      // Your attendance folder templates
+    "./templates/**/*.html",
+    "./**/templates/**/*.html"
   ],
   theme: {
-    extend: {},                    // Keep default Tailwind theme, extend if needed
+    extend: {},
   },
-  plugins: [],                     // Add Tailwind plugins here if needed
-};
+  plugins: [],
+}
+

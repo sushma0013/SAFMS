@@ -1,25 +1,10 @@
 {
-  "name": "smart-attendance",
-  "version": "1.0.0",
-  "description": "��#\u0000 \u0000S\u0000m\u0000a\u0000r\u0000t\u0000 \u0000A\u0000t\u0000t\u0000e\u0000n\u0000d\u0000a\u0000n\u0000c\u0000e\u0000 \u0000&\u0000 \u0000F\u0000e\u0000e\u0000 \u0000M\u0000a\u0000n\u0000a\u0000g\u0000e\u0000m\u0000e\u0000n\u0000t\u0000 \u0000S\u0000y\u0000s\u0000t\u0000e\u0000m\u0000\r\u0000 \u0000",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.18"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/sushma0013/SAFMS.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/sushma0013/SAFMS/issues"
-  },
-  "homepage": "https://github.com/sushma0013/SAFMS#readme",
   "devDependencies": {
     "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^3.4.10"
   }
 }

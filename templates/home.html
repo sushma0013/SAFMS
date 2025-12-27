@@ -1,0 +1,313 @@
+{% load static %}
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Smart Attendance & Fee Management System (SAFMS)</title>
+
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;family=Noto+Sans:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#135bec",
+                "background-light": "#f6f6f8",
+                "background-dark": "#101622",
+              },
+              fontFamily: {
+                "display": ["Lexend", "sans-serif"],
+                "body": ["Noto Sans", "sans-serif"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Lexend', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<!-- Top Navigation -->
+<header class="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-background-dark/90 backdrop-blur-md px-6 py-3">
+<div class="mx-auto flex max-w-[1280px] items-center justify-between">
+<div class="flex items-center gap-4 text-slate-900 dark:text-white">
+<div class="size-8 text-primary">
+<span class="material-symbols-outlined text-3xl">school</span>
+</div>
+<h2 class="text-xl font-bold leading-tight tracking-[-0.015em]">SAFMS</h2>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Features</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Solutions</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Pricing</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Support</a>
+</nav>
+<div class="flex gap-3">
+          <a href="/login/" class="px-4 py-2 bg-gray-100 rounded-lg font-semibold hover:bg-gray-200">
+        Login
+      </a>
+      <a href="/register/" class="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700">
+        Get Started
+      </a>
+{% comment %} <button class="hidden sm:flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-slate-900 dark:text-white text-sm font-bold transition-colors"> {% endcomment %}
+{% comment %} <span class="truncate">Login</span> {% endcomment %}
+{% comment %} </button> {% endcomment %}
+{% comment %} <button class="flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-primary hover:bg-blue-700 text-white text-sm font-bold transition-colors shadow-sm"> {% endcomment %}
+{% comment %} <span class="truncate">Get Started</span> {% endcomment %}
+{% comment %} </button> {% endcomment %}
+<!-- Simulated User Profile / Logout for demo purposes (hidden by default unless logged in state is desired) -->
+<!-- 
+                    <button class="hidden flex items-center justify-center rounded-full size-10 bg-gray-200 text-gray-600" title="Logout">
+                         <span class="material-symbols-outlined">logout</span>
+                    </button> 
+                    -->
+</div>
+</div>
+</header>
+<main class="flex-grow">
+<!-- Hero Section -->
+<section class="px-6 py-12 md:py-20 lg:py-24">
+<div class="mx-auto max-w-[1280px]">
+<div class="grid lg:grid-cols-2 gap-12 items-center">
+<!-- Hero Content -->
+<div class="flex flex-col gap-6 text-left">
+<h1 class="text-4xl md:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight text-slate-900 dark:text-white">
+                                Smart Management for <span class="text-primary">Modern Education</span>
+</h1>
+<p class="text-lg text-slate-600 dark:text-slate-300 max-w-[540px] leading-relaxed">
+                                 Simplify attendance tracking and fee management through one secure platform designed for modern educational institutions. Dedicated portals for Students, Teachers, and Administrators.
+                            </p>
+<div class="flex flex-wrap gap-4 pt-4">
+{% comment %} <button class="flex items-center justify-center rounded-lg h-12 px-6 bg-primary text-white text-base font-bold shadow-lg hover:shadow-primary/25 hover:bg-blue-700 transition-all"> {% endcomment %}
+{% comment %} <span class="mr-2">Login to Portal</span> {% endcomment %}
+{% comment %} <span class="material-symbols-outlined text-[20px]">login</span> {% endcomment %}
+</button>
+<button class="flex items-center justify-center rounded-lg h-12 px-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-slate-900 dark:text-white text-base font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+<span>Register Institution</span>
+</button>
+</div>
+<div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mt-2">
+<span class="material-symbols-outlined text-[18px] text-green-500">check_circle</span>
+<span>Free 14-day trial</span>
+<span class="mx-2">•</span>
+<span class="material-symbols-outlined text-[18px] text-green-500">check_circle</span>
+<span>No credit card required</span>
+</div>
+</div>
+<!-- Hero Image -->
+<div class="w-full relative group">
+<div class="absolute -inset-1 bg-gradient-to-r from-primary to-blue-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+<div class="relative w-full aspect-[4/3] bg-center bg-cover rounded-2xl shadow-2xl overflow-hidden" data-alt="Dashboard interface showing charts and student statistics on a laptop screen" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB3XGscVzMD68M9FhoRDHVdyQV_WQNwRLl6X5g4cRqX-2ehEWIU1VpPGgQF8DlqOWVfW8XvPGvSWPwEykabT41ouVrMJWAn75QhkF-z0X_XNOmivEkbaTD2w2d9IT_HYpucgblDFpJ2uQOo-GGUfO_ix-DHXg4M5sVJNi8IxC4bnmrkd9NAH5L1PYcGHG5nL7Yyi8-Dl9sjxKU-cBVWu4M1TF879_5aQXlle3VnrHDHogFqUY7INKoaf4JC7p7w_hrHCeuoWd1NrbE");'>
+<div class="absolute inset-0 bg-slate-900/10"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Stats / Trust Banner -->
+<section class="border-y border-gray-200 dark:border-gray-800 bg-white dark:bg-background-dark py-10">
+<div class="mx-auto max-w-[1280px] px-6">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+<div class="flex flex-col gap-1">
+<h3 class="text-3xl font-bold text-primary">500+</h3>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400">Institutions</p>
+</div>
+<div class="flex flex-col gap-1">
+<h3 class="text-3xl font-bold text-primary">1M+</h3>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400">Students Tracked</p>
+</div>
+<div class="flex flex-col gap-1">
+<h3 class="text-3xl font-bold text-primary">99.9%</h3>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400">Uptime</p>
+</div>
+<div class="flex flex-col gap-1">
+<h3 class="text-3xl font-bold text-primary">24/7</h3>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400">Support</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Role Selection Section -->
+<section class="py-20 px-6 bg-white dark:bg-gray-900/50">
+<div class="mx-auto max-w-[1280px]">
+<div class="flex flex-col gap-4 mb-12 text-center md:text-left">
+<h2 class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                            Role-Based Portals
+                        </h2>
+<p class="text-lg text-slate-600 dark:text-slate-300 max-w-2xl">
+                            Secure and dedicated environments tailored for every member of your educational ecosystem.
+                        </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Admin Card -->
+<div class="group relative flex flex-col gap-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-background-dark p-6 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/50 transition-all duration-300">
+<div class="size-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+</div>
+<div class="flex flex-col gap-2">
+<h3 class="text-xl font-bold text-slate-900 dark:text-white">Administrator</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                                    Full control over users, fee structures, and institution-wide reports. Manage the big picture with ease.
+                                </p>
+</div>
+<div class="mt-auto pt-4">
+    <a href="/login/" class="text-primary font-semibold hover:underline">
+Admin Login →
+</a>
+</div>
+</div>
+<!-- Teacher Card -->
+<div class="group relative flex flex-col gap-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-background-dark p-6 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/50 transition-all duration-300">
+<div class="size-12 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">school</span>
+</div>
+<div class="flex flex-col gap-2">
+<h3 class="text-xl font-bold text-slate-900 dark:text-white">Teacher</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                                    Mark digital attendance, manage schedules, upload assignments, and communicate directly with parents.
+                                </p>
+</div>
+<div class="mt-auto pt-4">
+    <a href="/login/" class="text-primary font-semibold hover:underline">
+Teacher Login →
+</a>
+</div>
+</div>
+<!-- Student Card -->
+<div class="group relative flex flex-col gap-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-background-dark p-6 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/50 transition-all duration-300">
+<div class="size-12 rounded-lg bg-green-500/10 flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">person_book</span>
+</div>
+<div class="flex flex-col gap-2">
+<h3 class="text-xl font-bold text-slate-900 dark:text-white">Student &amp; Parent</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                                    Check attendance history, pay school fees securely online, and download report cards instantly.
+                                </p>
+</div>
+<div class="mt-auto pt-4">
+    <a href="/login/" class="text-primary font-semibold hover:underline">
+Student Login →
+</a>
+
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Features Grid -->
+<section class="py-20 px-6">
+<div class="mx-auto max-w-[1280px]">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+<div class="max-w-2xl">
+<h2 class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-4">
+                                Why Choose Smart Attendance & Fee Management System (SAFMS)?
+                            </h2>
+<p class="text-lg text-slate-600 dark:text-slate-300">
+                                Integrated tools designed to reduce administrative workload and improve transparency.
+                            </p>
+</div>
+<button class="flex min-w-[140px] items-center justify-center rounded-lg h-10 px-4 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-slate-700 dark:text-slate-300 text-sm font-bold transition-colors">
+                            View All Features
+                        </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Feature 1 -->
+<div class="p-6 rounded-xl bg-slate-50 dark:bg-gray-800/50 hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors">
+<div class="mb-4 text-primary">
+<span class="material-symbols-outlined text-4xl">calendar_month</span>
+</div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Smart Attendance through QR Scanning</h3>
+<p class="text-sm text-slate-600 dark:text-slate-400">Students mark their attendance by scanning a QR code generated by the teacher. The system automatically records attendance without any manual entry.</p>
+</div>
+<!-- Feature 2 -->
+<div class="p-6 rounded-xl bg-slate-50 dark:bg-gray-800/50 hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors">
+<div class="mb-4 text-primary">
+<span class="material-symbols-outlined text-4xl">payments</span>
+</div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Fee Management</h3>
+<p class="text-sm text-slate-600 dark:text-slate-400">Payment Overview, Alerts & Notifications</p>
+</div>
+<!-- Feature 3 -->
+<div class="p-6 rounded-xl bg-slate-50 dark:bg-gray-800/50 hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors">
+<div class="mb-4 text-primary">
+<span class="material-symbols-outlined text-4xl">lock</span>
+</div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Secure Data</h3>
+<p class="text-sm text-slate-600 dark:text-slate-400">Bank-grade encryption keeps all student and institutional data safe.</p>
+</div>
+<!-- Feature 4 -->
+<div class="p-6 rounded-xl bg-slate-50 dark:bg-gray-800/50 hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors">
+<div class="mb-4 text-primary">
+<span class="material-symbols-outlined text-4xl">notifications_active</span>
+</div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Instant Alerts</h3>
+<p class="text-sm text-slate-600 dark:text-slate-400">SMS and Push notifications for absents, fees and dues</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-white dark:bg-background-dark border-t border-gray-200 dark:border-gray-800 pt-16 pb-8 px-6">
+<div class="mx-auto max-w-[1280px]">
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
+<div class="col-span-2 lg:col-span-2 flex flex-col gap-4 pr-8">
+<div class="flex items-center gap-2 text-slate-900 dark:text-white">
+<span class="material-symbols-outlined text-primary text-2xl">school</span>
+<span class="text-lg font-bold">SAFMS</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 max-w-xs">
+                            Empowering educational institutions with next-generation management tools. Simple, Secure, Smart.
+                        </p>
+</div>
+<div class="flex flex-col gap-4">
+<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Product</h4>
+<a class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Features</a>
+<a class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Pricing</a>
+<a class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Integrations</a>
+</div>
+<div class="flex flex-col gap-4">
+<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Resources</h4>
+<a class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Documentation</a>
+<a class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">API Reference</a>
+<a class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Community</a>
+</div>
+<div class="flex flex-col gap-4">
+<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Company</h4>
+<a class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">About</a>
+<a class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Contact</a>
+<a class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Careers</a>
+</div>
+</div>
+<div class="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-gray-200 dark:border-gray-800 gap-4">
+<p class="text-xs text-slate-500 dark:text-slate-500">
+                        © 2025 SAFMS — Smart Attendance and Fee Management System All rights reserved.
+                    </p>
+<div class="flex items-center gap-6">
+<a class="text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white" href="#">Privacy Policy</a>
+<a class="text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white" href="#">Terms of Service</a>
+<a class="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-medium" href="#">
+<span class="material-symbols-outlined text-[16px]">logout</span>
+                            Sign Out 
+                        </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+</body></html>

@@ -21,6 +21,9 @@ urlpatterns = [
 
     # 🏠 Home Page
     path('', views.home, name='home'),
+
+    path('register/', views.register, name='register'),
+
 ]
 
 # Serve media files in debug mode
