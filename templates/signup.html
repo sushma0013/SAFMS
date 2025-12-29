@@ -1,0 +1,42 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col justify-center items-center">
+
+    <h1 class="text-4xl font-bold mb-6">Sign Up</h1>
+
+    {% comment %} <form method="post" class="bg-white p-8 rounded shadow-md w-96">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded w-full hover:bg-green-600 transition">Register</button>
+    </form> {% endcomment %}
+    <form method="post" class="bg-white p-8 rounded shadow-md w-96">
+    {% csrf_token %}
+
+    <input type="text" name="username" placeholder="Username"
+        class="w-full p-2 border rounded mb-3" required>
+
+    <input type="password" name="password" placeholder="Password"
+        class="w-full p-2 border rounded mb-3" required>
+
+    <select name="role" class="w-full p-2 border rounded mb-3" required>
+        <option value="">Select Role</option>
+        <option value="teacher">Teacher</option>
+        <option value="student">Student</option>
+        <option value="admin">Admin</option>
+    </select>
+
+    <button type="submit"
+        class="bg-green-500 text-white px-4 py-2 rounded w-full hover:bg-green-600 transition">
+        Create Account
+    </button>
+</form>
+
+
+</body>
+</html>

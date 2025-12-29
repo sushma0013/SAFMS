@@ -1,4 +1,4 @@
-{% load static %}
+{% comment %} {% load static %}
 <!DOCTYPE html>
 <html class="Light" Lang="en">
 
@@ -38,6 +38,107 @@
             </button>
         </form>
     </div>
+
+</body>
+</html> {% endcomment %}
+
+{% load static %}
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="UTF-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+
+<title>Smart Attendance - Login</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300..700&display=swap" rel="stylesheet">
+
+<!-- Tailwind CSS -->
+<link rel="stylesheet" href="{% static 'css/output.css' %}">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<script>
+function setRole(role) {
+    document.getElementById("roleInput").value = role;
+}
+</script>
+</head>
+
+<body class="font-display bg-gray-100 min-h-screen flex">
+
+<!-- LEFT PANEL -->
+<div class="hidden md:flex md:w-1/2 bg-blue-600 text-white flex-col justify-between p-12">
+
+    <div>
+        <h2 class="text-2xl font-bold">Smart Attendance & Fee Managemenyt System</h2>
+        
+        <h1 class="text-4xl mt-10 font-bold">Streamline your school management.</h1>
+        <p class ="text-blue-100 text-lg max-w-md leading-relaxed">
+            Seamlessly track attendance ,manage fees, and connect teachers with students in one unified platform.
+        </p>
+        <p class="mt-4 text-blue-100">Attendance & fees in one platform.</p>
+    </div>
+    <p class="text-blue-200 text-sm">© 2025 SAFMS</p>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="flex-1 flex items-center justify-center p-8 bg-white">
+<div class="w-full max-w-md space-y-8">
+
+<h1 class="text-3xl font-bold">Welcome Back</h1>
+<p class="text-gray-500">Please enter your details to sign in.</p>
+
+<!-- ROLE SELECTOR -->
+<div class="grid grid-cols-3 gap-2">
+    <button type="button" onclick="setRole('teacher')" class="py-2 rounded bg-gray-200 hover:bg-blue-600 hover:text-white">Teacher</button>
+    <button type="button" onclick="setRole('student')" class="py-2 rounded bg-gray-200 hover:bg-blue-600 hover:text-white">Student</button>
+    <button type="button" onclick="setRole('admin')" class="py-2 rounded bg-gray-200 hover:bg-blue-600 hover:text-white">Admin</button>
+</div>
+
+<!-- LOGIN FORM -->
+<form method="post" action="{% url 'login' %}" class="space-y-5">
+    {% csrf_token %}
+
+    <input type="hidden" name="role" id="roleInput" value="{{ role }}">
+
+    <div>
+        <label class="block text-sm font-medium mb-1">Email Address</label>
+        <input name="email" type="email" required
+               class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500">
+    </div>
+
+    <div>
+        <label class="block text-sm font-medium mb-1">Password</label>
+        <input name="password" type="password" required
+               class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500">
+    </div>
+     <div>
+        <label class="block text-sm font-medium mb-1">User Name</label>
+        <input name="name" type="name" required
+               class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500">
+    </div>
+
+    <button type="submit"
+            class="w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700 transition">
+        Sign In
+    </button>
+</form>
+
+<p class="text-center text-sm text-gray-500">
+    Don't have an account?
+    <a href="{% url 'signup' %}" class="text-blue-600 font-semibold hover:underline">
+        Create an account
+    </a>
+</p>
+
+</div>
+</div>
 
 </body>
 </html>
