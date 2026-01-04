@@ -14,18 +14,18 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('signup/', views.signup_view, name='signup'),
     path('logout/', views.logout_view, name='logout'),
-    path('register/', views.register, name='register'),
 
 
-    # 📌 Dashboards
-    path('teacher/dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
-    path('student/dashboard/', views.student_dashboard, name='student_dashboard'),
-    path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
+
+    # # 📌 Dashboards
+    # path('teacher/dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
+    # path('student/dashboard/', views.student_dashboard, name='student_dashboard'),
+    # path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
 
     # 📌 QR + Attendance
-    path('generate_qr/', views.generate_qr, name='generate_qr'),
-    path('show_qr/<int:session_id>/', views.show_qr, name='show_qr'),
-    path('attendance/', include('attendance.urls', namespace='attendance')),
+    # path('generate_qr/', views.generate_qr, name='generate_qr'),
+    # path('show_qr/<int:session_id>/', views.show_qr, name='show_qr'),
+    path('attendance/', include('attendance.urls')),
 ]
 
 if settings.DEBUG:

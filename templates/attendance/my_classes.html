@@ -1,0 +1,12 @@
+<h2>My Classes</h2>
+
+<ul>
+{% for subject in subjects %}
+    <li>
+        {{ subject.name }} ({{ subject.code }}) – 
+        {{ subject.students.count }} students
+    </li>
+{% empty %}
+    <li>No classes assigned</li>
+{% endfor %}
+</ul>

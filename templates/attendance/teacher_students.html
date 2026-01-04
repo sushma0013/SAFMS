@@ -1,0 +1,26 @@
+<h2>Today Present Students</h2>
+<ul>
+  {% for r in today_present %}
+    <li>{{ r.student.username }} - {{ r.subject.name }}</li>
+  {% empty %}
+    <li>No present students today</li>
+  {% endfor %}
+</ul>
+
+<h2>Today Absent Students</h2>
+<ul>
+  {% for r in today_absent %}
+    <li>{{ r.student.username }} - {{ r.subject.name }}</li>
+  {% empty %}
+    <li>No absent students today</li>
+  {% endfor %}
+</ul>
+
+<h2>Low Attendance (&lt; 80%)</h2>
+<ul>
+  {% for s in low_attendance_students %}
+    <li>{{ s.student.username }} — {{ s.percentage }}%</li>
+  {% empty %}
+    <li>No students below 80%</li>
+  {% endfor %}
+</ul>

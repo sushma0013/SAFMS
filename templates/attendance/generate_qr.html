@@ -1,0 +1,46 @@
+{% comment %} <!DOCTYPE html>
+<html>
+<head>
+  <title>Generate QR Code</title>
+</head>
+<body>
+  <h2>QR for {{ subject.name }}</h2>
+  <p>Teacher: {{ teacher.get_full_name }}</p>
+
+  {% if qr_url %}
+      <h3>Scan this QR to mark attendance:</h3>
+      <img src="{{ qr_url }}" alt="QR Code">
+      <p>Valid until: {{ valid_until }}</p>
+  {% else %}
+      <p>No QR available today.</p>
+  {% endif %}
+</body>
+</html> {% endcomment %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Code</title>
+    <style>
+        body { text-align: center; font-family: Arial; margin: 40px; }
+        img { border: 3px solid #333; padding: 20px; margin: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Attendance QR Code</h1>
+    <h2>{{ subject.name }} ({{ subject.code }})</h2>
+    <p><strong>Date:</strong> {{ session.session_date }}</p>
+    <p><strong>Valid until:</strong> {{ session.valid_until }}</p>
+
+    {% if session.qr_code %}
+        <img src="{{ session.qr_code.url }}" alt="QR Code" width="400">
+        <br><br>
+        <p>Students can scan this QR code to mark attendance.</p>
+    {% else %}
+        <p style="color: red;">QR Code generation failed.</p>
+    {% endif %}
+
+    <br><br>
+    <a href="{% url 'attendance:teacher_dashboard' %}">← Back to Dashboard</a>
+</body>
+</html>

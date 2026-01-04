@@ -102,31 +102,34 @@ function setRole(role) {
 </div>
 
 <!-- LOGIN FORM -->
-<form method="post" action="{% url 'login' %}" class="space-y-5">
+<form method="POST" action="{% url 'login' %}?next={{ request.GET.next }}"><class="space-y-5">
+    <input type="hidden" name="next" value="{{ request.GET.next }}">
+
     {% csrf_token %}
 
-    <input type="hidden" name="role" id="roleInput" value="{{ role }}">
+    {% comment %} <input type="hidden" name="role" id="roleInput" value="{{ role }}"> {% endcomment %}
 
-    <div>
+    {% comment %} <div>
         <label class="block text-sm font-medium mb-1">Email Address</label>
         <input name="email" type="email" required
                class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500">
+    </div> {% endcomment %}
+     <div>
+        <label class="block text-sm font-medium mb-1">User Name</label>
+        <input name="username" type="text" required
+               class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500">
     </div>
+
 
     <div>
         <label class="block text-sm font-medium mb-1">Password</label>
         <input name="password" type="password" required
                class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500">
     </div>
-     <div>
-        <label class="block text-sm font-medium mb-1">User Name</label>
-        <input name="name" type="name" required
-               class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500">
-    </div>
-
+    
     <button type="submit"
             class="w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700 transition">
-        Sign In
+        login
     </button>
 </form>
 

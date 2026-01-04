@@ -1,4 +1,4 @@
-{% load static %}
+{% comment %} {% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,11 +10,7 @@
 
     <h1 class="text-4xl font-bold mb-6">Sign Up</h1>
 
-    {% comment %} <form method="post" class="bg-white p-8 rounded shadow-md w-96">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded w-full hover:bg-green-600 transition">Register</button>
-    </form> {% endcomment %}
+ 
     <form method="post" class="bg-white p-8 rounded shadow-md w-96">
     {% csrf_token %}
 
@@ -38,5 +34,175 @@
 </form>
 
 
+</body>
+</html> {% endcomment %}
+
+{% load static %}
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Register - Smart Attendance & Fee Management System(SAFMS)</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet"/>
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Tailwind Configuration -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-[#111318] dark:text-white overflow-x-hidden">
+<div class="flex min-h-screen w-full">
+    <!-- Left Side: Registration Form -->
+    <div class="flex w-full flex-col justify-center bg-white dark:bg-background-dark px-6 py-12 shadow-xl lg:w-1/2 lg:px-20 xl:px-32 relative z-10">
+        <!-- Header / Logo -->
+        <div class="mb-10 flex items-center gap-3">
+            <div class="flex size-10 items-center justify-center rounded-lg bg-primary text-white">
+                <span class="material-symbols-outlined" style="font-size: 24px;">school</span>
+            </div>
+            <h2 class="text-xl font-bold tracking-tight text-[#111318] dark:text-white">Smart Attendance & Fee Management System (SAFMS)</h2>
+        </div>
+        <div class="mb-8">
+            <h1 class="mb-2 text-3xl font-black leading-tight tracking-[-0.033em] text-[#111318] dark:text-white">Get started today</h1>
+            <p class="text-base font-normal text-[#616f89] dark:text-gray-400">Efficiently manage attendance and fees in one place.</p>
+        </div>
+
+        <!-- Django Form -->
+        <form method="post" class="flex flex-col gap-5">
+            {% csrf_token %}
+            
+            <!-- Role Selection -->
+            <div class="flex flex-col gap-2">
+                <label class="text-base font-medium text-[#111318] dark:text-gray-200">I am a...</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <label class="cursor-pointer">
+                        <input class="peer sr-only" name="role" type="radio" value="student" required/>
+                        <div class="flex flex-col items-center justify-center rounded-lg border border-[#dbdfe6] dark:border-gray-700 bg-white dark:bg-gray-800 p-3 text-center transition-all hover:bg-gray-50 peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary dark:peer-checked:bg-primary/20 dark:peer-checked:text-primary-light">
+                            <span class="material-symbols-outlined mb-1 text-2xl">school</span>
+                            <span class="text-sm font-medium">Student</span>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input class="peer sr-only" name="role" type="radio" value="teacher" required/>
+                        <div class="flex flex-col items-center justify-center rounded-lg border border-[#dbdfe6] dark:border-gray-700 bg-white dark:bg-gray-800 p-3 text-center transition-all hover:bg-gray-50 peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary dark:peer-checked:bg-primary/20 dark:peer-checked:text-primary-light">
+                            <span class="material-symbols-outlined mb-1 text-2xl">person_apron</span>
+                            <span class="text-sm font-medium">Teacher</span>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input class="peer sr-only" name="role" type="radio" value="admin" required/>
+                        <div class="flex flex-col items-center justify-center rounded-lg border border-[#dbdfe6] dark:border-gray-700 bg-white dark:bg-gray-800 p-3 text-center transition-all hover:bg-gray-50 peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary dark:peer-checked:bg-primary/20 dark:peer-checked:text-primary-light">
+                            <span class="material-symbols-outlined mb-1 text-2xl">shield_person</span>
+                            <span class="text-sm font-medium">Admin</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Username -->
+            <label class="flex flex-col gap-2">
+                <span class="text-base font-medium text-[#111318] dark:text-gray-200">Username</span>
+                <input name="username" class="h-12 w-full rounded-lg border border-[#dbdfe6] dark:border-gray-600 bg-white dark:bg-gray-800 px-4 text-base text-[#111318] dark:text-white placeholder-[#616f89] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:focus:border-primary" placeholder="Choose a username" type="text" required/>
+            </label>
+
+            <!-- Password -->
+            <label class="flex flex-col gap-2">
+                <span class="text-base font-medium text-[#111318] dark:text-gray-200">Password</span>
+                <div class="relative">
+                    <input name="password" id="password" class="h-12 w-full rounded-lg border border-[#dbdfe6] dark:border-gray-600 bg-white dark:bg-gray-800 pl-4 pr-10 text-base text-[#111318] dark:text-white placeholder-[#616f89] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:focus:border-primary" placeholder="Min. 8 characters" type="password" required/>
+                    <button class="absolute right-3 top-1/2 -translate-y-1/2 text-[#616f89] hover:text-[#111318] dark:hover:text-white" type="button" onclick="togglePassword('password', this)">
+                        <span class="material-symbols-outlined text-[20px]">visibility_off</span>
+                    </button>
+                </div>
+            </label>
+
+            <!-- Submit Button -->
+            <button class="mt-2 h-12 w-full rounded-lg bg-primary text-base font-bold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2" type="submit">
+                Create Account
+            </button>
+        </form>
+
+        <!-- Login Link -->
+        <p class="mt-8 text-center text-base text-[#616f89] dark:text-gray-400">
+            Already have an account? 
+            <a class="font-bold text-primary hover:underline" href="{% url 'login' %}">Sign in</a>
+        </p>
+    </div>
+
+    <!-- Right Side: Visual/Image -->
+    <div class="hidden lg:relative lg:flex lg:w-1/2 lg:flex-1 lg:items-center lg:justify-center lg:bg-background-light lg:dark:bg-[#0b101b]">
+        <!-- Decorative Background Pattern -->
+        <div class="absolute inset-0 h-full w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
+        <div class="relative z-10 w-full max-w-lg overflow-hidden rounded-2xl shadow-2xl mx-12">
+            <div class="relative h-[600px] w-full bg-blue-900">
+                <!-- Main Hero Image -->
+                <img class="h-full w-full object-cover opacity-80 mix-blend-overlay" alt="Students and teachers collaborating in a modern library environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD33IsQTcWKvVe-mGKCWpeJ4Jo7w0yquR-9sJEsdLVEJaHbW2H6qS1KQC1noBimR2GJzeYwXwtzfOXk88h-NIvfKgQPzwrF2QGZf4FRjraRyFRmubWVeQeVaZnQ_QSTtblEwKmj9Qc3VR9joEf-8si8mlzuHAvQ3y2T68_SkDiH54H6SzFKxM3efnluCQFHSNx7nguDAv78AG4KRHGT-NQwwf9kNbQAr7vB2mxxmPaHMj5m61dY9KLpAZ17L46BDFpAlWzVTtemLag"/>
+                <div class="absolute inset-0 bg-gradient-to-t from-[#135bec]/90 to-transparent"></div>
+                <!-- Overlay Text/Card -->
+                <div class="absolute bottom-0 left-0 right-0 p-8 text-white">
+                    <div class="mb-4 inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur-md border border-white/30">
+                        <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-green-400"></span>
+                        New v2.0 Live
+                    </div>
+                    <h3 class="mb-3 text-2xl font-bold leading-tight">Empowering Education</h3>
+                    <p class="mb-6 text-blue-100">Join over 10,000 schools managing attendance effortlessly. Streamline your workflow and focus on what matters most—teaching.</p>
+                    <div class="flex items-center gap-4">
+                        <div class="flex -space-x-3">
+                            <img alt="" class="inline-block h-10 w-10 rounded-full ring-2 ring-white dark:ring-gray-800 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAK_Ie9y7rwDEs6xKQwIcXVl3uLt7tf4ESErVOS3z2LV9C1yjkLCOd9HHWuyhsU796_tBuS2FW0Ms6P2j4NTE4z81tusEl7kTSU-9vxOAR8nygillxfSHKjficxTTSIrvwq1GjOsydXT3ugY350O1oSzXiKez0uoFKTUqgJRtPa9AQTZpA56-X7Rx8NpQLtdjHb6ZM0H1bGhyN71NiNL2xMlaegNpjocFVJb6Ki11UoGgABOYVer1hdZ6MqCHej7d1EYgvuVxJ5CjY"/>
+                            <img alt="" class="inline-block h-10 w-10 rounded-full ring-2 ring-white dark:ring-gray-800 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgk4NaEbToH4SrphnpHHJ5zAJ-0-36mU5BenKaQfPZ0m28jto7f0kwzF3Qub1uXReh1o0HmJ0v13hc1z7OOtGSqJY_bY12XkrVoaeW5Pq_WWiltpyiFuipUmnkM_duWCSC_2vR2JnYGbQZp6u9CTt6t4YQ0eAOh6-POjruu0g5QnAXhaDeNUvaeLn1mchzkPgEsa-PUEyx3tyT4CITMC8fVjVVAdsQExR5TpZDHq0Kxn__R_ILLQ7SUjiFZqfDWEibr_KXUZTuF3o"/>
+                            <img alt="" class="inline-block h-10 w-10 rounded-full ring-2 ring-white dark:ring-gray-800 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHo_UoDGZAe171hqoDK7t2ynR88n_31-9g-uWlRAnuZP8LWkAXEnWohnxE91OWkREh_mBt0B7wxRTfB8uaFpRl-EpPimpLqHeGsvPOeXwAG9uiSpEL0N7YQ0H8EmRb517NO359_KR2q8JXminvcdPdalmqQvVGeispm83wv3gfmGh-6ONtcfpXIDU2IFidxi7wf_bN7IDBzVPzoqIFV3ZK7TMWsjiXaJ4iiXt5zxdsyiEeWkxKw1PuSyq9qrG8s0DSXrx4L2FCAv8"/>
+                        </div>
+                        <div class="text-sm font-medium">
+                            <p>Trusted by educators</p>
+                            <div class="flex items-center text-yellow-400 text-xs">
+                                <span class="material-symbols-outlined" style="font-size: 16px; font-variation-settings: 'FILL' 1">star</span>
+                                <span class="material-symbols-outlined" style="font-size: 16px; font-variation-settings: 'FILL' 1">star</span>
+                                <span class="material-symbols-outlined" style="font-size: 16px; font-variation-settings: 'FILL' 1">star</span>
+                                <span class="material-symbols-outlined" style="font-size: 16px; font-variation-settings: 'FILL' 1">star</span>
+                                <span class="material-symbols-outlined" style="font-size: 16px; font-variation-settings: 'FILL' 1">star</span>
+                                <span class="ml-1 text-white">5.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePassword(fieldId, button) {
+    const field = document.getElementById(fieldId);
+    const icon = button.querySelector('.material-symbols-outlined');
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.textContent = 'visibility';
+    } else {
+        field.type = 'password';
+        icon.textContent = 'visibility_off';
+    }
+}
+</script>
 </body>
 </html>

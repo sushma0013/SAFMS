@@ -15,12 +15,20 @@ def qr_upload_path(instance, filename):
 # ------------------------------------------------------------
 # Subject Model
 # ------------------------------------------------------------
+# Subject Model
 class Subject(models.Model):
     name = models.CharField(max_length=120)
-    teacher = models.ForeignKey(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=20, unique=True)
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subjects')
+    students = models.ManyToManyField(User, related_name='enrolled_subjects', blank=True)
+    semester = models.IntegerField(default=1)
+    department = models.CharField(max_length=100, default='General')
 
     def __str__(self):
-        return f"{self.name} ({self.teacher.username})"
+        return f"{self.code} - {self.name} ({self.teacher.username})"
+    
+    def total_students(self):
+        return self.students.count()
 
 
 # ------------------------------------------------------------
@@ -34,6 +42,7 @@ class QRSession(models.Model):
     session_date = models.DateField(default=timezone.now)  # <--- Set default today
     valid_until = models.DateTimeField(blank=True, null=True)
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
+    is_closed = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if not self.valid_until:
@@ -42,11 +51,11 @@ class QRSession(models.Model):
 
     def __str__(self):
     # Check if session_date is datetime or date
-     if hasattr(self.session_date, 'date'):  # if datetime
-        session_str = self.session_date.date()
-     else:  # already a date
-        session_str = self.session_date
-     return f"{self.subject.name} - {self.created_by.username} ({session_str})"
+    #  if hasattr(self.session_date, 'date'):  # if datetime
+    #     session_str = self.session_date.date()
+    #  else:  # already a date
+    #     session_str = self.session_date
+     return f"{self.subject.name} - {self.session_date}"
 
 
     # Method to generate the QR Code
@@ -73,26 +82,45 @@ class QRSession(models.Model):
 # ------------------------------------------------------------
 # AttendanceRecord Model
 # ------------------------------------------------------------
+# class AttendanceRecord(models.Model):
+#     student = models.ForeignKey(User, on_delete=models.CASCADE)
+#     session = models.ForeignKey(QRSession, on_delete=models.CASCADE, related_name='attendance_records')
+#     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+
+#     STATUS_CHOICES = (
+#         ('Present', 'Present'),
+#         ('Absent', 'Absent'),
+#     )
+
+#     status = models.CharField(
+#     max_length=10,
+#     choices=(('Present','Present'), ('Absent','Absent')),
+#     default='Absent'
+# )
+
+# recorded_at = models.DateTimeField(auto_now_add=True)
+
+
+# class Meta:
+#         unique_together = ('student', 'session')
+
+# def __str__(self):
+#         return f"{self.student.username} - {self.subject.code} - {self.status}"
+
 class AttendanceRecord(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE)
-
-    # Session is already linked to Subject through QRSession → subject
     session = models.ForeignKey(QRSession, on_delete=models.CASCADE, related_name='attendance_records')
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
 
-    # NEW: direct subject reference for easy reporting/filtering
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, null=True, blank=True)
+    STATUS_CHOICES = (
+        ('Present', 'Present'),
+        ('Absent', 'Absent'),
+    )
 
-    # NEW: record the date (auto)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Absent')
     date = models.DateField(auto_now_add=True)
-
-    # Present / Absent (default already present)
-    status = models.CharField(max_length=20, default='Present')
-
     recorded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('student', 'session')
-
-    def __str__(self):
-        return f"{self.student.username} - {self.session}"
 

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Dashboard</title>
+</head>
+<body>
+    <h1>Student Dashboard</h1>
+    <p>Welcome, {{ request.user.username }}!</p>
+
+    <h2>Attendance Stats</h2>
+    {% for stat in attendance_stats %}
+        <p>{{ stat.subject.name }}: {{ stat.present }}/{{ stat.total }} ({{ stat.percentage }}%)</p>
+    {% endfor %}
+
+    <h2>Recent Attendance</h2>
+    <ul>
+        {% for record in attendance_records %}
+        <li>{{ record.subject.name }} - {{ record.date }} - {{ record.status }}</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'attendance:scan_qr' %}">Scan QR to Mark Attendance</a>
+    <br><br>
+    <a href="{% url 'logout' %}">Logout</a>
+</body>
+</html>

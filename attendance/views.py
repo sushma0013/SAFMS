@@ -1,50 +1,322 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-import qrcode
-from io import BytesIO
-from django.core.files import File
 from django.http import HttpResponse
-from .models import QRSession, AttendanceRecord,Subject
 from django.utils import timezone
+from django.contrib import messages
+from .models import QRSession, AttendanceRecord, Subject
+from datetime import timedelta
+from .utils import close_session_and_mark_absent
+from datetime import timedelta
+from django.db.models import Count,Q
+from django.contrib.auth.models import User
 
-# --- QR Views ---
+
+# ============= TEACHER VIEWS =============
 @login_required
-def generate_qr(request):
+def teacher_dashboard(request):
+    if request.user.profile.role != 'teacher':
+        messages.error(request, "Teachers only.")
+        return redirect('home')
+
+    subjects = Subject.objects.filter(teacher=request.user)
+    today = timezone.now().date()
+
+    subject_stats = []
+    today_present = 0
+    today_total = 0
+
+    # =========================
+    # SUBJECT LOOP
+    # =========================
+    for subject in subjects:
+        total_students = subject.students.count()
+
+        session = QRSession.objects.filter(
+            subject=subject,
+            session_date=today
+        ).order_by('-created_at').first()
+
+        if session:
+            present = AttendanceRecord.objects.filter(
+                session=session,
+                status='Present'
+            ).count()
+        else:
+            present = 0
+
+        today_present += present
+        today_total += total_students
+
+        subject_stats.append({
+            'subject': subject,
+            'total': total_students,
+            'present': present,
+        })
+
+    # =========================
+    # TODAY ATTENDANCE %
+    # =========================
+    attendance_today = round(
+        (today_present / today_total) * 100, 2
+    ) if today_total else 0
+
+    # =========================
+    # STUDENTS BELOW 80%
+    # =========================
+    low_attendance_students = []
+
+    students = AttendanceRecord.objects.filter(
+        subject__teacher=request.user
+    ).values('student').distinct()
+
+    for s in students:
+        student_id = s['student']
+
+        total_classes = AttendanceRecord.objects.filter(
+            student_id=student_id,
+            subject__teacher=request.user
+        ).count()
+
+        present_classes = AttendanceRecord.objects.filter(
+            student_id=student_id,
+            subject__teacher=request.user,
+            status='Present'
+        ).count()
+
+        if total_classes > 0:
+            percentage = (present_classes / total_classes) * 100
+            if percentage < 80:
+                low_attendance_students.append({
+                    'student': User.objects.get(id=student_id),
+                    'percentage': round(percentage, 2)
+                })
+                
+
+    # =========================
+    # FINAL RETURN
+    # =========================
+    return render(request, 'attendance/teacher_dashboard.html', {
+        'subjects': subjects,
+        'subject_stats': subject_stats,
+        'attendance_today': attendance_today,
+        'low_attendance_students': low_attendance_students,
+    })
+
+
+
+
+@login_required
+def generate_qr(request, subject_id):
+    if request.user.profile.role != 'teacher':
+        messages.error(request, "Teachers only.")
+        return redirect('home')
+
+    subject = get_object_or_404(Subject, id=subject_id, teacher=request.user)
+    now = timezone.now()
+    today = now.date()
+
+    # 1) Find active session for this subject today
+    active_session = QRSession.objects.filter(
+        subject=subject,
+        created_by=request.user,
+        session_date=today,
+        is_closed=False,
+        valid_until__gt=now
+    ).order_by('-created_at').first()
+
+    if active_session:
+        session = active_session
+        messages.info(request, "Using existing active QR session.")
+    else:
+        # 2) If there is an old session expired but not closed -> close it & mark absent
+        old_open_sessions = QRSession.objects.filter(
+            subject=subject,
+            created_by=request.user,
+            session_date=today,
+            is_closed=False,
+            valid_until__lte=now
+        )
+        for s in old_open_sessions:
+            close_session_and_mark_absent(s)
+
+        # 3) Create new session
+        session = QRSession.objects.create(
+            subject=subject,
+            created_by=request.user,
+            session_date=today,
+            valid_until=now + timedelta(minutes=15),
+            is_closed=False
+        )
+
+        domain = request.build_absolute_uri('/')[:-1]
+        session.generate_qr(request_domain=domain)
+        messages.success(request, "New QR generated (valid 15 minutes).")
+
+    return render(request, 'attendance/generate_qr.html', {
+        'session': session,
+        'subject': subject,
+        'expires_in': int((session.valid_until - now).total_seconds())
+    })
+
+
+# ============= STUDENT VIEWS =============
+@login_required
+def student_dashboard(request):
+    if request.user.profile.role != 'student':
+        messages.error(request, "Students only.")
+        return redirect('home')
+
+    enrolled_subjects = Subject.objects.filter(students=request.user)
+
+    attendance_stats = []
+
+    for subject in enrolled_subjects:
+        total = AttendanceRecord.objects.filter(
+            student=request.user, subject=subject
+        ).count()
+
+        present = AttendanceRecord.objects.filter(
+            student=request.user, subject=subject, status='Present'
+        ).count()
+
+        percent = round((present / total) * 100, 2) if total else 0
+
+        attendance_stats.append({
+            'subject': subject,
+            'total': total,
+            'present': present,
+            'percentage': percent
+        })
+
+    return render(request, 'attendance/student_dashboard.html', {
+        'enrolled_subjects': enrolled_subjects,
+        'attendance_stats': attendance_stats,
+    })
+@login_required
+def scan_qr_page(request):
+    if request.user.profile.role != 'student':
+        messages.error(request, "Students only.")
+        return redirect('home')
+
+    return render(request, 'attendance/scan_qr.html')
+
+
+
+
+
+@login_required
+def mark_attendance(request, uuid):
+    if request.user.profile.role != 'student':
+        return HttpResponse("Access denied")
+
+    session = get_object_or_404(QRSession, uuid=uuid)
+
+    # expired or closed session
+    if session.valid_until < timezone.now() or session.is_closed:
+        if not session.is_closed:
+            close_session_and_mark_absent(session)
+        return render(request, 'attendance/qr_expired.html')
+
+    # enrolled check
+    if not session.subject.students.filter(id=request.user.id).exists():
+        return HttpResponse("Not enrolled in this subject")
+
+    # if record exists already
+    record = AttendanceRecord.objects.filter(student=request.user, session=session).first()
+    if record:
+        return render(request, 'attendance/already_marked.html')
+
+    # mark present
+    AttendanceRecord.objects.create(
+        student=request.user,
+        session=session,
+        subject=session.subject,
+        status='Present'
+    )
+
+    return render(request, 'attendance/success.html', {'subject': session.subject})
+
+
+@login_required
+def teacher_profile(request):
     teacher = request.user
     subjects = Subject.objects.filter(teacher=teacher)
 
-    if not subjects.exists():
-        return render(request, 'attendance/no_subject.html', {'teacher': teacher})
+    total_students = sum(s.students.count() for s in subjects)
 
-    # Pick first subject for today (or add subject selection later)
-    subject = subjects.first()
-
-    # Check if today's QR exists and is still valid
-    qr_today = QRSession.objects.filter(
-        created_by=teacher,
-        subject=subject,
-        session_date=timezone.now().date(),
-        valid_until__gt=timezone.now()
-    ).first()
-
-    if qr_today:
-        # qr_url = qr_today.qr_code.url
-        session = qr_today
-    else:
-        session = QRSession.objects.create(
-            created_by=teacher,
-            subject=subject,
-            session_date=timezone.now().date()
-        )
-        # Generate QR using model method
-        session.generate_qr(request_domain='http://192.168.1.5:8000')
-        # qr_url = session.qr_code.url
-
-    return render(request, 'attendance/generate_qr.html', {
-        'qr_url': session.qr_code.url,
+    return render(request, 'attendance/teacher_profile.html', {
         'teacher': teacher,
-        'subject': subject,
-        'valid_until': session.valid_until
+        'subjects': subjects,
+        'total_students': total_students
+    })
+@login_required
+def teacher_students(request):
+    if request.user.profile.role != 'teacher':
+        messages.error(request, "Teachers only.")
+        return redirect('home')
+
+    today = timezone.now().date()
+
+    subjects = Subject.objects.filter(teacher=request.user)
+
+    # All students taught by this teacher
+    students = User.objects.filter(
+        attendancerecord__subject__in=subjects
+    ).distinct()
+
+    # TODAY PRESENT
+    today_present = AttendanceRecord.objects.filter(
+        subject__in=subjects,
+        date=today,
+        status='Present'
+    ).select_related('student', 'subject')
+
+    # TODAY ABSENT
+    today_absent = AttendanceRecord.objects.filter(
+        subject__in=subjects,
+        date=today,
+        status='Absent'
+    ).select_related('student', 'subject')
+
+    # LOW ATTENDANCE (<80%)
+    low_attendance_students = []
+
+    for student in students:
+        total = AttendanceRecord.objects.filter(
+            student=student,
+            subject__in=subjects
+        ).count()
+
+        present = AttendanceRecord.objects.filter(
+            student=student,
+            subject__in=subjects,
+            status='Present'
+        ).count()
+
+        percent = (present / total) * 100 if total else 0
+
+        if percent < 80:
+            low_attendance_students.append({
+                'student': student,
+                'percentage': round(percent, 2)
+            })
+
+    return render(request, 'attendance/teacher_students.html', {
+        'today_present': today_present,
+        'today_absent': today_absent,
+        'low_attendance_students': low_attendance_students
+    })
+
+@login_required
+def my_classes(request):
+    if request.user.profile.role != 'teacher':
+        messages.error(request, "Teachers only.")
+        return redirect('home')
+
+    subjects = Subject.objects.filter(teacher=request.user)
+
+    return render(request, 'attendance/my_classes.html', {
+        'subjects': subjects
     })
 
 
@@ -52,59 +324,4 @@ def generate_qr(request):
 
 
 
-        # Generate QR image
-        # data = f"http://192.168.1.5:8000/attendance/mark/{session.uuid}/"  # replace with your local IP
-        # qr_img = qrcode.make(data)
-        # buffer = BytesIO()
-        # qr_img.save(buffer, format='PNG')
-        # file_name = f"qr_{session.uuid}.png"
-        # session.qr_code.save(file_name, File(buffer), save=True)
-        # qr_url = session.qr_code.url
 
-    # return render(request, 'attendance/generate_qr.html', {
-    #     'qr_url': qr_url,
-    #     'teacher': teacher,
-    #     'subject': subject,
-    #     'valid_until': session.valid_until
-    # })
-
-
-
-
-def show_qr(request, session_id):
-    session = QRSession.objects.get(id=session_id)
-    return render(request, 'attendance/show_qr.html', {'session': session})
-
-
-
-
-@login_required
-def mark_attendance(request, uuid):
-    session = get_object_or_404(QRSession, uuid=uuid)
-
-    # Check if QR is still valid
-    if session.valid_until < timezone.now():
-        return HttpResponse("<h2>This QR code has expired.</h2>")
-
-    # Prevent duplicate attendance
-    if not AttendanceRecord.objects.filter(student=request.user, session=session).exists():
-        AttendanceRecord.objects.create(
-            student=request.user,
-            session=session,
-            status='Present'
-        )
-
-    return HttpResponse("<h2>Attendance marked successfully!</h2>")
-
-
-
-
-# --- Other Views ---
-def attendance_home(request):
-    return HttpResponse("<h2>Attendance Home Page</h2>")
-
-def attendance_list(request):
-    return HttpResponse("<h2>Attendance List Page</h2>")
-
-def home(request):
-    return HttpResponse("<h2>Smart Attendance System is working!</h2>")

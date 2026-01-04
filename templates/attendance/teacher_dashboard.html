@@ -1,0 +1,325 @@
+
+
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Teacher Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "primary-dark": "#3b82f6",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                        "card-light": "#ffffff",
+                        "card-dark": "#1A2230",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background-color: #475569;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 font-display transition-colors duration-200">
+    <div class="flex h-screen w-full overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="hidden lg:flex flex-col w-72 bg-card-light dark:bg-card-dark border-r border-gray-200 dark:border-gray-800 h-full">
+            <div class="p-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white">
+                        <span class="material-symbols-outlined text-2xl">school</span>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Smart Attendance & Fee Management System</span>
+                </div>
+            </div>
+            
+            <!-- Teacher Profile -->
+            <div class="flex flex-col flex-1 px-4 gap-2 overflow-y-auto">
+                <div class="relative group flex items-center gap-3 p-3 mb-4 rounded-xl bg-background-light dark:bg-background-dark/50">
+                    <div class="bg-center bg-no-repeat bg-cover rounded-full h-10 w-10 border-2 border-white dark:border-gray-700 shadow-sm" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDdcWjjUxvUMCvHAksPn2wWJhWvn0a7NSZJD9uvZAhBnsg3URB0E9fwDxoPhnw6eWIeV7kcHnN-a3CqBeiH8qDwird4CE-pzcqnlfqXDp6r7xHsf7__n0EAfrt4rLRYtEzcBBuxZwmQsoVkvX3gOYbb5wsbCY3zRS6ftvQ8YCekF1CDEKBAoM1-Zvqv4QvSJKf6MZsXjzAiFj__dNeC1QygnDhDYrSANfIXFTR-mDaoRZslPXHwjtTWnIsbu07iXh7bDSDHhWiFtsI");'></div>
+                    <div class="flex flex-col overflow-hidden">
+                        <h2 class="text-sm font-semibold truncate text-gray-900 dark:text-white">{{ request.user.username }}</h2>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 truncate">Teacher</p>
+                        <a href="{% url 'attendance:teacher_profile' %}">
+
+                    </div>
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="flex flex-col gap-1">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary dark:text-primary-dark font-medium transition-colors" href="#">
+                        <span class="material-symbols-outlined icon-fill">dashboard</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors" href="#">
+                        <span class="material-symbols-outlined">class</span>
+                       
+
+                        <span>My Classes</span>
+                         <a href="{% url 'attendance:my_classes' %}">
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors" href="#">
+                        <span class="material-symbols-outlined">groups</span>
+                        <span>Students</span>
+                        <a href="{% url 'attendance:teacher_students' %}">
+    Students
+</a>
+
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors" href="#">
+                        <span class="material-symbols-outlined">analytics</span>
+                        <span>Reports</span>
+                    </a>
+                    <div class="my-2 border-t border-gray-100 dark:border-gray-800"></div>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors" href="#">
+                        <span class="material-symbols-outlined">settings</span>
+                        <span>Settings</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <!-- Logout Button -->
+            <div class="p-4 border-t border-gray-200 dark:border-gray-800">
+                <a href="{% url 'logout' %}" class="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="text-sm font-medium">Log Out</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+            <!-- Header -->
+            <header class="h-20 flex items-center justify-between px-6 lg:px-8 border-b border-gray-200 dark:border-gray-800 bg-card-light/80 dark:bg-card-dark/80 backdrop-blur-sm z-10">
+                <div class="flex flex-col justify-center">
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Good Morning, {{ request.user.username }}</h1>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Friday, October 24th • Fall Semester</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="relative hidden md:block w-64 lg:w-96">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                            <span class="material-symbols-outlined text-[20px]">search</span>
+                        </span>
+                        <input class="w-full py-2.5 pl-10 pr-4 text-sm text-gray-700 bg-background-light dark:bg-background-dark border-none rounded-lg focus:ring-2 focus:ring-primary dark:text-gray-200 placeholder-gray-400" placeholder="Search student name or roll number..." type="text"/>
+                    </div>
+                    <button class="relative p-2 text-gray-400 hover:text-primary dark:hover:text-white transition-colors">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-card-dark rounded-full"></span>
+                    </button>
+                    <button class="lg:hidden p-2 text-gray-600 dark:text-gray-300">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="flex-1 overflow-y-auto p-4 lg:p-8 space-y-6">
+                <!-- Messages -->
+                {% if messages %}
+                <div class="space-y-2">
+                    {% for message in messages %}
+                    <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-4 py-3 rounded-lg">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Stats Cards -->
+                <section class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+                    <div class="bg-card-light dark:bg-card-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col gap-1">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-gray-500 dark:text-gray-400 font-medium">Attendance Today</p>
+                            <h3 class="text-3xl font-bold">{{ attendance_today }}%</h3>
+
+                            <span class="material-symbols-outlined text-primary bg-primary/10 p-1.5 rounded-lg">checklist</span>
+                        </div>
+                        <div class="flex items-end gap-3">
+                            <h3 class="text-3xl font-bold text-gray-900 dark:text-white">92%</h3>
+                            <span class="flex items-center text-sm font-medium text-green-600 dark:text-green-400 mb-1">
+                                <span class="material-symbols-outlined text-[16px]">trending_up</span>
+                                +2.4%
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">vs. last Friday</p>
+                       
+
+                    </div>
+                    
+                    <div class="bg-card-light dark:bg-card-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col gap-1">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-gray-500 dark:text-gray-400 font-medium">At Risk Students</p>
+                            <span class="material-symbols-outlined text-red-500 bg-red-500/10 p-1.5 rounded-lg">person_alert</span>
+                             <h3 class="text-lg font-bold mt-6">Students Below 80%</h3>
+
+{% if low_attendance_students %}
+<table class="w-full mt-3">
+    <tr>
+        <th>Student</th>
+        <th>Attendance %</th>
+    </tr>
+    {% for s in low_attendance_students %}
+    <tr>
+        <td>{{ s.student.username }}</td>
+        <td class="text-red-600">{{ s.percentage }}%</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p class="text-gray-500 mt-2">No students below 80% 🎉</p>
+{% endif %}
+                        </div>
+                        <div class="flex items-end gap-3">
+                            <h3 class="text-3xl font-bold text-gray-900 dark:text-white">8</h3>
+                            <span class="flex items-center text-sm font-medium text-red-600 dark:text-red-400 mb-1">
+                                Intervention Needed
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">Attendance below 80%</p>
+                    </div>
+                    
+                    <div class="bg-card-light dark:bg-card-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col gap-1">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-gray-500 dark:text-gray-400 font-medium">Total Students</p>
+                            <span class="material-symbols-outlined text-purple-500 bg-purple-500/10 p-1.5 rounded-lg">group</span>
+                        </div>
+                        <div class="flex items-end gap-3">
+                            <h3 class="text-3xl font-bold text-gray-900 dark:text-white">120</h3>
+                            <span class="flex items-center text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                Across 4 classes
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">Updated 2 mins ago</p>
+                    </div>
+                </section>
+
+                <!-- Your Subjects Table -->
+                <div class="bg-card-light dark:bg-card-dark rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Your Subjects</h3>
+                    </div>
+                    
+                    {% if subjects %}
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200 dark:border-gray-700">
+                                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Code</th>
+                                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Name</th>
+                                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Semester</th>
+                                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Students</th>
+                                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject in subjects %}
+                                <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-background-light dark:hover:bg-background-dark/50 transition-colors">
+                                    <td class="py-4 px-4 text-sm font-medium text-gray-900 dark:text-white">{{ subject.code }}</td>
+                                    <td class="py-4 px-4 text-sm text-gray-700 dark:text-gray-300">{{ subject.name }}</td>
+                                    <td class="py-4 px-4 text-sm text-gray-700 dark:text-gray-300">{{ subject.semester }}</td>
+                                    <td class="py-4 px-4 text-sm text-gray-700 dark:text-gray-300">{{ subject.total_students }}</td>
+                                    <td class="py-4 px-4">
+                                        <a href="{% url 'attendance:generate_qr' subject.id %}" class="inline-flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm">
+                                            <span class="material-symbols-outlined text-[18px]">qr_code_2</span>
+                                            Generate QR
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-12">
+                        <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">folder_open</span>
+                        <p class="text-gray-500 dark:text-gray-400">No subjects assigned yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Recent Sessions -->
+                <div class="bg-card-light dark:bg-card-dark rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Recent Sessions</h3>
+                    </div>
+                    
+                    {% if recent_sessions %}
+                    <div class="space-y-3">
+                        {% for session in recent_sessions %}
+                        <div class="flex items-center gap-4 p-4 rounded-lg bg-background-light dark:bg-background-dark/50 border border-gray-100 dark:border-gray-800">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-primary">qr_code</span>
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ session.subject.name }}</h4>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Session Date: {{ session.session_date }}
+                                </p>
+                                <p class="text-xs text-gray-400 mt-0.5">
+                                    Valid until: {{ session.valid_until }}
+                                </p>
+                            </div>
+                            <span class="flex-shrink-0 px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                                Active
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-12">
+                        <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">history</span>
+                        <p class="text-gray-500 dark:text-gray-400">No recent sessions found.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Dark mode toggle (optional)
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+    </script>
+</body>
+</html>
+
+
+

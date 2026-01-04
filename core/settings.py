@@ -26,7 +26,8 @@ SECRET_KEY = 'django-insecure-s#l=#o3ios26a1)zf6we@v5z&flsc%h&+dr)oczri9#3f=5=re
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["192.168.1.16", "127.0.0.1", "localhost"]
+
 
 
 # Application definition
@@ -39,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'accounts',
+     'accounts.apps.AccountsConfig',
     'attendance',
     'dashboard',
     'fees',
@@ -115,7 +116,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kathmandu'
+USE_TZ = True
+
 
 USE_I18N = True
 
@@ -143,5 +146,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_REDIRECT_URL = '/attendance/generate_qr/'
 
 LOGOUT_REDIRECT_URL = '/login/'
+LOGIN_URL = '/login/'
+
 
 
