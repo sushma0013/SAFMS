@@ -5,6 +5,7 @@ from django.conf.urls.static import static
 from . import views
 
 urlpatterns = [
+    
     path('admin/', admin.site.urls),
 
     # 🏠 Home
@@ -26,6 +27,10 @@ urlpatterns = [
     # path('generate_qr/', views.generate_qr, name='generate_qr'),
     # path('show_qr/<int:session_id>/', views.show_qr, name='show_qr'),
     path('attendance/', include('attendance.urls')),
+    path("", include("accounts.urls")),
+    path("accounts/", include("allauth.urls")),
+
+
 ]
 
 if settings.DEBUG:

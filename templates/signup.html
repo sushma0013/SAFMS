@@ -93,7 +93,15 @@
             {% csrf_token %}
             
             <!-- Role Selection -->
-            <div class="flex flex-col gap-2">
+             <input type="hidden" name="role" value="student">
+
+<div class="p-3 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-600">
+  You are creating a <b>Student</b> account. <br>
+  Teachers/Admin accounts are created by the system administrator.
+</div>
+
+
+            {% comment %} <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-[#111318] dark:text-gray-200">I am a...</label>
                 <div class="grid grid-cols-3 gap-3">
                     <label class="cursor-pointer">
@@ -118,7 +126,7 @@
                         </div>
                     </label>
                 </div>
-            </div>
+            </div> {% endcomment %}
 
             <!-- Username -->
             <label class="flex flex-col gap-2">

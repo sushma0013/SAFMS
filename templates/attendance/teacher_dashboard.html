@@ -68,16 +68,18 @@
             </div>
             
             <!-- Teacher Profile -->
+             <a href="{% url 'attendance:teacher_profile' %}">
             <div class="flex flex-col flex-1 px-4 gap-2 overflow-y-auto">
                 <div class="relative group flex items-center gap-3 p-3 mb-4 rounded-xl bg-background-light dark:bg-background-dark/50">
                     <div class="bg-center bg-no-repeat bg-cover rounded-full h-10 w-10 border-2 border-white dark:border-gray-700 shadow-sm" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDdcWjjUxvUMCvHAksPn2wWJhWvn0a7NSZJD9uvZAhBnsg3URB0E9fwDxoPhnw6eWIeV7kcHnN-a3CqBeiH8qDwird4CE-pzcqnlfqXDp6r7xHsf7__n0EAfrt4rLRYtEzcBBuxZwmQsoVkvX3gOYbb5wsbCY3zRS6ftvQ8YCekF1CDEKBAoM1-Zvqv4QvSJKf6MZsXjzAiFj__dNeC1QygnDhDYrSANfIXFTR-mDaoRZslPXHwjtTWnIsbu07iXh7bDSDHhWiFtsI");'></div>
                     <div class="flex flex-col overflow-hidden">
                         <h2 class="text-sm font-semibold truncate text-gray-900 dark:text-white">{{ request.user.username }}</h2>
                         <p class="text-xs text-gray-500 dark:text-gray-400 truncate">Teacher</p>
-                        <a href="{% url 'attendance:teacher_profile' %}">
+                        
 
                     </div>
                 </div>
+            </a>
                 
                 <!-- Navigation -->
                 <nav class="flex flex-col gap-1">
@@ -85,27 +87,27 @@
                         <span class="material-symbols-outlined icon-fill">dashboard</span>
                         <span>Dashboard</span>
                     </a>
-                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors" href="#">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors" href="{% url 'attendance:my_classes' %}">
                         <span class="material-symbols-outlined">class</span>
                        
 
                         <span>My Classes</span>
-                         <a href="{% url 'attendance:my_classes' %}">
-                    </a>
-                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors" href="#">
+                         {% comment %} <a href="{% url 'attendance:my_classes' %}">
+                    </a> {% endcomment %}
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors" href="{% url 'attendance:teacher_students' %}">
                         <span class="material-symbols-outlined">groups</span>
                         <span>Students</span>
-                        <a href="{% url 'attendance:teacher_students' %}">
+                        {% comment %} <a href="{% url 'attendance:teacher_students' %}">
     Students
-</a>
+</a> {% endcomment %}
 
                     </a>
-                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors" href="#">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors" href="{% url 'attendance:teacher_reports' %}">
                         <span class="material-symbols-outlined">analytics</span>
                         <span>Reports</span>
                     </a>
                     <div class="my-2 border-t border-gray-100 dark:border-gray-800"></div>
-                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors" href="#">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors" href="{% url 'attendance:teacher_settings' %}">
                         <span class="material-symbols-outlined">settings</span>
                         <span>Settings</span>
                     </a>
@@ -184,7 +186,7 @@
                         <div class="flex items-center justify-between mb-2">
                             <p class="text-gray-500 dark:text-gray-400 font-medium">At Risk Students</p>
                             <span class="material-symbols-outlined text-red-500 bg-red-500/10 p-1.5 rounded-lg">person_alert</span>
-                             <h3 class="text-lg font-bold mt-6">Students Below 80%</h3>
+                             {% comment %} <h3 class="text-lg font-bold mt-6">Students Below 80%</h3> {% endcomment %}
 
 {% if low_attendance_students %}
 <table class="w-full mt-3">
@@ -204,9 +206,9 @@
 {% endif %}
                         </div>
                         <div class="flex items-end gap-3">
-                            <h3 class="text-3xl font-bold text-gray-900 dark:text-white">8</h3>
-                            <span class="flex items-center text-sm font-medium text-red-600 dark:text-red-400 mb-1">
-                                Intervention Needed
+                            {% comment %} <h3 class="text-3xl font-bold text-gray-900 dark:text-white">8</h3> {% endcomment %}
+                            {% comment %} <span class="flex items-center text-sm font-medium text-red-600 dark:text-red-400 mb-1">
+                                Intervention Needed {% endcomment %}
                             </span>
                         </div>
                         <p class="text-xs text-gray-400 mt-2">Attendance below 80%</p>

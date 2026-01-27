@@ -61,7 +61,7 @@
 
 <!-- Tailwind CSS -->
 <link rel="stylesheet" href="{% static 'css/output.css' %}">
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+{% comment %} <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script> {% endcomment %}
 
 <script>
 function setRole(role) {
@@ -88,24 +88,65 @@ function setRole(role) {
 </div>
 
 <!-- RIGHT PANEL -->
-<div class="flex-1 flex items-center justify-center p-8 bg-white">
-<div class="w-full max-w-md space-y-8">
+  <div class="flex-1 flex items-center justify-center p-8 bg-gray-50">
+    <div class="w-full max-w-md space-y-6 bg-white p-8 rounded-xl shadow">
+
+      <h1 class="text-3xl font-bold">Welcome Back</h1>
+      <p class="text-gray-500">Login as a student using Google, or use username/password.</p>
+
+      <!-- GOOGLE LOGIN BUTTON (Students only) -->
+      <a href="/accounts/google/login/?process=login&prompt=select_account%20consent&next=/dashboard/"
+         class="w-full flex items-center justify-center gap-3 border border-gray-300 p-3 rounded-lg hover:bg-gray-50 transition">
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg"
+             alt="Google" class="h-5 w-5">
+        Continue with Google (Student)
+      </a>
+
+      <div class="flex items-center gap-3 my-2">
+        <div class="h-px bg-gray-200 flex-1"></div>
+        <span class="text-sm text-gray-400">or</span>
+        <div class="h-px bg-gray-200 flex-1"></div>
+      </div>
+{% comment %} <div class="flex-1 flex items-center justify-center p-8 bg-white">
+<div class="w-full max-w-md space-y-8"> {% endcomment %}
 
 <h1 class="text-3xl font-bold">Welcome Back</h1>
 <p class="text-gray-500">Please enter your details to sign in.</p>
 
 <!-- ROLE SELECTOR -->
-<div class="grid grid-cols-3 gap-2">
+{% comment %} <div class="grid grid-cols-3 gap-2">
     <button type="button" onclick="setRole('teacher')" class="py-2 rounded bg-gray-200 hover:bg-blue-600 hover:text-white">Teacher</button>
     <button type="button" onclick="setRole('student')" class="py-2 rounded bg-gray-200 hover:bg-blue-600 hover:text-white">Student</button>
     <button type="button" onclick="setRole('admin')" class="py-2 rounded bg-gray-200 hover:bg-blue-600 hover:text-white">Admin</button>
+</div> {% endcomment %}
+{# ================= GOOGLE LOGIN BUTTON ================= #}
+{% comment %} <a href="/accounts/google/login/?next=/dashboard/" {% endcomment %}
+<a href="/accounts/google/login/?process=login&prompt=select_account&auth_type=reauthenticate&next=/dashboard/"
+
+   style="display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:12px;border:1px solid #d1d5db;border-radius:10px;background:#fff;text-decoration:none;font-weight:600;">
+  <img src="https://www.svgrepo.com/show/475656/google-color.svg"
+       alt="Google" style="width:20px;height:20px;display:block;">
+  Continue with Google (Student)
+</a>
+
+<div style="display:flex;align-items:center;gap:12px;margin:12px 0;">
+  <div style="height:1px;background:#e5e7eb;flex:1;"></div>
+  <span style="font-size:14px;color:#9ca3af;">or login with username</span>
+  <div style="height:1px;background:#e5e7eb;flex:1;"></div>
 </div>
 
-<!-- LOGIN FORM -->
-<form method="POST" action="{% url 'login' %}?next={{ request.GET.next }}"><class="space-y-5">
-    <input type="hidden" name="next" value="{{ request.GET.next }}">
 
-    {% csrf_token %}
+
+{# ======================================================= #}
+
+<!-- LOGIN FORM -->
+{% comment %} <form method="POST" action="{% url 'login' %}?next={{ request.GET.next }}" class="space-y-5"> {% endcomment %}
+<form method="POST" action="{% url 'login' %}">
+
+    
+    <input type="hidden" name="next" value="{{ request.GET.next }}">
+   {% csrf_token %} 
+
 
     {% comment %} <input type="hidden" name="role" id="roleInput" value="{{ role }}"> {% endcomment %}
 

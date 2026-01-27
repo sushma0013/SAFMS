@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Lexend', sans-serif; }
+        .material-symbols-outlined { font-size: 22px; }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-900">
+
+<div class="min-h-screen flex">
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="w-72 bg-white border-r flex flex-col">
+        <div class="p-6 border-b">
+            <h1 class="text-xl font-bold">Smart Attendance</h1>
+            <p class="text-sm text-gray-500">Teacher Panel</p>
+        </div>
+
+        <nav class="flex-1 px-4 py-4 space-y-1">
+            <a href="{% url 'attendance:teacher_dashboard' %}"
+               class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100">
+                <span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+
+            <a href="{% url 'attendance:teacher_profile' %}"
+               class="flex items-center gap-3 px-3 py-2 rounded bg-blue-100 text-blue-700">
+                <span class="material-symbols-outlined">person</span>
+                Profile
+            </a>
+
+            <a href="{% url 'attendance:my_classes' %}"
+               class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100">
+                <span class="material-symbols-outlined">class</span>
+                My Classes
+            </a>
+
+            <a href="{% url 'attendance:teacher_students' %}"
+               class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100">
+                <span class="material-symbols-outlined">groups</span>
+                Students
+            </a>
+        </nav>
+
+        <div class="p-4 border-t">
+            <a href="{% url 'logout' %}" class="text-red-600">Logout</a>
+        </div>
+    </aside>
+
+    <!-- ================= MAIN ================= -->
+    <main class="flex-1 p-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold">Teacher Profile</h2>
+            <p class="text-sm text-gray-500">Your account and teaching information</p>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="bg-white p-6 rounded shadow mb-8">
+            <div class="flex items-center gap-6">
+
+                <!-- Avatar -->
+                <div class="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
+                    {{ teacher.username|slice:":1"|upper }}
+                </div>
+
+                <!-- Info -->
+                <div>
+                    <h3 class="text-xl font-semibold">{{ teacher.username }}</h3>
+                    <p class="text-gray-500 text-sm">Teacher</p>
+
+                    <div class="mt-3 space-y-1 text-sm">
+                        <p><strong>Email:</strong> {{ teacher.email|default:"Not provided" }}</p>
+                        <p><strong>Joined:</strong> {{ teacher.date_joined|date:"F j, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+            <div class="bg-white p-6 rounded shadow">
+                <p class="text-gray-500 text-sm">Subjects Assigned</p>
+                <h3 class="text-3xl font-bold mt-2">{{ subjects.count }}</h3>
+            </div>
+
+            <div class="bg-white p-6 rounded shadow">
+                <p class="text-gray-500 text-sm">Total Students</p>
+                <h3 class="text-3xl font-bold mt-2">{{ total_students }}</h3>
+            </div>
+
+            <div class="bg-white p-6 rounded shadow">
+                <p class="text-gray-500 text-sm">Active Status</p>
+                <h3 class="text-xl font-semibold mt-3 text-green-600">Active</h3>
+            </div>
+
+        </div>
+
+        <!-- Subjects List -->
+        <div class="bg-white p-6 rounded shadow">
+            <h3 class="text-lg font-bold mb-4">Your Subjects</h3>
+
+            {% if subjects %}
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b text-gray-600">
+                        <th class="text-left py-2">Code</th>
+                        <th>Name</th>
+                        <th>Semester</th>
+                        <th>Students</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subject in subjects %}
+                    <tr class="border-b">
+                        <td class="py-2">{{ subject.code }}</td>
+                        <td>{{ subject.name }}</td>
+                        <td>{{ subject.semester }}</td>
+                        <td>{{ subject.students.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-gray-500">No subjects assigned yet.</p>
+            {% endif %}
+        </div>
+
+    </main>
+</div>
+
+</body>
+</html>

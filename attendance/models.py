@@ -43,6 +43,7 @@ class QRSession(models.Model):
     valid_until = models.DateTimeField(blank=True, null=True)
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
     is_closed = models.BooleanField(default=False)
+    closed_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.valid_until:
@@ -124,3 +125,17 @@ class AttendanceRecord(models.Model):
     class Meta:
         unique_together = ('student', 'session')
 
+class StudentProfile(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="attendance_student"
+    )
+
+    student_id = models.PositiveIntegerField(unique=True)
+    full_name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.student_id} - {self.full_name}"

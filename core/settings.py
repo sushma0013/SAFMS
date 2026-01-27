@@ -26,7 +26,18 @@ SECRET_KEY = 'django-insecure-s#l=#o3ios26a1)zf6we@v5z&flsc%h&+dr)oczri9#3f=5=re
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["192.168.1.16", "127.0.0.1", "localhost"]
+# ALLOWED_HOSTS = [ "127.0.0.1", "localhost","0.0.0.0","https://sericultural-undefiable-davina.ngrok-free.dev"]
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    ".ngrok-free.dev",
+]
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://sericultural-undefiable-davina.ngrok-free.dev",
+]
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 
@@ -57,7 +68,25 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "allauth.account.middleware.AccountMiddleware",
+
 ]
+INSTALLED_APPS += [
+    "django.contrib.sites",
+
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+]
+SITE_ID = 2
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+
 
 ROOT_URLCONF = 'core.urls'
 
@@ -76,6 +105,19 @@ TEMPLATES = [
         },
     },
 ]
+ACCOUNT_LOGIN_METHODS = {"username", "email"}  # instead of ACCOUNT_AUTHENTICATION_METHOD
+
+ACCOUNT_SIGNUP_FIELDS = [
+    "email*",
+    "username*",
+    "password1*",
+    "password2*",
+]
+
+# ACCOUNT_EMAIL_REQUIRED = True
+# ACCOUNT_USERNAME_REQUIRED = True   # keep username for your system
+# ACCOUNT_AUTHENTICATION_METHOD = "username_email"  # can login via username OR email
+
 
 
 WSGI_APPLICATION = 'core.wsgi.application'
@@ -143,10 +185,19 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 #folder where image are saved  
 
-LOGIN_REDIRECT_URL = '/attendance/generate_qr/'
+# LOGIN_REDIRECT_URL = '/attendance/generate_qr/'
 
-LOGOUT_REDIRECT_URL = '/login/'
-LOGIN_URL = '/login/'
+# LOGOUT_REDIRECT_URL = '/login/'
+# LOGIN_URL = '/login/'
+# LOGIN_REDIRECT_URL = '/dashboard/'
+
+LOGIN_REDIRECT_URL = "/dashboard/"
+LOGOUT_REDIRECT_URL = "/login/"
+LOGIN_URL = "/login/"
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+
+
 
 
 
