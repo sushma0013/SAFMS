@@ -84,7 +84,7 @@
 <div class="flex flex-1 justify-end gap-8">
 <nav class="flex items-center gap-9">
 <a class="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors"  href="{% url 'attendance:teacher_dashboard' %}">Dashboard</a>
-<a class="text-primary text-sm font-semibold border-b-2 border-primary pb-1" href="#">Classes</a>
+{% comment %} <a class="text-primary text-sm font-semibold border-b-2 border-primary pb-1" href="#">Classes</a> {% endcomment %}
 <a class="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="{% url 'attendance:my_classes' %}">Classes</a>
 <a class="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="{% url 'attendance:teacher_reports' %}">Reports</a>
 </nav>
@@ -121,87 +121,111 @@
 <span class="material-symbols-outlined text-lg">file_download</span>
 <span>Export Report</span>
 </button>
-<button class="flex items-center gap-2 rounded-lg h-11 px-6 bg-primary text-white text-sm font-bold shadow-md hover:bg-primary/90 transition-colors">
+<a href="{% url 'attendance:teacher_add_student' %}"
+   class="flex items-center gap-2 rounded-lg h-11 px-6 bg-primary text-white text-sm font-bold shadow-md hover:bg-primary/90 transition-colors">
+  <span class="material-symbols-outlined text-lg">person_add</span>
+  <span>Add Student</span>
+</a>
+
+{% comment %} <button class="flex items-center gap-2 rounded-lg h-11 px-6 bg-primary text-white text-sm font-bold shadow-md hover:bg-primary/90 transition-colors">
 <span class="material-symbols-outlined text-lg">person_add</span>
 <span>Add Student</span>
-</button>
+</button> {% endcomment %}
 </div>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-<div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-[#dbdfe6] dark:border-gray-700 shadow-sm">
-<div class="flex justify-between items-start">
-<p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Total Students</p>
-<span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg">school</span>
+
+  <!-- Total Students -->
+  <div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-[#dbdfe6] dark:border-gray-700 shadow-sm">
+    <div class="flex justify-between items-start">
+      <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Total Students</p>
+      <span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg">school</span>
+    </div>
+    <p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">
+      {{ total_students }}
+    </p>
+    <p class="text-xs text-gray-500 font-medium">
+      Across your subjects
+    </p>
+  </div>
+
+  <!-- Present Today -->
+  <div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-[#dbdfe6] dark:border-gray-700 shadow-sm">
+    <div class="flex justify-between items-start">
+      <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Present Today</p>
+      <span class="material-symbols-outlined text-green-500 bg-green-500/10 p-2 rounded-lg">check_circle</span>
+    </div>
+    <p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">
+      {{ present_today_count }}
+    </p>
+    <p class="text-xs text-gray-500 font-medium">
+      {% if total_students %}
+        {% widthratio present_today_count total_students 100 %}% attendance rate
+      {% else %}
+        0% attendance rate
+      {% endif %}
+    </p>
+  </div>
+
+  <!-- Absent Today -->
+  <div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-[#dbdfe6] dark:border-gray-700 shadow-sm">
+    <div class="flex justify-between items-start">
+      <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Absent Today</p>
+      <span class="material-symbols-outlined text-red-500 bg-red-500/10 p-2 rounded-lg">cancel</span>
+    </div>
+    <p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">
+      {{ absent_today_count }}
+    </p>
+    <p class="text-xs text-red-500 font-medium">Requires follow-up</p>
+  </div>
+
+  <!-- At Risk -->
+  <div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-900 shadow-sm relative overflow-hidden">
+    <div class="absolute top-0 right-0 p-1 bg-red-500 text-white text-[10px] font-bold px-2 rounded-bl-lg">CRITICAL</div>
+    <div class="flex justify-between items-start">
+      <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">At Risk (&lt;80%)</p>
+      <span class="material-symbols-outlined text-orange-500 bg-orange-500/10 p-2 rounded-lg">warning</span>
+    </div>
+    <p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">
+      {{ low_attendance_count }}
+    </p>
+    <p class="text-xs text-orange-500 font-medium">Action needed</p>
+  </div>
+
 </div>
-<p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">32</p>
-<p class="text-xs text-green-500 font-medium">+2 this month</p>
-</div>
-<div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-[#dbdfe6] dark:border-gray-700 shadow-sm">
-<div class="flex justify-between items-start">
-<p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Present Today</p>
-<span class="material-symbols-outlined text-green-500 bg-green-500/10 p-2 rounded-lg">check_circle</span>
-</div>
-<p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">28</p>
-<p class="text-xs text-gray-500 font-medium">87.5% attendance rate</p>
-</div>
-<div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-[#dbdfe6] dark:border-gray-700 shadow-sm">
-<div class="flex justify-between items-start">
-<p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Absent Today</p>
-<span class="material-symbols-outlined text-red-500 bg-red-500/10 p-2 rounded-lg">cancel</span>
-</div>
-<p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">4</p>
-<p class="text-xs text-red-500 font-medium">Requires follow-up</p>
-</div>
-<div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-900 shadow-sm relative overflow-hidden">
-<div class="absolute top-0 right-0 p-1 bg-red-500 text-white text-[10px] font-bold px-2 rounded-bl-lg">CRITICAL</div>
-<div class="flex justify-between items-start">
-<p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">At Risk (&lt;80%)</p>
-<span class="material-symbols-outlined text-orange-500 bg-orange-500/10 p-2 rounded-lg">warning</span>
-</div>
-<p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">3</p>
-<p class="text-xs text-orange-500 font-medium">Action needed</p>
-</div>
-</div>
-<div class="mb-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+
+{% comment %}
 <div class="flex border-b border-[#dbdfe6] dark:border-gray-700 px-4 overflow-x-auto no-scrollbar">
-<a class="flex items-center gap-2 whitespace-nowrap border-b-[3px] border-primary text-primary px-4 pb-[13px] pt-4" href="#">
-<span class="material-symbols-outlined text-lg">school</span>
-{% comment %} <p class="text-sm font-bold leading-normal tracking-[0.015em]">Total Students</p> {% endcomment %}
-<p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">
-  {{ total_students }}
-</p>
+  <a class="flex items-center gap-2 whitespace-nowrap border-b-[3px] border-primary text-primary px-4 pb-[13px] pt-4" href="#">
+    <span class="material-symbols-outlined text-lg">school</span>
+    <p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">
+      {{ total_students }}
+    </p>
+  </a>
 
-</a>
-<a class="flex items-center gap-2 whitespace-nowrap border-b-[3px] border-transparent text-[#616f89] hover:text-[#111318] dark:hover:text-white px-4 pb-[13px] pt-4 transition-colors" href="#">
-<span class="material-symbols-outlined text-lg">how_to_reg</span>
-{% comment %} <p class="text-sm font-bold leading-normal tracking-[0.015em]">Present Today</p> {% endcomment %}
-<p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">
-  {{ present_today_count }}
-</p>
+  <a class="flex items-center gap-2 whitespace-nowrap border-b-[3px] border-transparent text-[#616f89] hover:text-[#111318] dark:hover:text-white px-4 pb-[13px] pt-4 transition-colors" href="#">
+    <span class="material-symbols-outlined text-lg">how_to_reg</span>
+    <p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">
+      {{ present_today_count }}
+    </p>
+  </a>
 
-</a>
-<a class="flex items-center gap-2 whitespace-nowrap border-b-[3px] border-transparent text-[#616f89] hover:text-[#111318] dark:hover:text-white px-4 pb-[13px] pt-4 transition-colors" href="#">
-<span class="material-symbols-outlined text-lg">person_off</span>
-{% comment %} <p class="text-sm font-bold leading-normal tracking-[0.015em]">Absent Today</p> {% endcomment %}
-<p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">
-  {{ absent_today_count }}
-</p>
+  <a class="flex items-center gap-2 whitespace-nowrap border-b-[3px] border-transparent text-[#616f89] hover:text-[#111318] dark:hover:text-white px-4 pb-[13px] pt-4 transition-colors" href="#">
+    <span class="material-symbols-outlined text-lg">person_off</span>
+    <p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">
+      {{ absent_today_count }}
+    </p>
+  </a>
 
-</a>
-<a class="flex items-center gap-2 whitespace-nowrap border-b-[3px] border-transparent text-orange-500 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/20 px-4 pb-[13px] pt-4 transition-all" href="#">
-<span class="material-symbols-outlined text-lg">priority_high</span>
-{% comment %} <p class="text-sm font-bold leading-normal tracking-[0.015em]">Low Attendance Alert</p> {% endcomment %}
-<p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">
-  {{ low_attendance_count }}
-</p>
-<span class="ml-1 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 text-[10px] py-0.5 px-2 rounded-full">
-  {{ low_attendance_count }}
-</span>
-
-
-{% comment %} <span class="ml-1 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 text-[10px] py-0.5 px-2 rounded-full">3</span> {% endcomment %}
-</a>
+  <a class="flex items-center gap-2 whitespace-nowrap border-b-[3px] border-transparent text-orange-500 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/20 px-4 pb-[13px] pt-4 transition-all" href="#">
+    <span class="material-symbols-outlined text-lg">priority_high</span>
+    <p class="text-[#111318] dark:text-white tracking-light text-3xl font-bold leading-tight">
+      {{ low_attendance_count }}
+    </p>
+  </a>
 </div>
+{% endcomment %}
+
 <div class="overflow-x-auto">
 <table class="w-full text-left border-collapse">
 <thead class="bg-gray-50 dark:bg-gray-900/50">
@@ -214,6 +238,81 @@
 </tr>
 </thead>
 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+
+{% for row in students_data %}
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+
+  <!-- Student Name -->
+  <td class="px-6 py-4 whitespace-nowrap">
+    <div class="text-sm font-semibold text-[#111318] dark:text-white">
+      {{ row.student.username }}
+    </div>
+  </td>
+
+  <!-- Student ID -->
+  <td class="px-6 py-4 whitespace-nowrap text-sm text-[#616f89] dark:text-gray-300">
+    {{ row.student.id }}
+  </td>
+
+  <!-- Attendance Rate -->
+  <td class="px-6 py-4 whitespace-nowrap">
+    <div class="flex flex-col gap-1 w-32">
+      {% if row.student.id in low_attendance_ids %}
+        <div class="flex justify-between text-[10px] font-bold text-red-500">
+          <span>{{ row.percent }}%</span>
+          <span>Risk</span>
+        </div>
+      {% else %}
+        <div class="flex justify-between text-[10px] font-bold text-green-600">
+          <span>{{ row.percent }}%</span>
+          <span>OK</span>
+        </div>
+      {% endif %}
+
+      <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+        <div class="h-1.5 rounded-full" style="width: {{ row.percent }}%"></div>
+      </div>
+    </div>
+  </td>
+
+  <!-- Last Status -->
+  <td class="px-6 py-4 whitespace-nowrap">
+    {% if row.last_status == "Present" %}
+      <span class="inline-flex items-center py-1 px-3 rounded-full text-xs font-bold
+                   bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
+        Present
+      </span>
+    {% elif row.last_status == "Absent" %}
+      <span class="inline-flex items-center py-1 px-3 rounded-full text-xs font-bold
+                   bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">
+        Absent
+      </span>
+    {% else %}
+      <span class="inline-flex items-center py-1 px-3 rounded-full text-xs font-bold
+                   bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+        No Record
+      </span>
+    {% endif %}
+  </td>
+
+  <!-- Actions (remove view) -->
+  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+    —
+  </td>
+
+</tr>
+{% empty %}
+<tr>
+  <td colspan="5" class="px-6 py-8 text-center text-[#616f89] dark:text-gray-400">
+    No students enrolled
+  </td>
+</tr>
+{% endfor %}
+
+</tbody>
+
+
+{% comment %} <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
   {% for s in low_attendance_students %}
   <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
     <td class="px-6 py-4 whitespace-nowrap">
@@ -264,172 +363,8 @@
     </td>
   </tr>
   {% endfor %}
-</tbody>
-
-{% comment %} <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-<td class="px-6 py-4 whitespace-nowrap">
-<div class="flex items-center gap-3">
-<div class="size-9 rounded-full bg-cover bg-center" data-alt="Profile of Sarah Jenkins" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD9m7qY28AqpSQsYweAd_vPicONeaOE9EZ51nMMDeV0elH4bpIu7tv5vRFxB3uXw3orOPzN95KZnqT-F6zyq_rP6rpN8RX9OQbLzYyJKuDWr0IKPSqSsjc3PBSLLuySlfodLKRaM3lCIUuLqg7ci0ZEdHvPgXEMPcNT9rMcJxai5NG1VeMeXIU6alK-ZPxSlDR70E3VaL9NHnRzGSvRiFWQpBP6HsuvmaROCXUfIcVdJ10MSkiIpAZTe-sUqJxGobCMfeMV1HRmg2Y");'></div>
-<div>
-<div class="text-sm font-semibold text-[#111318] dark:text-white">Sarah Jenkins</div>
-<div class="text-xs text-[#616f89]">sarah.j@school.edu</div>
-</div>
-</div>
-</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-[#616f89] dark:text-gray-300">#MTH-2024-042</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<div class="flex flex-col gap-1 w-32">
-<div class="flex justify-between text-[10px] font-bold text-red-500">
-<span>72%</span>
-<span>Critical</span>
-</div>
-<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
-<div class="bg-red-500 h-1.5 rounded-full" style="width: 72%"></div>
-</div>
-</div>
-</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">
-<span class="size-1.5 rounded-full bg-red-500"></span>
-                                    Absent Today
-                                </span>
-</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<div class="flex gap-2">
-<button class="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Message Parent">
-<span class="material-symbols-outlined text-lg">mail</span>
-</button>
-<button class="p-2 text-orange-500 hover:bg-orange-500/10 rounded-lg transition-colors" title="Send Alert">
-<span class="material-symbols-outlined text-lg">priority_high</span>
-</button>
-<button class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" title="More Options">
-<span class="material-symbols-outlined text-lg">more_vert</span>
-</button>
-</div>
-</td>
-</tr>
-<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-<td class="px-6 py-4 whitespace-nowrap">
-<div class="flex items-center gap-3">
-<div class="size-9 rounded-full bg-cover bg-center" data-alt="Profile of Alex Rivera" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA9r8DrvUFVGkxG55d33mAjUVUtAUvdjqsAGtZp_FAxTRu0sO5IhrWRy4jytY4WxgNDTGoeYNgQkWw6KmkRNZyNmA4RCCzUYlhmd0MVefQ-uYF6WB9Tm_0_heUlXqmX6-WlSl8x5YiuWVm_BDuJokXUlibNkVS535q3X7WWXmVI-D1H2jFTBHsRwh8xBFk4z7UCe9ofx0ZrehIAlYgmeB9igjIXGjuN71TZo2srjRiLAWs4yQjhTeyeU51wHbT4_pe4LhggC9QJ5os");'></div>
-<div>
-<div class="text-sm font-semibold text-[#111318] dark:text-white">Alex Rivera</div>
-<div class="text-xs text-[#616f89]">alex.r@school.edu</div>
-</div>
-</div>
-</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-[#616f89] dark:text-gray-300">#MTH-2024-015</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<div class="flex flex-col gap-1 w-32">
-<div class="flex justify-between text-[10px] font-bold text-green-600">
-<span>96%</span>
-<span>Excellent</span>
-</div>
-<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
-<div class="bg-green-500 h-1.5 rounded-full" style="width: 96%"></div>
-</div>
-</div>
-</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
-<span class="size-1.5 rounded-full bg-green-500"></span>
-                                    Present
-                                </span>
-</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<div class="flex gap-2">
-<button class="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
-<span class="material-symbols-outlined text-lg">visibility</span>
-</button>
-<button class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-<span class="material-symbols-outlined text-lg">more_vert</span>
-</button>
-</div>
-</td>
-</tr>
-<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-<td class="px-6 py-4 whitespace-nowrap">
-<div class="flex items-center gap-3">
-<div class="size-9 rounded-full bg-cover bg-center" data-alt="Profile of Emily Chen" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBnSHjj_KdnfmPw9d5LQKBwRZirEc840GDSnY9DnfFIwiLLNzJxh31It7bEnUmPs2maEEa69xAmUSMdFLbe6R9xYopObM9i4ZdbIegBLvPbeWLQFre7vK_OivHowL5XeokZlogxRMuNP1mHs-MXCeLeW14WYpMmD2d_Kif2Lnrou2Afi0JUknpNxhj37aCDETk4G-CHXajl1MefB2W9Hb0FyEMXCkEcQgwyRMRkE3jM9Pfsrgj__fk3-NzOOLfUFqxj6Hzxrs0rxV0");'></div>
-<div>
-<div class="text-sm font-semibold text-[#111318] dark:text-white">Emily Chen</div>
-<div class="text-xs text-[#616f89]">emily.c@school.edu</div>
-</div>
-</div>
-</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-[#616f89] dark:text-gray-300">#MTH-2024-008</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<div class="flex flex-col gap-1 w-32">
-<div class="flex justify-between text-[10px] font-bold text-primary">
-<span>84%</span>
-<span>Healthy</span>
-</div>
-<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
-<div class="bg-primary h-1.5 rounded-full" style="width: 84%"></div>
-</div>
-</div>
-</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
-<span class="size-1.5 rounded-full bg-green-500"></span>
-                                    Present
-                                </span>
-</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<div class="flex gap-2">
-<button class="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
-<span class="material-symbols-outlined text-lg">visibility</span>
-</button>
-<button class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-<span class="material-symbols-outlined text-lg">more_vert</span>
-</button>
-</div>
-</td>
-</tr>
-<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors bg-orange-50/30 dark:bg-orange-950/5">
-<td class="px-6 py-4 whitespace-nowrap">
-<div class="flex items-center gap-3">
-<div class="size-9 rounded-full bg-cover bg-center" data-alt="Profile of Marcus Thorne" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDGKBAnqMJ4ylcbaW59Vu4z80VPM8phjeFyeay9DEQ5ljW6f0k-7UqQoCMV8EJ4Zt_NSpTEHD6qcQgjpcB7Gms1ir5UagzdbjroJoF8-ulEWQKH3u9D2uUC8eRwjxxPuEHr0ns8-fgZQQU72Y_2ZIhYow5Aj7cxkP_G-cvVdLrjvuSHRNWHRqPX58Fp4cywvOs8a8zWuIZ5-4OZsEbqHo7gb7a7yp5JDAp4QIjShF9XQNId3NCPGBapvWIfbou4I_Hn8wThep9axgs");'></div>
-<div>
-<div class="text-sm font-semibold text-[#111318] dark:text-white">Marcus Thorne</div>
-<div class="text-xs text-[#616f89]">m.thorne@school.edu</div>
-</div>
-</div>
-</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-[#616f89] dark:text-gray-300">#MTH-2024-112</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<div class="flex flex-col gap-1 w-32">
-<div class="flex justify-between text-[10px] font-bold text-orange-600">
-<span>79.5%</span>
-<span>Near Risk</span>
-</div>
-<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
-<div class="bg-orange-500 h-1.5 rounded-full" style="width: 79.5%"></div>
-</div>
-</div>
-</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
-<span class="size-1.5 rounded-full bg-green-500"></span>
-                                    Present
-                                </span>
-</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<div class="flex gap-2">
-<button class="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
-<span class="material-symbols-outlined text-lg">mail</span>
-</button>
-<button class="p-2 text-orange-500 hover:bg-orange-500/10 rounded-lg transition-colors">
-<span class="material-symbols-outlined text-lg">priority_high</span>
-</button>
-<button class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-<span class="material-symbols-outlined text-lg">more_vert</span>
-</button>
-</div>
-</td>
-</tr>
 </tbody> {% endcomment %}
+
 </table>
 </div>
 <div class="px-6 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">

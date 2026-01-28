@@ -61,6 +61,9 @@ urlpatterns = [
     path('teacher/students/', views.teacher_students, name='teacher_students'),
     path("teacher/reports/", views.teacher_reports, name="teacher_reports"),
     path("teacher/settings/", views.teacher_settings, name="teacher_settings"),
+    path("teacher/add-student/", views.teacher_add_student, name="teacher_add_student"),
+    
+
 
     # Student
     path('student/dashboard/', views.student_dashboard, name='student_dashboard'),

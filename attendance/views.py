@@ -15,6 +15,7 @@ from .models import StudentProfile
 
 
 
+
 NGROK_BASE_URL = "https://sericultural-undefiable-davina.ngrok-free.dev"
 
 
@@ -26,12 +27,32 @@ NGROK_BASE_URL = "https://sericultural-undefiable-davina.ngrok-free.dev"
 
 
 # ============= TEACHER VIEWS =============
+
 @login_required
 def teacher_dashboard(request):
+    # -------------------------
+    # ROLE CHECK
+    # -------------------------
     if request.user.profile.role != 'teacher':
         messages.error(request, "Teachers only.")
         return redirect('home')
 
+    # -------------------------
+    # AUTO-CLOSE EXPIRED QR
+    # -------------------------
+    now = timezone.now()
+    expired_sessions = QRSession.objects.filter(
+        created_by=request.user,
+        is_closed=False,
+        valid_until__lte=now
+    )
+
+    for session in expired_sessions:
+        close_session_and_mark_absent(session)
+
+    # -------------------------
+    # NORMAL DASHBOARD LOGIC
+    # -------------------------
     subjects = Subject.objects.filter(teacher=request.user)
     today = timezone.now().date()
 
@@ -39,9 +60,6 @@ def teacher_dashboard(request):
     today_present = 0
     today_total = 0
 
-    # =========================
-    # SUBJECT LOOP
-    # =========================
     for subject in subjects:
         total_students = subject.students.count()
 
@@ -50,13 +68,10 @@ def teacher_dashboard(request):
             session_date=today
         ).order_by('-created_at').first()
 
-        if session:
-            present = AttendanceRecord.objects.filter(
-                session=session,
-                status='Present'
-            ).count()
-        else:
-            present = 0
+        present = AttendanceRecord.objects.filter(
+            session=session,
+            status='Present'
+        ).count() if session else 0
 
         today_present += present
         today_total += total_students
@@ -67,16 +82,13 @@ def teacher_dashboard(request):
             'present': present,
         })
 
-    # =========================
-    # TODAY ATTENDANCE %
-    # =========================
     attendance_today = round(
         (today_present / today_total) * 100, 2
     ) if today_total else 0
 
-    # =========================
-    # STUDENTS BELOW 80%
-    # =========================
+    # -------------------------
+    # LOW ATTENDANCE (<80%)
+    # -------------------------
     low_attendance_students = []
 
     students = AttendanceRecord.objects.filter(
@@ -104,17 +116,103 @@ def teacher_dashboard(request):
                     'student': User.objects.get(id=student_id),
                     'percentage': round(percentage, 2)
                 })
-                
 
-    # =========================
-    # FINAL RETURN
-    # =========================
     return render(request, 'attendance/teacher_dashboard.html', {
         'subjects': subjects,
         'subject_stats': subject_stats,
         'attendance_today': attendance_today,
         'low_attendance_students': low_attendance_students,
     })
+
+# @login_required
+# def teacher_dashboard(request):
+#     if request.user.profile.role != 'teacher':
+#         messages.error(request, "Teachers only.")
+#         return redirect('home')
+
+#     subjects = Subject.objects.filter(teacher=request.user)
+#     today = timezone.now().date()
+
+#     subject_stats = []
+#     today_present = 0
+#     today_total = 0
+
+#     # =========================
+#     # SUBJECT LOOP
+#     # =========================
+#     for subject in subjects:
+#         total_students = subject.students.count()
+
+#         session = QRSession.objects.filter(
+#             subject=subject,
+#             session_date=today
+#         ).order_by('-created_at').first()
+
+#         if session:
+#             present = AttendanceRecord.objects.filter(
+#                 session=session,
+#                 status='Present'
+#             ).count()
+#         else:
+#             present = 0
+
+#         today_present += present
+#         today_total += total_students
+
+#         subject_stats.append({
+#             'subject': subject,
+#             'total': total_students,
+#             'present': present,
+#         })
+
+#     # =========================
+#     # TODAY ATTENDANCE %
+#     # =========================
+#     attendance_today = round(
+#         (today_present / today_total) * 100, 2
+#     ) if today_total else 0
+
+#     # =========================
+#     # STUDENTS BELOW 80%
+#     # =========================
+#     low_attendance_students = []
+
+#     students = AttendanceRecord.objects.filter(
+#         subject__teacher=request.user
+#     ).values('student').distinct()
+
+#     for s in students:
+#         student_id = s['student']
+
+#         total_classes = AttendanceRecord.objects.filter(
+#             student_id=student_id,
+#             subject__teacher=request.user
+#         ).count()
+
+#         present_classes = AttendanceRecord.objects.filter(
+#             student_id=student_id,
+#             subject__teacher=request.user,
+#             status='Present'
+#         ).count()
+
+#         if total_classes > 0:
+#             percentage = (present_classes / total_classes) * 100
+#             if percentage < 80:
+#                 low_attendance_students.append({
+#                     'student': User.objects.get(id=student_id),
+#                     'percentage': round(percentage, 2)
+#                 })
+                
+
+#     # =========================
+#     # FINAL RETURN
+#     # =========================
+#     return render(request, 'attendance/teacher_dashboard.html', {
+#         'subjects': subjects,
+#         'subject_stats': subject_stats,
+#         'attendance_today': attendance_today,
+#         'low_attendance_students': low_attendance_students,
+#     })
 
 
 
@@ -261,56 +359,132 @@ def teacher_profile(request):
         'subjects': subjects,
         'total_students': total_students
     })
-
-
+from django.db.models import Count, Q, Max
+from django.utils import timezone
 
 @login_required
 def teacher_students(request):
     if request.user.profile.role != 'teacher':
-        messages.error(request, "Teachers only.")
         return redirect('home')
 
-    today = timezone.localdate()
     subjects = Subject.objects.filter(teacher=request.user)
-
-    # ✅ Correct: uses related_name='enrolled_subjects'
     students = User.objects.filter(enrolled_subjects__in=subjects).distinct()
 
-    today_present = AttendanceRecord.objects.filter(
+    today = timezone.now().date()
+
+    # --- Top cards ---
+    total_students = students.count()
+
+    present_today_count = AttendanceRecord.objects.filter(
         subject__in=subjects,
         date=today,
         status='Present'
-    ).select_related('student', 'subject')
+    ).values('student').distinct().count()
 
-    today_absent = AttendanceRecord.objects.filter(
+    absent_today_count = total_students - present_today_count
+
+    # --- Per-student attendance stats ---
+    # totals + present counts per student
+    stats = AttendanceRecord.objects.filter(
         subject__in=subjects,
-        date=today,
-        status='Absent'
-    ).select_related('student', 'subject')
+        student__in=students
+    ).values('student').annotate(
+        total=Count('id'),
+        present=Count('id', filter=Q(status='Present')),
+        last_time=Max('recorded_at'),
+    )
 
-    low_attendance_students = []
-    for student in students:
-        total = AttendanceRecord.objects.filter(student=student, subject__in=subjects).count()
-        present = AttendanceRecord.objects.filter(student=student, subject__in=subjects, status='Present').count()
-        if total > 0:
-            percent = (present / total) * 100
-            if percent < 80:
-                low_attendance_students.append({
-                    'student': student,
-                    'percentage': round(percent, 2)
-                })
+    stats_map = {row['student']: row for row in stats}
 
-    return render(request, 'attendance/teacher_students.html', {
-        'total_students': students.count(),
-        'present_today_count': today_present.count(),
-        'absent_today_count': today_absent.count(),
-        'low_attendance_count': len(low_attendance_students),
+    # last status per student (based on latest recorded_at)
+    # (simple method: query once per student for last record; OK for small class sizes)
+    student_rows = []
+    low_attendance_ids = set()
 
-        'today_present': today_present,
-        'today_absent': today_absent,
-        'low_attendance_students': low_attendance_students,
-        'today': today,
+    for st in students:
+        row = stats_map.get(st.id, {'total': 0, 'present': 0})
+
+        total = row.get('total', 0)
+        present = row.get('present', 0)
+        percent = round((present / total) * 100, 2) if total else 0
+
+        last_record = AttendanceRecord.objects.filter(
+            student=st,
+            subject__in=subjects
+        ).order_by('-recorded_at').select_related('subject').first()
+
+        last_status = last_record.status if last_record else "No Record"
+
+        if total > 0 and percent < 80:
+            low_attendance_ids.add(st.id)
+
+        student_rows.append({
+            "student": st,
+            "percent": percent,
+            "last_status": last_status,
+        })
+
+    low_attendance_count = len(low_attendance_ids)
+
+    return render(request, "attendance/teacher_students.html", {
+        "students_data": student_rows,           # ✅ use this in template
+        "total_students": total_students,
+        "present_today_count": present_today_count,
+        "absent_today_count": absent_today_count,
+        "low_attendance_count": low_attendance_count,
+        "low_attendance_ids": low_attendance_ids,
     })
+
+
+
+
+# @login_required
+# def teacher_students(request):
+#     if request.user.profile.role != 'teacher':
+#         messages.error(request, "Teachers only.")
+#         return redirect('home')
+
+#     today = timezone.localdate()
+#     subjects = Subject.objects.filter(teacher=request.user)
+
+#     # ✅ Correct: uses related_name='enrolled_subjects'
+#     students = User.objects.filter(enrolled_subjects__in=subjects).distinct()
+
+#     today_present = AttendanceRecord.objects.filter(
+#         subject__in=subjects,
+#         date=today,
+#         status='Present'
+#     ).select_related('student', 'subject')
+
+#     today_absent = AttendanceRecord.objects.filter(
+#         subject__in=subjects,
+#         date=today,
+#         status='Absent'
+#     ).select_related('student', 'subject')
+
+#     low_attendance_students = []
+#     for student in students:
+#         total = AttendanceRecord.objects.filter(student=student, subject__in=subjects).count()
+#         present = AttendanceRecord.objects.filter(student=student, subject__in=subjects, status='Present').count()
+#         if total > 0:
+#             percent = (present / total) * 100
+#             if percent < 80:
+#                 low_attendance_students.append({
+#                     'student': student,
+#                     'percentage': round(percent, 2)
+#                 })
+
+#     return render(request, 'attendance/teacher_students.html', {
+#         'total_students': students.count(),
+#         'present_today_count': today_present.count(),
+#         'absent_today_count': today_absent.count(),
+#         'low_attendance_count': len(low_attendance_students),
+
+#         'today_present': today_present,
+#         'today_absent': today_absent,
+#         'low_attendance_students': low_attendance_students,
+#         'today': today,
+#     })
 
 
 # @login_required
@@ -442,6 +616,38 @@ def teacher_reports(request):
 @login_required
 def teacher_settings(request):
     return render(request, "attendance/teacher_settings.html")
+
+
+
+
+@login_required
+def teacher_add_student(request):
+    if request.user.profile.role != "teacher":
+        messages.error(request, "Teachers only.")
+        return redirect("home")
+
+    subjects = Subject.objects.filter(teacher=request.user)
+
+    if request.method == "POST":
+        username = request.POST.get("username")
+        subject_id = request.POST.get("subject_id")
+
+        student = User.objects.filter(username=username).first()
+        subject = Subject.objects.filter(id=subject_id, teacher=request.user).first()
+
+        if not student:
+            messages.error(request, "Student username not found.")
+            return redirect("attendance:teacher_add_student")
+
+        if not subject:
+            messages.error(request, "Invalid subject.")
+            return redirect("attendance:teacher_add_student")
+
+        subject.students.add(student)
+        messages.success(request, f"{student.username} enrolled in {subject.code}.")
+        return redirect("attendance:teacher_students")
+
+    return render(request, "attendance/teacher_add_student.html", {"subjects": subjects})
 
 
 
