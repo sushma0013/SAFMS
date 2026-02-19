@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Student Dashboard{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50">
+  <!-- Topbar -->
+  <div class="bg-white border-b">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="font-bold">SAFMS</div>
+      <div class="text-sm">
+        {{ request.user.username }} |
+        <a class="text-blue-600" href="{% url 'logout' %}">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-12 gap-6">
+  <!-- Sidebar -->
+<aside class="col-span-12 md:col-span-3 relative z-50">
+  <div class="bg-white rounded-lg shadow p-4 space-y-2">
+    <a class="block px-3 py-2 rounded hover:bg-gray-100 cursor-pointer"
+       href="{% url 'attendance:student_dashboard' %}">Dashboard</a>
+
+    <a class="block px-3 py-2 rounded hover:bg-gray-100 cursor-pointer"
+       href="{% url 'attendance:student_profile' %}">Student Profile</a>
+
+    <a class="block px-3 py-2 rounded hover:bg-gray-100 cursor-pointer"
+       href="{% url 'attendance:my_attendance' %}">My Attendance</a>
+
+    <a class="block px-3 py-2 rounded hover:bg-gray-100 cursor-pointer"
+       href="{% url 'attendance:my_fees' %}">My Fees</a>
+
+    <a class="block px-3 py-2 rounded hover:bg-gray-100 cursor-pointer"
+       href="{% url 'attendance:student_report' %}">Report</a>
+
+    <a class="block px-3 py-2 rounded hover:bg-gray-100 cursor-pointer"
+       href="{% url 'attendance:student_settings' %}">Settings</a>
+  </div>
+</aside>
+
+
+    <!-- Main content -->
+    <main class="col-span-12 md:col-span-9">
+      {% if messages %}
+        <div class="mb-4 space-y-2">
+          {% for message in messages %}
+            <div class="p-3 rounded bg-yellow-100">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

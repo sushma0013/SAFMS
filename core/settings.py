@@ -27,11 +27,20 @@ SECRET_KEY = 'django-insecure-s#l=#o3ios26a1)zf6we@v5z&flsc%h&+dr)oczri9#3f=5=re
 DEBUG = True
 
 # ALLOWED_HOSTS = [ "127.0.0.1", "localhost","0.0.0.0","https://sericultural-undefiable-davina.ngrok-free.dev"]
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    ".ngrok-free.dev",
+# ALLOWED_HOSTS = [
+#     "127.0.0.1",
+#     "localhost",
+#     ".ngrok-free.dev",
+# ]
+ALLOWED_HOSTS = ["*"]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.ngrok-free.dev",
 ]
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+
 
 
 CSRF_TRUSTED_ORIGINS = [
@@ -79,7 +88,7 @@ INSTALLED_APPS += [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
 ]
-SITE_ID = 2
+SITE_ID =2
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
@@ -121,6 +130,8 @@ ACCOUNT_SIGNUP_FIELDS = [
 
 
 WSGI_APPLICATION = 'core.wsgi.application'
+# 'accounts.apps.AccountsConfig',
+
 
 
 # Database

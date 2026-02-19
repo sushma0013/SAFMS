@@ -65,10 +65,16 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark text-[#111318] dark:text-white font-display overflow-hidden">
+<body class="bg-background-light dark:bg-background-dark text-[#111318] dark:text-white font-display">
+
+
+
 <div class="flex h-screen w-full">
+
+
     <!-- Sidebar -->
-    <aside class="hidden lg:flex flex-col w-72 bg-white dark:bg-[#1a202c] border-r border-[#dbdfe6] dark:border-gray-800 h-full flex-shrink-0">
+<aside class="flex flex-col w-72 bg-white dark:bg-[#1a202c] border-r border-[#dbdfe6] dark:border-gray-800 h-screen flex-shrink-0 overflow-y-auto">
+
         <div class="p-6 border-b border-[#f0f2f4] dark:border-gray-800">
             <div class="flex gap-3 items-center">
                 <div class="bg-center bg-no-repeat bg-cover rounded-full size-12" style='background-image: url("https://ui-avatars.com/api/?name={{ request.user.username }}&background=135bec&color=fff");'></div>
@@ -79,11 +85,47 @@
             </div>
         </div>
         <nav class="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-2">
-            <a class="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#f0f2f4] dark:bg-gray-800 text-primary" href="#">
+            {% comment %} <a class="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#f0f2f4] dark:bg-gray-800 text-primary" href="#">
                 <span class="material-symbols-outlined">dashboard</span>
                 <span class="text-sm font-medium">Dashboard</span>
-            </a>
-            <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors" href="#">
+            </a> {% endcomment %}
+            <a class="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#f0f2f4] dark:bg-gray-800 text-primary"
+   href="{% url 'attendance:student_dashboard' %}">
+  <span class="material-symbols-outlined">dashboard</span>
+  <span class="text-sm font-medium">Dashboard</span>
+</a>
+
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors"
+   href="{% url 'attendance:student_profile' %}">
+  <span class="material-symbols-outlined">person</span>
+  <span class="text-sm font-medium">Student Profile</span>
+</a>
+
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors"
+   href="{% url 'attendance:my_attendance' %}">
+  <span class="material-symbols-outlined">calendar_month</span>
+  <span class="text-sm font-medium">My Attendance</span>
+</a>
+
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors"
+   href="{% url 'attendance:my_fees' %}">
+  <span class="material-symbols-outlined">payments</span>
+  <span class="text-sm font-medium">My Fees</span>
+</a>
+
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors"
+   href="{% url 'attendance:student_report' %}">
+  <span class="material-symbols-outlined">bar_chart</span>
+  <span class="text-sm font-medium">Reports</span>
+</a>
+
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors"
+   href="{% url 'attendance:student_settings' %}">
+  <span class="material-symbols-outlined">settings</span>
+  <span class="text-sm font-medium">Settings</span>
+</a>
+
+            {% comment %} <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors" href="#">
                 <span class="material-symbols-outlined">person</span>
                 <span class="text-sm font-medium">Student Profile</span>
             </a>
@@ -104,7 +146,7 @@
                 <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors" href="#">
                     <span class="material-symbols-outlined">settings</span>
                     <span class="text-sm font-medium">Settings</span>
-                </a>
+                </a> {% endcomment %}
                 <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors" href="{% url 'logout' %}">
                     <span class="material-symbols-outlined">logout</span>
                     <span class="text-sm font-medium">Log Out</span>
@@ -114,7 +156,9 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-full relative overflow-hidden">
+<main class="flex-1 flex flex-col min-w-0 h-screen">
+
+
         <!-- Header -->
         <header class="flex items-center justify-between whitespace-nowrap border-b border-[#f0f2f4] dark:border-gray-800 bg-white dark:bg-[#1a202c] px-8 py-4 flex-shrink-0 z-10">
             <div class="flex items-center gap-4">
@@ -136,8 +180,13 @@
         </header>
 
         <!-- Content -->
-        <div class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-4 md:p-8">
-            <div class="max-w-[1200px] mx-auto flex flex-col gap-6">
+        <div class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-3 md:p-4">
+
+           <div class="w-full max-w-7xl mx-auto flex flex-col gap-4">
+
+
+              
+
                 
                 <!-- Alert Section -->
                 {% for stat in attendance_stats %}
@@ -160,9 +209,75 @@
                 {% endfor %}
 
                 <!-- Stats Row -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 <!-- Stats Row -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+  <!-- Quick Action -->
+  <div class="flex flex-col gap-4 rounded-xl p-5 border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
+    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+      <span class="material-symbols-outlined text-6xl text-primary">qr_code_scanner</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">qr_code</span>
+      <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Quick Action</p>
+    </div>
+    <div>
+      <p class="text-[#111318] dark:text-white text-2xl font-bold leading-tight">Mark Attendance</p>
+      <p class="text-primary text-sm font-medium mt-1">Scan QR Code</p>
+    </div>
+    <div class="mt-auto pt-2">
+      <a href="{% url 'attendance:scan_qr' %}" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary hover:bg-blue-700 text-white text-sm font-bold transition-colors shadow-sm">
+        <span class="material-symbols-outlined mr-2 text-lg">qr_code_scanner</span>
+        Scan Now
+      </a>
+    </div>
+  </div>
+
+  <!-- Total Classes -->
+  <div class="flex flex-col gap-4 rounded-xl p-6 border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
+    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+      <span class="material-symbols-outlined text-6xl text-green-600">bar_chart</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-green-600">pie_chart</span>
+      <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Total Classes</p>
+    </div>
+
+    <div>
+      <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">{{ total_classes_all }}</p>
+      <p class="text-green-600 text-sm font-medium mt-1 flex items-center gap-1">
+        <span class="material-symbols-outlined text-sm">school</span>
+        Total classes (all subjects)
+      </p>
+      <p class="text-[#616f89] dark:text-gray-400 text-sm mt-2">
+        Present: <b class="text-[#111318] dark:text-white">{{ total_present_all }}</b>
+      </p>
+    </div>
+  </div>
+
+  <!-- Pending Dues -->
+  <div class="flex flex-col gap-4 rounded-xl p-6 border border-orange-200 dark:border-orange-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
+    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+      <span class="material-symbols-outlined text-6xl text-orange-500">warning</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-orange-500">attach_money</span>
+      <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Pending Dues</p>
+    </div>
+    <div>
+      <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">$45,000</p>
+      <p class="text-orange-600 dark:text-orange-400 text-sm font-bold mt-1">Due by Oct 30, 2026</p>
+    </div>
+    <button class="mt-2 w-fit px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
+      Pay Now
+    </button>
+  </div>
+
+</div>
+
+                {% comment %} <div class="grid grid-cols-1 md:grid-cols-3 gap-4"> {% endcomment %}
                     <!-- Today's Status / Scan QR -->
-                    <div class="flex flex-col gap-4 rounded-xl p-6 border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
+                    {% comment %} <div class="flex flex-col gap-4 rounded-xl p-6 border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
                         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                             <span class="material-symbols-outlined text-6xl text-primary">qr_code_scanner</span>
                         </div>
@@ -190,9 +305,15 @@
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-green-600">pie_chart</span>
                             <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Total Classes</p>
-                        </div>
-                        <div>
-                            {% if attendance_stats %}
+                        </div> {% endcomment %}
+                        {% comment %} <div>
+                            <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">{{ total_classes_all }}</p>
+<p class="text-green-600 text-sm font-medium mt-1 flex items-center gap-1">
+  <span class="material-symbols-outlined text-sm">school</span>
+  Total classes (all subjects)
+</p> {% endcomment %}
+
+                            {% comment %} {% if attendance_stats %}
                                 {% for stat in attendance_stats %}
                                     {% if forloop.first %}
                                         <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">{{ stat.total }}</p>
@@ -202,14 +323,25 @@
                                         </p>
                                     {% endif %}
                                 {% endfor %}
-                            {% else %}
-                                <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">0</p>
+                            {% else %} {% endcomment %}
+                                {% comment %} <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">0</p>
                             {% endif %}
                         </div>
-                    </div>
+                    </div> {% endcomment %}
+                    <div>
+  {% comment %} <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">{{ total_classes_all }}</p>
+  <p class="text-green-600 text-sm font-medium mt-1 flex items-center gap-1">
+    <span class="material-symbols-outlined text-sm">school</span>
+    Total classes (all subjects)
+  </p>
+  <p class="text-[#616f89] dark:text-gray-400 text-sm mt-1">
+    Present: <b>{{ total_present_all }}</b>
+  </p>
+</div> {% endcomment %}
+
 
                     <!-- Pending Dues -->
-                    <div class="flex flex-col gap-4 rounded-xl p-6 border border-orange-200 dark:border-orange-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
+                    {% comment %} <div class="flex flex-col gap-4 rounded-xl p-6 border border-orange-200 dark:border-orange-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
                         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                             <span class="material-symbols-outlined text-6xl text-orange-500">warning</span>
                         </div>
@@ -225,10 +357,11 @@
                             Pay Now
                         </button>
                     </div>
-                </div>
+                </div> {% endcomment %}
 
-                <!-- Detailed Content Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+             <!-- Detailed Content Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
                     <!-- Attendance Detailed Report -->
                     <div class="flex flex-col rounded-xl border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm">
                         <div class="p-5 border-b border-[#f0f2f4] dark:border-gray-800 flex justify-between items-center">
@@ -308,13 +441,13 @@
                     <h3 class="text-[#111318] dark:text-white text-lg font-bold mb-4">Recent Activity</h3>
                     <div class="flex flex-col gap-0">
                         {% for record in attendance_records|slice:":5" %}
-                        <div class="flex gap-4 pb-4 {% if not forloop.last %}border-l-2 {% if record.status == 'present' %}border-green-200 dark:border-green-900{% else %}border-red-200 dark:border-red-900{% endif %}{% endif %} pl-4 relative">
-                            <div class="absolute -left-[9px] top-0 size-4 {% if record.status == 'present' %}bg-green-500{% else %}bg-red-500{% endif %} rounded-full border-4 border-white dark:border-[#1a202c]"></div>
+                        <div class="flex gap-4 pb-4 {% if not forloop.last %}border-l-2 {% if record.status == 'Present' %}border-green-200 dark:border-green-900{% else %}border-red-200 dark:border-red-900{% endif %}{% endif %} pl-4 relative">
+                            <div class="absolute -left-[9px] top-0 size-4 {% if record.status == 'Present' %}bg-green-500{% else %}bg-red-500{% endif %} rounded-full border-4 border-white dark:border-[#1a202c]"></div>
                             <div class="flex flex-col flex-1">
                                 <p class="text-sm font-bold text-[#111318] dark:text-white">Attendance Marked: {{ record.subject.name }}</p>
                                 <p class="text-xs text-[#616f89] dark:text-gray-400">{{ record.date }}</p>
                             </div>
-                            <span class="ml-auto text-xs font-medium {% if record.status == 'present' %}text-green-600 bg-green-50 dark:bg-green-900/20{% else %}text-red-600 bg-red-50 dark:bg-red-900/20{% endif %} px-2 py-1 rounded h-fit">
+                            <span class="ml-auto text-xs font-medium {% if record.status == 'Present' %}text-green-600 bg-green-50 dark:bg-green-900/20{% else %}text-red-600 bg-red-50 dark:bg-red-900/20{% endif %} px-2 py-1 rounded h-fit">
                                 {{ record.status|title }}
                             </span>
                         </div>

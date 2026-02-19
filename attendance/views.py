@@ -6,10 +6,11 @@ from django.contrib import messages
 from .models import QRSession, AttendanceRecord, Subject
 from datetime import timedelta
 from .utils import close_session_and_mark_absent
-from datetime import timedelta
+
 from django.db.models import Count,Q
 from django.contrib.auth.models import User
 from .models import StudentProfile
+
 
 
 
@@ -270,6 +271,8 @@ def generate_qr(request, subject_id):
 
 
 # ============= STUDENT VIEWS =============
+
+
 @login_required
 def student_dashboard(request):
     if request.user.profile.role != 'student':
@@ -279,17 +282,16 @@ def student_dashboard(request):
     enrolled_subjects = Subject.objects.filter(students=request.user)
 
     attendance_stats = []
+    total_classes_all = 0
+    total_present_all = 0
 
     for subject in enrolled_subjects:
-        total = AttendanceRecord.objects.filter(
-            student=request.user, subject=subject
-        ).count()
-
-        present = AttendanceRecord.objects.filter(
-            student=request.user, subject=subject, status='Present'
-        ).count()
-
+        total = AttendanceRecord.objects.filter(student=request.user, subject=subject).count()
+        present = AttendanceRecord.objects.filter(student=request.user, subject=subject, status='Present').count()
         percent = round((present / total) * 100, 2) if total else 0
+
+        total_classes_all += total
+        total_present_all += present
 
         attendance_stats.append({
             'subject': subject,
@@ -298,10 +300,51 @@ def student_dashboard(request):
             'percentage': percent
         })
 
+    attendance_records = AttendanceRecord.objects.filter(
+        student=request.user
+    ).select_related('subject').order_by('-id')[:10]
+
     return render(request, 'attendance/student_dashboard.html', {
         'enrolled_subjects': enrolled_subjects,
         'attendance_stats': attendance_stats,
+        'attendance_records': attendance_records,
+        'total_classes_all': total_classes_all,
+        'total_present_all': total_present_all,
     })
+
+
+# @login_required
+# def student_dashboard(request):
+#     if request.user.profile.role != 'student':
+#         messages.error(request, "Students only.")
+#         return redirect('home')
+
+#     enrolled_subjects = Subject.objects.filter(students=request.user)
+
+#     attendance_stats = []
+
+#     for subject in enrolled_subjects:
+#         total = AttendanceRecord.objects.filter(
+#             student=request.user, subject=subject
+#         ).count()
+
+#         present = AttendanceRecord.objects.filter(
+#             student=request.user, subject=subject, status='Present'
+#         ).count()
+
+#         percent = round((present / total) * 100, 2) if total else 0
+
+#         attendance_stats.append({
+#             'subject': subject,
+#             'total': total,
+#             'present': present,
+#             'percentage': percent
+#         })
+
+#     return render(request, 'attendance/student_dashboard.html', {
+#         'enrolled_subjects': enrolled_subjects,
+#         'attendance_stats': attendance_stats,
+#     })
 @login_required
 def scan_qr_page(request):
     if request.user.profile.role != 'student':
@@ -649,6 +692,44 @@ def teacher_add_student(request):
 
     return render(request, "attendance/teacher_add_student.html", {"subjects": subjects})
 
+@login_required
+def student_profile(request):
+    if request.user.profile.role != 'student':
+        messages.error(request, "Students only.")
+        return redirect('home')
+    return render(request, "attendance/student_profile.html")
+
+
+@login_required
+def my_attendance(request):
+    if request.user.profile.role != 'student':
+        messages.error(request, "Students only.")
+        return redirect('home')
+    return render(request, "attendance/my_attendance.html")
+
+
+@login_required
+def my_fees(request):
+    if request.user.profile.role != 'student':
+        messages.error(request, "Students only.")
+        return redirect('home')
+    return render(request, "attendance/my_fees.html")
+
+
+@login_required
+def student_report(request):
+    if request.user.profile.role != 'student':
+        messages.error(request, "Students only.")
+        return redirect('home')
+    return render(request, "attendance/student_report.html")
+
+
+@login_required
+def student_settings(request):
+    if request.user.profile.role != 'student':
+        messages.error(request, "Students only.")
+        return redirect('home')
+    return render(request, "attendance/student_settings.html")
 
 
 

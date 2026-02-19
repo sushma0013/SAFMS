@@ -70,6 +70,12 @@ urlpatterns = [
     path('scan/', views.scan_qr_page, name='scan_qr'),
     path('mark/<uuid:uuid>/', views.mark_attendance, name='mark_attendance'),
     path("link-student/", views.link_student, name="link_student"),
+    path("student/profile/", views.student_profile, name="student_profile"),
+path("student/my-attendance/", views.my_attendance, name="my_attendance"),
+path("student/my-fees/", views.my_fees, name="my_fees"),
+path("student/report/", views.student_report, name="student_report"),
+path("student/settings/", views.student_settings, name="student_settings"),
+
 
 ]
 
