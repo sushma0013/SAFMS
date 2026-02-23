@@ -1,0 +1,137 @@
+{% extends "attendance/base.html" %}
+{% block title %}Fee Manager - SAFMS{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- Header -->
+  <div class="bg-white rounded-xl border border-slate-200 p-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-black tracking-tight text-slate-900">
+          Fee Manager Dashboard
+        </h1>
+        <p class="text-slate-500 mt-1">
+          Manage student fees, payments, and dues in one place.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="/admin/attendance/payment/add/"
+           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#135bec] text-white font-bold text-sm hover:opacity-95 shadow-sm">
+          <span class="material-symbols-outlined text-lg">add</span>
+          Add Payment
+        </a>
+
+        <a href="/admin/attendance/feestructure/add/"
+           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-800 font-bold text-sm hover:bg-slate-50">
+          <span class="material-symbols-outlined text-lg">paid</span>
+          Set Total Fee
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+
+    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Students</p>
+      <p class="text-3xl font-black text-slate-900 mt-2">{{ total_students }}</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Fee Setup Done</p>
+      <p class="text-3xl font-black text-slate-900 mt-2">{{ total_fee_set }}</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl border border-emerald-200 shadow-sm">
+      <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Total Collected</p>
+      <p class="text-3xl font-black text-emerald-600 mt-2">Rs. {{ total_collected }}</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl border border-red-200 shadow-sm">
+      <p class="text-xs font-bold text-red-600 uppercase tracking-wider">Students With Due</p>
+      <p class="text-3xl font-black text-red-600 mt-2">{{ due_students }}</p>
+    </div>
+  </div>
+
+  <!-- Reminder / Popper Card -->
+  {% if due_soon_students > 0 %}
+  <div class="bg-[#135bec]/10 border border-[#135bec]/20 rounded-xl p-6 flex items-start gap-4">
+    <div class="size-12 rounded-full bg-[#135bec] text-white flex items-center justify-center shadow">
+      <span class="material-symbols-outlined">notifications_active</span>
+    </div>
+    <div class="flex-1">
+      <h3 class="font-black text-slate-900">Due Date Alert</h3>
+      <p class="text-slate-600 mt-1">
+        {{ due_soon_students }} student(s) have fee due dates within the next 7 days.
+        Please check dues and ensure reminders are created.
+      </p>
+      <div class="mt-4 flex gap-3">
+        <a href="/admin/attendance/feestructure/"
+           class="px-4 py-2 rounded-lg bg-white border border-slate-200 font-bold text-sm hover:bg-slate-50">
+          View Fee Structures
+        </a>
+        <a href="/admin/attendance/payment/"
+           class="px-4 py-2 rounded-lg bg-[#135bec] text-white font-bold text-sm hover:opacity-95">
+          View Payments
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Recent Payments -->
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+      <h3 class="text-lg font-black text-slate-900">Recent Payments</h3>
+      <a href="/admin/attendance/payment/" class="text-sm font-bold text-[#135bec] hover:underline">
+        View all
+      </a>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <tr>
+            <th class="px-6 py-3">Student ID</th>
+            <th class="px-6 py-3">Student</th>
+            <th class="px-6 py-3">Amount</th>
+            <th class="px-6 py-3">Date</th>
+            <th class="px-6 py-3">Note</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for p in recent_payments %}
+          <tr class="hover:bg-slate-50">
+            <td class="px-6 py-3 font-mono text-sm text-slate-700">
+              {{ p.student.student_id }}
+            </td>
+            <td class="px-6 py-3 text-sm font-semibold text-slate-900">
+              {{ p.student.full_name }}
+            </td>
+            <td class="px-6 py-3 text-sm font-black text-emerald-600">
+              Rs. {{ p.amount }}
+            </td>
+            <td class="px-6 py-3 text-sm text-slate-600">
+              {{ p.paid_at|date:"Y-m-d H:i" }}
+            </td>
+            <td class="px-6 py-3 text-sm text-slate-600">
+              {{ p.note|default:"-" }}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="px-6 py-8 text-center text-slate-500">
+              No payments yet.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

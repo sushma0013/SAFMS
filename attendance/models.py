@@ -9,6 +9,8 @@ import uuid
 import os
 from datetime import timedelta
 
+
+
 def qr_upload_path(instance, filename):
     return os.path.join('qr_codes', filename)
 
@@ -108,6 +110,7 @@ class QRSession(models.Model):
 # def __str__(self):
 #         return f"{self.student.username} - {self.subject.code} - {self.status}"
 
+
 class AttendanceRecord(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE)
     session = models.ForeignKey(QRSession, on_delete=models.CASCADE, related_name='attendance_records')
@@ -125,17 +128,139 @@ class AttendanceRecord(models.Model):
     class Meta:
         unique_together = ('student', 'session')
 
+    def __str__(self):
+        return f"{self.student.username} - {self.subject.code} - {self.status}"
+
+
 class StudentProfile(models.Model):
     user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="student_profile"
+    )
+
+    student_id = models.CharField(max_length=30, unique=True)
+    full_name = models.CharField(max_length=100)
+
+    phone = models.CharField(max_length=20, blank=True)
+    address = models.CharField(max_length=255, blank=True)
+
+    major = models.CharField(max_length=60, blank=True)
+    semester = models.CharField(max_length=30, blank=True)
+
+    academic_advisor = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="attendance_student"
+        related_name="advised_students"
     )
-
-    student_id = models.PositiveIntegerField(unique=True)
-    full_name = models.CharField(max_length=100)
 
     def __str__(self):
         return f"{self.student_id} - {self.full_name}"
+# class AttendanceRecord(models.Model):
+#     student = models.ForeignKey(User, on_delete=models.CASCADE)
+#     session = models.ForeignKey(QRSession, on_delete=models.CASCADE, related_name='attendance_records')
+#     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+
+#     STATUS_CHOICES = (
+#         ('Present', 'Present'),
+#         ('Absent', 'Absent'),
+#     )
+
+#     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Absent')
+#     date = models.DateField(auto_now_add=True)
+#     recorded_at = models.DateTimeField(auto_now_add=True)
+
+#     class Meta:
+#         unique_together = ('student', 'session')
+
+#         class StudentProfile(models.Model):
+#           user = models.OneToOneField(
+#         User,
+#         on_delete=models.CASCADE,
+#         related_name="student_profile"
+#     )
+
+#     # Basic student info
+#     student_id = models.CharField(max_length=30, unique=True)
+#     full_name = models.CharField(max_length=100)
+
+#     phone = models.CharField(max_length=20, blank=True)
+#     address = models.CharField(max_length=255, blank=True)
+
+#     major = models.CharField(max_length=60, blank=True)        # Math, Science, CS...
+#     semester = models.CharField(max_length=30, blank=True)     # "5th Semester"
+
+#     # advisor can be teacher User (best + not complicated)
+#     academic_advisor = models.ForeignKey(
+#         User,
+#         on_delete=models.SET_NULL,
+#         null=True,
+#         blank=True,
+#         related_name="advised_students"
+#     )
+
+#     def __str__(self):
+#         return f"{self.student_id} - {self.full_name}"
+
+# class StudentProfile(models.Model):
+#     user = models.OneToOneField(
+#         User,
+#         on_delete=models.SET_NULL,
+#         null=True,
+#         blank=True,
+#         related_name="attendance_student"
+#     )
+
+#     student_id = models.PositiveIntegerField(unique=True)
+#     full_name = models.CharField(max_length=100)
+
+#     def __str__(self):
+#         return f"{self.student_id} - {self.full_name}"
+
+
+
+
+class FeeStructure(models.Model):
+    student = models.OneToOneField(
+        StudentProfile,
+        on_delete=models.CASCADE,
+        related_name="fee_structure"
+    )
+    total_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    # deadline for paying the remaining fee
+    due_date = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.student.student_id} - Total: {self.total_fee}"
+
+
+class Payment(models.Model):
+    student = models.ForeignKey(
+        StudentProfile,
+        on_delete=models.CASCADE,
+        related_name="payments"
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    paid_at = models.DateTimeField(auto_now_add=True)
+    note = models.CharField(max_length=200, blank=True)
+
+    def __str__(self):
+        return f"{self.student.student_id} - Paid: {self.amount}"
+
+
+class Notification(models.Model):
+    student = models.ForeignKey(
+        StudentProfile,
+        on_delete=models.CASCADE,
+        related_name="notifications"
+    )
+    title = models.CharField(max_length=120)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.student.student_id} - {self.title}"

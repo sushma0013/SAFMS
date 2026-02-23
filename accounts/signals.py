@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.signals import user_logged_in
-
 from .models import Profile
 
 User = get_user_model()
@@ -10,7 +9,9 @@ User = get_user_model()
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.create(user=instance, role="student")
+        # ✅ if staff/superuser => admin else student
+        role = "admin" if (instance.is_staff or instance.is_superuser) else "student"
+        Profile.objects.create(user=instance, role=role)
 
 @receiver(user_logged_in)
 def set_role_after_google_login(sender, request, user, **kwargs):

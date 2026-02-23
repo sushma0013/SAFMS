@@ -1,61 +1,133 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{% block title %}Student Dashboard{% endblock %}</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}SAFMS{% endblock %}</title>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap" rel="stylesheet"/>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#135bec",
+            "background-light": "#f6f6f8",
+            "background-dark": "#101622",
+          },
+          fontFamily: {
+            display: ["Lexend", "sans-serif"],
+          },
+          borderRadius: {
+            DEFAULT: "0.25rem",
+            lg: "0.5rem",
+            xl: "0.75rem",
+            full: "9999px",
+          },
+        },
+      },
+    };
+  </script>
 </head>
 
-<body class="bg-gray-50">
-  <!-- Topbar -->
-  <div class="bg-white border-b">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-      <div class="font-bold">SAFMS</div>
-      <div class="text-sm">
-        {{ request.user.username }} |
-        <a class="text-blue-600" href="{% url 'logout' %}">Logout</a>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+  <div class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar Navigation (same as your design) -->
+    <aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0">
+      <div class="p-6 flex items-center gap-3">
+        <div class="bg-primary text-white p-2 rounded-lg flex items-center justify-center">
+          <span class="material-symbols-outlined text-2xl">school</span>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight text-primary">SAFMS</h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Student Mgmt</p>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <div class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-12 gap-6">
-  <!-- Sidebar -->
-<aside class="col-span-12 md:col-span-3 relative z-50">
-  <div class="bg-white rounded-lg shadow p-4 space-y-2">
-    <a class="block px-3 py-2 rounded hover:bg-gray-100 cursor-pointer"
-       href="{% url 'attendance:student_dashboard' %}">Dashboard</a>
+      <nav class="flex-1 px-4 space-y-1 py-4">
 
-    <a class="block px-3 py-2 rounded hover:bg-gray-100 cursor-pointer"
-       href="{% url 'attendance:student_profile' %}">Student Profile</a>
+        <!-- Dashboard -->
+        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+           href="{% url 'attendance:student_dashboard' %}">
+          <span class="material-symbols-outlined">dashboard</span>
+          <span class="text-sm font-medium">Dashboard</span>
+        </a>
 
-    <a class="block px-3 py-2 rounded hover:bg-gray-100 cursor-pointer"
-       href="{% url 'attendance:my_attendance' %}">My Attendance</a>
+        <!-- Student Profile (active style can be set per-page with optional block) -->
+        {% block nav_student_profile %}
+        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+           href="{% url 'attendance:student_profile' %}">
+          <span class="material-symbols-outlined">person</span>
+          <span class="text-sm font-medium">Student Profile</span>
+        </a>
+        {% endblock %}
 
-    <a class="block px-3 py-2 rounded hover:bg-gray-100 cursor-pointer"
-       href="{% url 'attendance:my_fees' %}">My Fees</a>
+        <!-- My Attendance -->
+        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+           href="{% url 'attendance:my_attendance' %}">
+          <span class="material-symbols-outlined">calendar_today</span>
+          <span class="text-sm font-medium">My Attendance</span>
+        </a>
 
-    <a class="block px-3 py-2 rounded hover:bg-gray-100 cursor-pointer"
-       href="{% url 'attendance:student_report' %}">Report</a>
+        <!-- My Fee -->
+        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+           href="{% url 'attendance:my_fees' %}">
+          <span class="material-symbols-outlined">payments</span>
+          <span class="text-sm font-medium">My Fee</span>
+        </a>
 
-    <a class="block px-3 py-2 rounded hover:bg-gray-100 cursor-pointer"
-       href="{% url 'attendance:student_settings' %}">Settings</a>
-  </div>
-</aside>
+        <!-- Reports -->
+        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+           href="{% url 'attendance:student_report' %}">
+          <span class="material-symbols-outlined">bar_chart</span>
+          <span class="text-sm font-medium">Reports</span>
+        </a>
+      </nav>
 
+      <!-- Bottom Settings + Logout -->
+      <div class="p-4 border-t border-slate-200 dark:border-slate-800 space-y-1">
+        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+           href="{% url 'attendance:student_settings' %}">
+          <span class="material-symbols-outlined">settings</span>
+          <span class="text-sm font-medium">Settings</span>
+        </a>
 
-    <!-- Main content -->
-    <main class="col-span-12 md:col-span-9">
+        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-slate-800 transition-colors"
+           href="{% url 'logout' %}">
+          <span class="material-symbols-outlined">logout</span>
+          <span class="text-sm font-medium">Logout</span>
+        </a>
+
+        {% if request.user.is_staff and not request.user.is_superuser %}
+  <a class="block px-3 py-2 rounded hover:bg-gray-100"
+     href="{% url 'attendance:fee_manager_dashboard' %}">
+    Fee Dashboard
+  </a>
+{% endif %}
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark">
       {% if messages %}
-        <div class="mb-4 space-y-2">
+        <div class="p-6 max-w-5xl mx-auto space-y-2">
           {% for message in messages %}
-            <div class="p-3 rounded bg-yellow-100">{{ message }}</div>
+            <div class="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80">
+              {{ message }}
+            </div>
           {% endfor %}
         </div>
       {% endif %}
 
       {% block content %}{% endblock %}
     </main>
+
   </div>
 </body>
 </html>

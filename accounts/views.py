@@ -41,24 +41,43 @@ from attendance.models import StudentProfile
 #     return redirect("choose_role")
 
 
+# @login_required
+# def dashboard_redirect(request):
+#     profile, _ = Profile.objects.get_or_create(user=request.user)
+#     role = getattr(profile, "role", None)
+
+#     if request.user.is_superuser or role == "admin":
+#         return redirect("admin:index")
+
+#     if role == "teacher":
+#         return redirect("attendance:teacher_dashboard")
+
+#     # STUDENT: must be linked to a StudentProfile
+#     linked = StudentProfile.objects.filter(user=request.user).exists()
+#     if not linked:
+#         return redirect("attendance:link_student")
+
+#     return redirect("attendance:student_dashboard")
+from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
+
+
+
+
 @login_required
 def dashboard_redirect(request):
-    profile, _ = Profile.objects.get_or_create(user=request.user)
-    role = getattr(profile, "role", None)
+    role = getattr(request.user.profile, "role", None)
 
-    if request.user.is_superuser or role == "admin":
-        return redirect("admin:index")
+    if role == "admin":
+        return redirect("attendance:fee_manager_dashboard")
 
     if role == "teacher":
         return redirect("attendance:teacher_dashboard")
 
-    # STUDENT: must be linked to a StudentProfile
-    linked = StudentProfile.objects.filter(user=request.user).exists()
-    if not linked:
-        return redirect("attendance:link_student")
+    if role == "student":
+        return redirect("attendance:student_dashboard")
 
-    return redirect("attendance:student_dashboard")
-
+    return redirect("home")
 
 # def google_start(request, role):
 #     # role will be 'student' or 'teacher' or 'admin'

@@ -10,6 +10,13 @@ from .utils import close_session_and_mark_absent
 from django.db.models import Count,Q
 from django.contrib.auth.models import User
 from .models import StudentProfile
+from django.contrib.auth.decorators import login_required, user_passes_test
+from .models import StudentProfile, FeeStructure, Payment
+
+
+
+
+
 
 
 
@@ -311,6 +318,19 @@ def student_dashboard(request):
         'total_classes_all': total_classes_all,
         'total_present_all': total_present_all,
     })
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404
+from .models import StudentProfile
+
+@login_required
+def student_profile(request):
+    profile = get_object_or_404(StudentProfile, user=request.user)
+    return render(request, "attendance/student_profile.html", {"profile": profile})
+# @login_required
+# def student_profile(request):
+#     return render(request, "attendance/student_profile.html")
 
 
 # @login_required
@@ -639,8 +659,9 @@ def link_student(request):
             # link Google user to student
             student.user = request.user
             student.save()
+            return redirect("accounts:dashboard")
 
-            return redirect("attendance:student_dashboard")
+            # return redirect("attendance:student_dashboard")
 
         except StudentProfile.DoesNotExist:
             return render(
@@ -730,6 +751,54 @@ def student_settings(request):
         messages.error(request, "Students only.")
         return redirect('home')
     return render(request, "attendance/student_settings.html")
+
+
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import Sum, Count
+from django.utils import timezone
+from datetime import timedelta
+
+from .models import StudentProfile, FeeStructure, Payment
+
+def staff_only(user):
+    return user.is_staff  # fee manager must be staff
+
+@login_required
+@user_passes_test(staff_only)
+def fee_manager_dashboard(request):
+    total_students = StudentProfile.objects.count()
+    total_fee_set = FeeStructure.objects.count()
+
+    total_collected = Payment.objects.aggregate(total=Sum("amount"))["total"] or 0
+
+    # Students with due (total_fee - paid > 0)
+    # Simple approximation: count students where paid < total_fee
+    fee_rows = FeeStructure.objects.select_related("student").all()
+    due_students = 0
+    due_soon_students = 0
+
+    today = timezone.localdate()
+    due_soon_date = today + timedelta(days=7)
+
+    for fee in fee_rows:
+        paid = fee.student.payments.aggregate(total=Sum("amount"))["total"] or 0
+        remaining = fee.total_fee - paid
+        if remaining > 0:
+            due_students += 1
+            if fee.due_date and today <= fee.due_date <= due_soon_date:
+                due_soon_students += 1
+
+    recent_payments = Payment.objects.select_related("student").order_by("-paid_at")[:8]
+
+    context = {
+        "total_students": total_students,
+        "total_fee_set": total_fee_set,
+        "total_collected": total_collected,
+        "due_students": due_students,
+        "due_soon_students": due_soon_students,
+        "recent_payments": recent_payments,
+    }
+    return render(request, "attendance/fee_manager_dashboard.html", context)
 
 
 

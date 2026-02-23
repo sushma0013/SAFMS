@@ -75,6 +75,7 @@ path("student/my-attendance/", views.my_attendance, name="my_attendance"),
 path("student/my-fees/", views.my_fees, name="my_fees"),
 path("student/report/", views.student_report, name="student_report"),
 path("student/settings/", views.student_settings, name="student_settings"),
+path("fee/dashboard/", views.fee_manager_dashboard, name="fee_manager_dashboard"),
 
 
 ]

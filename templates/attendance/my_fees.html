@@ -1,7 +1,100 @@
 {% extends "attendance/base.html" %}
+{% block title %}My Fee - SAFMS{% endblock %}
+
 {% block content %}
-<div class="p-6">
-  <h1 class="text-2xl font-bold">My Fees</h1>
-  <p class="mt-2 text-gray-600">This page will show fees paid and dues.</p>
+<div class="space-y-8 font-display">
+
+  <!-- PAGE HEADER -->
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div>
+      <h2 class="text-3xl font-black tracking-tight text-slate-900">
+        My Fee Overview
+      </h2>
+      <p class="text-slate-500 mt-1 font-medium flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">calendar_today</span>
+        Academic Year {{ academic_year|default:"2023-2024" }}
+      </p>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Fee</p>
+      <h3 class="text-3xl font-bold mt-2">Rs. {{ total_fee }}</h3>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl border border-emerald-200 shadow-sm">
+      <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Paid</p>
+      <h3 class="text-3xl font-bold mt-2 text-emerald-600">
+        Rs. {{ paid_amount }}
+      </h3>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl border border-red-200 shadow-sm">
+      <p class="text-xs font-bold text-red-600 uppercase tracking-wider">Remaining</p>
+      <h3 class="text-3xl font-bold mt-2 text-red-600">
+        Rs. {{ remaining_amount }}
+      </h3>
+      {% if due_date %}
+        <p class="text-sm text-slate-500 mt-2">
+          Due by <b>{{ due_date }}</b>
+        </p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- REMINDER -->
+  {% if remaining_amount > 0 %}
+  <div class="bg-primary/10 border border-primary/20 rounded-xl p-6 flex gap-4">
+    <span class="material-symbols-outlined text-primary text-3xl">
+      priority_high
+    </span>
+    <div>
+      <h4 class="font-bold">Payment Reminder</h4>
+      <p class="text-slate-600">
+        Please clear your remaining fee before the deadline.
+      </p>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- HISTORY -->
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b">
+      <h3 class="text-xl font-bold">Payment History</h3>
+    </div>
+
+    <table class="w-full text-left">
+      <thead class="bg-slate-50 text-xs uppercase font-bold text-slate-500">
+        <tr>
+          <th class="px-6 py-3">Date</th>
+          <th class="px-6 py-3">Amount</th>
+          <th class="px-6 py-3">Note</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y">
+        {% for p in payments %}
+        <tr>
+          <td class="px-6 py-3">{{ p.paid_at|date:"Y-m-d" }}</td>
+          <td class="px-6 py-3 font-bold text-emerald-600">
+            Rs. {{ p.amount }}
+          </td>
+          <td class="px-6 py-3">{{ p.note|default:"-" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3" class="px-6 py-6 text-center text-slate-500">
+            No payments yet
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
 </div>
 {% endblock %}
+
+

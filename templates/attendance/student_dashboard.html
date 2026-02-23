@@ -1,464 +1,331 @@
-{% comment %} <!DOCTYPE html>
-<html>
-<head>
-    <title>Student Dashboard</title>
-</head>
-<body>
-    <h1>Student Dashboard</h1>
-    <p>Welcome, {{ request.user.username }}!</p>
-
-    <h2>Attendance Stats</h2>
-    {% for stat in attendance_stats %}
-        <p>{{ stat.subject.name }}: {{ stat.present }}/{{ stat.total }} ({{ stat.percentage }}%)</p>
-    {% endfor %}
-
-    <h2>Recent Attendance</h2>
-    <ul>
-        {% for record in attendance_records %}
-        <li>{{ record.subject.name }} - {{ record.date }} - {{ record.status }}</li>
-        {% endfor %}
-    </ul>
-
-    <a href="{% url 'attendance:scan_qr' %}">Scan QR to Mark Attendance</a>
-    <br><br>
-    <a href="{% url 'logout' %}">Logout</a>
-</body>
-</html> {% endcomment %}
-
-
-
 {% load static %}
 <!DOCTYPE html>
 <html class="light" lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Student Dashboard</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet"/>
-    <!-- Material Symbols -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#135bec",
-                        "background-light": "#f6f6f8",
-                        "background-dark": "#101622",
-                    },
-                    fontFamily: {
-                        "display": ["Lexend", "sans-serif"]
-                    },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
-                },
-            },
-        }
-    </script>
-    <style>
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    </style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Dashboard</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet"/>
+  <!-- Material Symbols -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#135bec",
+            "background-light": "#f6f6f8",
+            "background-dark": "#101622",
+          },
+          fontFamily: { display: ["Lexend", "sans-serif"] },
+          borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+        },
+      },
+    }
+  </script>
+
+  <style>
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark text-[#111318] dark:text-white font-display">
 
+<body class="h-screen overflow-hidden bg-background-light dark:bg-background-dark text-[#111318] dark:text-white font-display">
 
-
-<div class="flex h-screen w-full">
-
+  <div class="flex h-screen w-full overflow-hidden">
 
     <!-- Sidebar -->
-<aside class="flex flex-col w-72 bg-white dark:bg-[#1a202c] border-r border-[#dbdfe6] dark:border-gray-800 h-screen flex-shrink-0 overflow-y-auto">
-
-        <div class="p-6 border-b border-[#f0f2f4] dark:border-gray-800">
-            <div class="flex gap-3 items-center">
-                <div class="bg-center bg-no-repeat bg-cover rounded-full size-12" style='background-image: url("https://ui-avatars.com/api/?name={{ request.user.username }}&background=135bec&color=fff");'></div>
-                <div class="flex flex-col">
-                    <h1 class="text-base font-bold leading-normal">{{ request.user.username }}</h1>
-                    <p class="text-[#616f89] dark:text-gray-400 text-sm font-normal">Student ID: {{ request.user.id }}</p>
-                </div>
-            </div>
+    <aside class="flex flex-col w-72 bg-white dark:bg-[#1a202c] border-r border-[#dbdfe6] dark:border-gray-800 h-screen flex-shrink-0 overflow-y-auto">
+      <div class="p-6 border-b border-[#f0f2f4] dark:border-gray-800">
+        <div class="flex gap-3 items-center">
+          <div class="bg-center bg-no-repeat bg-cover rounded-full size-12"
+               style='background-image: url("https://ui-avatars.com/api/?name={{ request.user.username }}&background=135bec&color=fff");'></div>
+          <div class="flex flex-col">
+            <h1 class="text-base font-bold leading-normal">{{ request.user.username }}</h1>
+            <p class="text-[#616f89] dark:text-gray-400 text-sm font-normal">Student ID: {{ request.user.id }}</p>
+          </div>
         </div>
-        <nav class="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-2">
-            {% comment %} <a class="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#f0f2f4] dark:bg-gray-800 text-primary" href="#">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span class="text-sm font-medium">Dashboard</span>
-            </a> {% endcomment %}
-            <a class="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#f0f2f4] dark:bg-gray-800 text-primary"
-   href="{% url 'attendance:student_dashboard' %}">
-  <span class="material-symbols-outlined">dashboard</span>
-  <span class="text-sm font-medium">Dashboard</span>
-</a>
+      </div>
 
-<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors"
-   href="{% url 'attendance:student_profile' %}">
-  <span class="material-symbols-outlined">person</span>
-  <span class="text-sm font-medium">Student Profile</span>
-</a>
+      <nav class="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-2">
 
-<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors"
-   href="{% url 'attendance:my_attendance' %}">
-  <span class="material-symbols-outlined">calendar_month</span>
-  <span class="text-sm font-medium">My Attendance</span>
-</a>
+        <a class="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#f0f2f4] dark:bg-gray-800 text-primary"
+           href="{% url 'attendance:student_dashboard' %}">
+          <span class="material-symbols-outlined">dashboard</span>
+          <span class="text-sm font-medium">Dashboard</span>
+        </a>
 
-<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors"
-   href="{% url 'attendance:my_fees' %}">
-  <span class="material-symbols-outlined">payments</span>
-  <span class="text-sm font-medium">My Fees</span>
-</a>
+        <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors"
+           href="{% url 'attendance:student_profile' %}">
+          <span class="material-symbols-outlined">person</span>
+          <span class="text-sm font-medium">Student Profile</span>
+        </a>
 
-<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors"
-   href="{% url 'attendance:student_report' %}">
-  <span class="material-symbols-outlined">bar_chart</span>
-  <span class="text-sm font-medium">Reports</span>
-</a>
+        <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors"
+           href="{% url 'attendance:my_attendance' %}">
+          <span class="material-symbols-outlined">calendar_month</span>
+          <span class="text-sm font-medium">My Attendance</span>
+        </a>
 
-<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors"
-   href="{% url 'attendance:student_settings' %}">
-  <span class="material-symbols-outlined">settings</span>
-  <span class="text-sm font-medium">Settings</span>
-</a>
+        <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors"
+           href="{% url 'attendance:my_fees' %}">
+          <span class="material-symbols-outlined">payments</span>
+          <span class="text-sm font-medium">My Fees</span>
+        </a>
 
-            {% comment %} <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors" href="#">
-                <span class="material-symbols-outlined">person</span>
-                <span class="text-sm font-medium">Student Profile</span>
-            </a>
-            <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors" href="#">
-                <span class="material-symbols-outlined">calendar_month</span>
-                <span class="text-sm font-medium">My Attendance</span>
-            </a>
-            <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors" href="#">
-                <span class="material-symbols-outlined">payments</span>
-                <span class="text-sm font-medium">My Fees</span>
-            </a>
-            <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors" href="#">
-                <span class="material-symbols-outlined">bar_chart</span>
-                <span class="text-sm font-medium">Reports</span>
-            </a>
-            <div class="mt-auto">
-                <div class="border-t border-[#f0f2f4] dark:border-gray-800 my-2"></div>
-                <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111318] dark:text-gray-200 transition-colors" href="#">
-                    <span class="material-symbols-outlined">settings</span>
-                    <span class="text-sm font-medium">Settings</span>
-                </a> {% endcomment %}
-                <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors" href="{% url 'logout' %}">
-                    <span class="material-symbols-outlined">logout</span>
-                    <span class="text-sm font-medium">Log Out</span>
-                </a>
-            </div>
-        </nav>
+        <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors"
+           href="{% url 'attendance:student_report' %}">
+          <span class="material-symbols-outlined">bar_chart</span>
+          <span class="text-sm font-medium">Reports</span>
+        </a>
+
+        <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors"
+           href="{% url 'attendance:student_settings' %}">
+          <span class="material-symbols-outlined">settings</span>
+          <span class="text-sm font-medium">Settings</span>
+        </a>
+
+        <div class="mt-auto pt-4">
+          <div class="border-t border-[#f0f2f4] dark:border-gray-800 my-2"></div>
+          <a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
+             href="{% url 'logout' %}">
+            <span class="material-symbols-outlined">logout</span>
+            <span class="text-sm font-medium">Log Out</span>
+          </a>
+        </div>
+
+      </nav>
     </aside>
 
     <!-- Main Content -->
-<main class="flex-1 flex flex-col min-w-0 h-screen">
+    <main class="flex-1 min-w-0 flex flex-col h-screen">
 
-
-        <!-- Header -->
-        <header class="flex items-center justify-between whitespace-nowrap border-b border-[#f0f2f4] dark:border-gray-800 bg-white dark:bg-[#1a202c] px-8 py-4 flex-shrink-0 z-10">
-            <div class="flex items-center gap-4">
-                <button class="lg:hidden text-[#111318] dark:text-white">
-                    <span class="material-symbols-outlined">menu</span>
-                </button>
-                <h2 class="text-[#111318] dark:text-white text-xl font-bold leading-tight">Student Dashboard</h2>
-            </div>
-            <div class="flex items-center gap-6">
-                <button class="relative flex items-center justify-center text-[#616f89] dark:text-gray-300 hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined text-[24px]">notifications</span>
-                    <span class="absolute top-0 right-0 size-2.5 bg-red-500 rounded-full border-2 border-white dark:border-[#1a202c]"></span>
-                </button>
-                <div class="hidden md:flex flex-col items-end">
-                    <span class="text-sm font-medium text-[#111318] dark:text-white">Fall Semester 2024</span>
-                    <span class="text-xs text-[#616f89] dark:text-gray-400">{{ request.user.username }}</span>
-                </div>
-            </div>
-        </header>
-
-        <!-- Content -->
-        <div class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-3 md:p-4">
-
-           <div class="w-full max-w-7xl mx-auto flex flex-col gap-4">
-
-
-              
-
-                
-                <!-- Alert Section -->
-                {% for stat in attendance_stats %}
-                    {% if stat.percentage < 75 %}
-                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800/30 p-5 shadow-sm">
-                        <div class="flex gap-4">
-                            <div class="bg-red-100 dark:bg-red-900/30 p-2 rounded-full h-fit text-red-600 dark:text-red-400">
-                                <span class="material-symbols-outlined">warning</span>
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <p class="text-[#111318] dark:text-white text-base font-bold">Attendance Alert: {{ stat.subject.name }}</p>
-                                <p class="text-[#616f89] dark:text-gray-300 text-sm">Your attendance is {{ stat.percentage }}%, below the 75% threshold. Please meet your faculty advisor.</p>
-                            </div>
-                        </div>
-                        <button class="whitespace-nowrap rounded-lg px-4 py-2 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                            View Details
-                        </button>
-                    </div>
-                    {% endif %}
-                {% endfor %}
-
-                <!-- Stats Row -->
-                 <!-- Stats Row -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-  <!-- Quick Action -->
-  <div class="flex flex-col gap-4 rounded-xl p-5 border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
-    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-      <span class="material-symbols-outlined text-6xl text-primary">qr_code_scanner</span>
-    </div>
-    <div class="flex items-center gap-2">
-      <span class="material-symbols-outlined text-primary">qr_code</span>
-      <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Quick Action</p>
-    </div>
-    <div>
-      <p class="text-[#111318] dark:text-white text-2xl font-bold leading-tight">Mark Attendance</p>
-      <p class="text-primary text-sm font-medium mt-1">Scan QR Code</p>
-    </div>
-    <div class="mt-auto pt-2">
-      <a href="{% url 'attendance:scan_qr' %}" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary hover:bg-blue-700 text-white text-sm font-bold transition-colors shadow-sm">
-        <span class="material-symbols-outlined mr-2 text-lg">qr_code_scanner</span>
-        Scan Now
-      </a>
-    </div>
-  </div>
-
-  <!-- Total Classes -->
-  <div class="flex flex-col gap-4 rounded-xl p-6 border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
-    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-      <span class="material-symbols-outlined text-6xl text-green-600">bar_chart</span>
-    </div>
-    <div class="flex items-center gap-2">
-      <span class="material-symbols-outlined text-green-600">pie_chart</span>
-      <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Total Classes</p>
-    </div>
-
-    <div>
-      <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">{{ total_classes_all }}</p>
-      <p class="text-green-600 text-sm font-medium mt-1 flex items-center gap-1">
-        <span class="material-symbols-outlined text-sm">school</span>
-        Total classes (all subjects)
-      </p>
-      <p class="text-[#616f89] dark:text-gray-400 text-sm mt-2">
-        Present: <b class="text-[#111318] dark:text-white">{{ total_present_all }}</b>
-      </p>
-    </div>
-  </div>
-
-  <!-- Pending Dues -->
-  <div class="flex flex-col gap-4 rounded-xl p-6 border border-orange-200 dark:border-orange-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
-    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-      <span class="material-symbols-outlined text-6xl text-orange-500">warning</span>
-    </div>
-    <div class="flex items-center gap-2">
-      <span class="material-symbols-outlined text-orange-500">attach_money</span>
-      <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Pending Dues</p>
-    </div>
-    <div>
-      <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">$45,000</p>
-      <p class="text-orange-600 dark:text-orange-400 text-sm font-bold mt-1">Due by Oct 30, 2026</p>
-    </div>
-    <button class="mt-2 w-fit px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
-      Pay Now
-    </button>
-  </div>
-
-</div>
-
-                {% comment %} <div class="grid grid-cols-1 md:grid-cols-3 gap-4"> {% endcomment %}
-                    <!-- Today's Status / Scan QR -->
-                    {% comment %} <div class="flex flex-col gap-4 rounded-xl p-6 border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
-                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <span class="material-symbols-outlined text-6xl text-primary">qr_code_scanner</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary">qr_code</span>
-                            <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Quick Action</p>
-                        </div>
-                        <div>
-                            <p class="text-[#111318] dark:text-white text-2xl font-bold leading-tight">Mark Attendance</p>
-                            <p class="text-primary text-sm font-medium mt-1">Scan QR Code</p>
-                        </div>
-                        <div class="mt-auto pt-2">
-                            <a href="{% url 'attendance:scan_qr' %}" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary hover:bg-blue-700 text-white text-sm font-bold transition-colors shadow-sm">
-                                <span class="material-symbols-outlined mr-2 text-lg">qr_code_scanner</span>
-                                Scan Now
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Overall Attendance -->
-                    <div class="flex flex-col gap-4 rounded-xl p-6 border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
-                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <span class="material-symbols-outlined text-6xl text-green-600">bar_chart</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-green-600">pie_chart</span>
-                            <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Total Classes</p>
-                        </div> {% endcomment %}
-                        {% comment %} <div>
-                            <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">{{ total_classes_all }}</p>
-<p class="text-green-600 text-sm font-medium mt-1 flex items-center gap-1">
-  <span class="material-symbols-outlined text-sm">school</span>
-  Total classes (all subjects)
-</p> {% endcomment %}
-
-                            {% comment %} {% if attendance_stats %}
-                                {% for stat in attendance_stats %}
-                                    {% if forloop.first %}
-                                        <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">{{ stat.total }}</p>
-                                        <p class="text-green-600 text-sm font-medium mt-1 flex items-center gap-1">
-                                            <span class="material-symbols-outlined text-sm">school</span>
-                                            Classes attended
-                                        </p>
-                                    {% endif %}
-                                {% endfor %}
-                            {% else %} {% endcomment %}
-                                {% comment %} <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">0</p>
-                            {% endif %}
-                        </div>
-                    </div> {% endcomment %}
-                    <div>
-  {% comment %} <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">{{ total_classes_all }}</p>
-  <p class="text-green-600 text-sm font-medium mt-1 flex items-center gap-1">
-    <span class="material-symbols-outlined text-sm">school</span>
-    Total classes (all subjects)
-  </p>
-  <p class="text-[#616f89] dark:text-gray-400 text-sm mt-1">
-    Present: <b>{{ total_present_all }}</b>
-  </p>
-</div> {% endcomment %}
-
-
-                    <!-- Pending Dues -->
-                    {% comment %} <div class="flex flex-col gap-4 rounded-xl p-6 border border-orange-200 dark:border-orange-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
-                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <span class="material-symbols-outlined text-6xl text-orange-500">warning</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-orange-500">attach_money</span>
-                            <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Pending Dues</p>
-                        </div>
-                        <div>
-                            <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">$45,000</p>
-                            <p class="text-orange-600 dark:text-orange-400 text-sm font-bold mt-1">Due by Oct 30, 2026</p>
-                        </div>
-                        <button class="mt-2 w-fit px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
-                            Pay Now
-                        </button>
-                    </div>
-                </div> {% endcomment %}
-
-             <!-- Detailed Content Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-                    <!-- Attendance Detailed Report -->
-                    <div class="flex flex-col rounded-xl border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm">
-                        <div class="p-5 border-b border-[#f0f2f4] dark:border-gray-800 flex justify-between items-center">
-                            <h3 class="text-[#111318] dark:text-white text-lg font-bold">Subject-wise Attendance</h3>
-                            <button class="text-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded-lg transition-colors" title="Download Report">
-                                <span class="material-symbols-outlined">download</span>
-                            </button>
-                        </div>
-                        <div class="p-6 flex flex-col gap-4">
-                            {% for stat in attendance_stats %}
-                            <div class="flex flex-col gap-2 pb-4 {% if not forloop.last %}border-b border-[#f0f2f4] dark:border-gray-800{% endif %}">
-                                <div class="flex justify-between items-center">
-                                    <p class="text-[#111318] dark:text-white font-medium">{{ stat.subject.name }}</p>
-                                    <p class="text-[#111318] dark:text-white font-bold">{{ stat.present }}/{{ stat.total }}</p>
-                                </div>
-                                <div class="h-3 w-full bg-[#f0f2f4] dark:bg-gray-700 rounded-full overflow-hidden">
-                                    <div class="h-full {% if stat.percentage >= 75 %}bg-green-500{% elif stat.percentage >= 60 %}bg-orange-500{% else %}bg-red-500{% endif %} rounded-full" style="width: {{ stat.percentage }}%"></div>
-                                </div>
-                                <p class="text-[#616f89] dark:text-gray-400 text-xs text-right">{{ stat.percentage }}% attendance</p>
-                            </div>
-                            {% empty %}
-                            <p class="text-[#616f89] dark:text-gray-400 text-center py-8">No attendance records found</p>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <!-- Fee Structure Breakdown -->
-                    <div class="flex flex-col rounded-xl border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm">
-                        <div class="p-5 border-b border-[#f0f2f4] dark:border-gray-800 flex justify-between items-center">
-                            <h3 class="text-[#111318] dark:text-white text-lg font-bold">Fee Status</h3>
-                            <button class="text-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded-lg transition-colors" title="Download Statement">
-                                <span class="material-symbols-outlined">description</span>
-                            </button>
-                        </div>
-                        <div class="p-6 flex flex-col gap-6">
-                            <div class="flex items-center gap-6">
-                                <div class="relative size-24 flex-shrink-0">
-                                    <svg class="size-full -rotate-90" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-                                        <circle class="stroke-current text-gray-200 dark:text-gray-700" cx="18" cy="18" fill="none" r="16" stroke-width="3"></circle>
-                                        <circle class="stroke-current text-green-500" cx="18" cy="18" fill="none" r="16" stroke-dasharray="100" stroke-dashoffset="45" stroke-linecap="round" stroke-width="3"></circle>
-                                    </svg>
-                                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                                        <span class="text-xs text-gray-500 font-medium">Paid</span>
-                                        <span class="block text-sm font-bold text-[#111318] dark:text-white">55%</span>
-                                    </div>
-                                </div>
-                                <div class="flex flex-col gap-3 flex-1">
-                                    <div class="flex justify-between items-center pb-2 border-b border-dashed border-gray-200 dark:border-gray-700">
-                                        <span class="text-sm text-[#616f89] dark:text-gray-400">Total Fees</span>
-                                        <span class="text-sm font-bold text-[#111318] dark:text-white">$100,000</span>
-                                    </div>
-                                    <div class="flex justify-between items-center pb-2 border-b border-dashed border-gray-200 dark:border-gray-700">
-                                        <span class="text-sm text-[#616f89] dark:text-gray-400">Paid Amount</span>
-                                        <span class="text-sm font-bold text-green-600">$55,000</span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm text-[#616f89] dark:text-gray-400">Due Amount</span>
-                                        <span class="text-sm font-bold text-red-500">$45,000</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex gap-3 mt-auto">
-                                <button class="flex-1 py-2.5 rounded-lg bg-primary hover:bg-blue-700 text-white text-sm font-bold shadow-md transition-colors">
-                                    Pay Dues
-                                </button>
-                                <button class="flex-1 py-2.5 rounded-lg border border-[#dbdfe6] dark:border-gray-700 text-[#111318] dark:text-white text-sm font-medium hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
-                                    <span class="material-symbols-outlined text-sm">download</span>
-                                    Statement
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Activity -->
-                <div class="rounded-xl border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm p-6">
-                    <h3 class="text-[#111318] dark:text-white text-lg font-bold mb-4">Recent Activity</h3>
-                    <div class="flex flex-col gap-0">
-                        {% for record in attendance_records|slice:":5" %}
-                        <div class="flex gap-4 pb-4 {% if not forloop.last %}border-l-2 {% if record.status == 'Present' %}border-green-200 dark:border-green-900{% else %}border-red-200 dark:border-red-900{% endif %}{% endif %} pl-4 relative">
-                            <div class="absolute -left-[9px] top-0 size-4 {% if record.status == 'Present' %}bg-green-500{% else %}bg-red-500{% endif %} rounded-full border-4 border-white dark:border-[#1a202c]"></div>
-                            <div class="flex flex-col flex-1">
-                                <p class="text-sm font-bold text-[#111318] dark:text-white">Attendance Marked: {{ record.subject.name }}</p>
-                                <p class="text-xs text-[#616f89] dark:text-gray-400">{{ record.date }}</p>
-                            </div>
-                            <span class="ml-auto text-xs font-medium {% if record.status == 'Present' %}text-green-600 bg-green-50 dark:bg-green-900/20{% else %}text-red-600 bg-red-50 dark:bg-red-900/20{% endif %} px-2 py-1 rounded h-fit">
-                                {{ record.status|title }}
-                            </span>
-                        </div>
-                        {% empty %}
-                        <p class="text-[#616f89] dark:text-gray-400 text-center py-8">No recent activity</p>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
+      <!-- Header -->
+      <header class="flex items-center justify-between border-b border-[#f0f2f4] dark:border-gray-800 bg-white dark:bg-[#1a202c] px-8 py-4 flex-shrink-0">
+        <div class="flex items-center gap-4">
+          <h2 class="text-[#111318] dark:text-white text-xl font-bold leading-tight">Student Dashboard</h2>
         </div>
+
+        <div class="flex items-center gap-6">
+          <button class="relative flex items-center justify-center text-[#616f89] dark:text-gray-300 hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-[24px]">notifications</span>
+            <span class="absolute top-0 right-0 size-2.5 bg-red-500 rounded-full border-2 border-white dark:border-[#1a202c]"></span>
+          </button>
+          <div class="hidden md:flex flex-col items-end">
+            <span class="text-sm font-medium text-[#111318] dark:text-white">Fall Semester 2024</span>
+            <span class="text-xs text-[#616f89] dark:text-gray-400">{{ request.user.username }}</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Scrollable content -->
+      <div class="flex-1 min-h-0 overflow-y-auto bg-background-light dark:bg-background-dark p-4 md:p-6">
+        <div class="w-full max-w-7xl mx-auto flex flex-col gap-6">
+
+          <!-- Alert Section -->
+          {% for stat in attendance_stats %}
+            {% if stat.percentage < 75 %}
+              <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800/30 p-5 shadow-sm">
+                <div class="flex gap-4">
+                  <div class="bg-red-100 dark:bg-red-900/30 p-2 rounded-full h-fit text-red-600 dark:text-red-400">
+                    <span class="material-symbols-outlined">warning</span>
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <p class="text-[#111318] dark:text-white text-base font-bold">Attendance Alert: {{ stat.subject.name }}</p>
+                    <p class="text-[#616f89] dark:text-gray-300 text-sm">
+                      Your attendance is {{ stat.percentage }}%, below the 75% threshold. Please meet your faculty advisor.
+                    </p>
+                  </div>
+                </div>
+                <button class="whitespace-nowrap rounded-lg px-4 py-2 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                  View Details
+                </button>
+              </div>
+            {% endif %}
+          {% endfor %}
+
+          <!-- Stats Row -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            <!-- Quick Action -->
+            <div class="flex flex-col gap-4 rounded-xl p-6 border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
+              <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <span class="material-symbols-outlined text-6xl text-primary">qr_code_scanner</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">qr_code</span>
+                <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Quick Action</p>
+              </div>
+              <div>
+                <p class="text-[#111318] dark:text-white text-2xl font-bold leading-tight">Mark Attendance</p>
+                <p class="text-primary text-sm font-medium mt-1">Scan QR Code</p>
+              </div>
+              <div class="mt-auto pt-2">
+                <a href="{% url 'attendance:scan_qr' %}" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary hover:bg-blue-700 text-white text-sm font-bold transition-colors shadow-sm">
+                  <span class="material-symbols-outlined mr-2 text-lg">qr_code_scanner</span>
+                  Scan Now
+                </a>
+              </div>
+            </div>
+
+            <!-- Total Classes -->
+            <div class="flex flex-col gap-4 rounded-xl p-6 border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
+              <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <span class="material-symbols-outlined text-6xl text-green-600">bar_chart</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-green-600">pie_chart</span>
+                <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Total Classes</p>
+              </div>
+              <div>
+                <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">{{ total_classes_all }}</p>
+                <p class="text-green-600 text-sm font-medium mt-1 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">school</span>
+                  Total classes (all subjects)
+                </p>
+                <p class="text-[#616f89] dark:text-gray-400 text-sm mt-2">
+                  Present: <b class="text-[#111318] dark:text-white">{{ total_present_all }}</b>
+                </p>
+              </div>
+            </div>
+
+            <!-- Pending Dues -->
+            <div class="flex flex-col gap-4 rounded-xl p-6 border border-orange-200 dark:border-orange-800 bg-white dark:bg-[#1a202c] shadow-sm relative overflow-hidden group">
+              <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <span class="material-symbols-outlined text-6xl text-orange-500">warning</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-orange-500">attach_money</span>
+                <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Pending Dues</p>
+              </div>
+              <div>
+                <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">$45,000</p>
+                <p class="text-orange-600 dark:text-orange-400 text-sm font-bold mt-1">Due by Oct 30, 2026</p>
+              </div>
+              <button class="mt-2 w-fit px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
+                Pay Now
+              </button>
+            </div>
+
+          </div>
+
+          <!-- 3-column grid (Subject wise + Fees + Recent activity) -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Subject-wise Attendance -->
+            <div class="flex flex-col rounded-xl border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm">
+              <div class="p-5 border-b border-[#f0f2f4] dark:border-gray-800 flex justify-between items-center">
+                <h3 class="text-[#111318] dark:text-white text-lg font-bold">Subject-wise Attendance</h3>
+                <button class="text-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded-lg transition-colors" title="Download Report">
+                  <span class="material-symbols-outlined">download</span>
+                </button>
+              </div>
+              <div class="p-6 flex flex-col gap-4">
+                {% for stat in attendance_stats %}
+                  <div class="flex flex-col gap-2 pb-4 {% if not forloop.last %}border-b border-[#f0f2f4] dark:border-gray-800{% endif %}">
+                    <div class="flex justify-between items-center">
+                      <p class="text-[#111318] dark:text-white font-medium">{{ stat.subject.name }}</p>
+                      <p class="text-[#111318] dark:text-white font-bold">{{ stat.present }}/{{ stat.total }}</p>
+                    </div>
+                    <div class="h-3 w-full bg-[#f0f2f4] dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div class="h-full {% if stat.percentage >= 75 %}bg-green-500{% elif stat.percentage >= 60 %}bg-orange-500{% else %}bg-red-500{% endif %} rounded-full"
+                           style="width: {{ stat.percentage }}%"></div>
+                    </div>
+                    <p class="text-[#616f89] dark:text-gray-400 text-xs text-right">{{ stat.percentage }}% attendance</p>
+                  </div>
+                {% empty %}
+                  <p class="text-[#616f89] dark:text-gray-400 text-center py-8">No attendance records found</p>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Fee Status -->
+            <div class="flex flex-col rounded-xl border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm">
+              <div class="p-5 border-b border-[#f0f2f4] dark:border-gray-800 flex justify-between items-center">
+                <h3 class="text-[#111318] dark:text-white text-lg font-bold">Fee Status</h3>
+                <button class="text-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded-lg transition-colors" title="Download Statement">
+                  <span class="material-symbols-outlined">description</span>
+                </button>
+              </div>
+
+              <div class="p-6 flex flex-col gap-6">
+                <div class="flex items-center gap-6">
+                  <div class="relative size-24 flex-shrink-0">
+                    <svg class="size-full -rotate-90" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                      <circle class="stroke-current text-gray-200 dark:text-gray-700" cx="18" cy="18" fill="none" r="16" stroke-width="3"></circle>
+                      <circle class="stroke-current text-green-500" cx="18" cy="18" fill="none" r="16"
+                              stroke-dasharray="100" stroke-dashoffset="45" stroke-linecap="round" stroke-width="3"></circle>
+                    </svg>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                      <span class="text-xs text-gray-500 font-medium">Paid</span>
+                      <span class="block text-sm font-bold text-[#111318] dark:text-white">55%</span>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col gap-3 flex-1">
+                    <div class="flex justify-between items-center pb-2 border-b border-dashed border-gray-200 dark:border-gray-700">
+                      <span class="text-sm text-[#616f89] dark:text-gray-400">Total Fees</span>
+                      <span class="text-sm font-bold text-[#111318] dark:text-white">$100,000</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-2 border-b border-dashed border-gray-200 dark:border-gray-700">
+                      <span class="text-sm text-[#616f89] dark:text-gray-400">Paid Amount</span>
+                      <span class="text-sm font-bold text-green-600">$55,000</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm text-[#616f89] dark:text-gray-400">Due Amount</span>
+                      <span class="text-sm font-bold text-red-500">$45,000</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex gap-3 mt-auto">
+                  <button class="flex-1 py-2.5 rounded-lg bg-primary hover:bg-blue-700 text-white text-sm font-bold shadow-md transition-colors">
+                    Pay Dues
+                  </button>
+                  <button class="flex-1 py-2.5 rounded-lg border border-[#dbdfe6] dark:border-gray-700 text-[#111318] dark:text-white text-sm font-medium hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-sm">download</span>
+                    Statement
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="rounded-xl border border-[#dbdfe6] dark:border-gray-800 bg-white dark:bg-[#1a202c] shadow-sm p-6">
+              <h3 class="text-[#111318] dark:text-white text-lg font-bold mb-4">Recent Activity</h3>
+
+              <div class="flex flex-col gap-0">
+                {% for record in attendance_records|slice:":5" %}
+                  <div class="flex gap-4 pb-4 {% if not forloop.last %}border-l-2 {% if record.status == 'Present' %}border-green-200 dark:border-green-900{% else %}border-red-200 dark:border-red-900{% endif %}{% endif %} pl-4 relative">
+                    <div class="absolute -left-[9px] top-0 size-4 {% if record.status == 'Present' %}bg-green-500{% else %}bg-red-500{% endif %} rounded-full border-4 border-white dark:border-[#1a202c]"></div>
+                    <div class="flex flex-col flex-1">
+                      <p class="text-sm font-bold text-[#111318] dark:text-white">Attendance Marked: {{ record.subject.name }}</p>
+                      <p class="text-xs text-[#616f89] dark:text-gray-400">{{ record.date }}</p>
+                    </div>
+                    <span class="ml-auto text-xs font-medium {% if record.status == 'Present' %}text-green-600 bg-green-50 dark:bg-green-900/20{% else %}text-red-600 bg-red-50 dark:bg-red-900/20{% endif %} px-2 py-1 rounded h-fit">
+                      {{ record.status|title }}
+                    </span>
+                  </div>
+                {% empty %}
+                  <p class="text-[#616f89] dark:text-gray-400 text-center py-8">No recent activity</p>
+                {% endfor %}
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
     </main>
-</div>
+  </div>
 </body>
 </html>
