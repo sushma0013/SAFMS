@@ -1,0 +1,33 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Payment Requests</h1>
+<table>
+  <tr>
+    <th>Student</th><th>Semester</th><th>Amount</th><th>Note</th><th>Status</th><th>Proof</th><th>Action</th>
+  </tr>
+  {% for r in requests %}
+  <tr>
+    <td>{{ r.student.full_name }}</td>
+    <td>{{ r.semester }}</td>
+    <td>{{ r.amount }}</td>
+    <td>{{ r.note }}</td>
+    <td>{{ r.status }}</td>
+    <td>
+      {% if r.proof %}
+        <a href="{{ r.proof.url }}" target="_blank">View</a>
+      {% else %}
+        No Proof
+      {% endif %}
+    </td>
+    <td>
+      {% if r.status == "PENDING" %}
+        <a href="{% url 'attendance:approve_payment_request' r.id %}">Approve</a> |
+        <a href="{% url 'attendance:reject_payment_request' r.id %}">Reject</a>
+      {% else %}
+        Reviewed
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

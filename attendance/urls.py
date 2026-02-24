@@ -76,7 +76,11 @@ path("student/my-fees/", views.my_fees, name="my_fees"),
 path("student/report/", views.student_report, name="student_report"),
 path("student/settings/", views.student_settings, name="student_settings"),
 path("fee/dashboard/", views.fee_manager_dashboard, name="fee_manager_dashboard"),
-
+path("student/pay-request/", views.create_payment_request, name="create_payment_request"),
+path("fee-manager/requests/", views.fee_manager_requests, name="fee_manager_requests"),
+path("fee-manager/requests/<int:pk>/approve/", views.approve_payment_request, name="approve_payment_request"),
+path("fee-manager/requests/<int:pk>/reject/", views.reject_payment_request, name="reject_payment_request"),
+path("student/notification/read/<int:notif_id>/", views.mark_notification_read, name="mark_notification_read"),
 
 ]
 

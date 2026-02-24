@@ -131,6 +131,51 @@
         <div class="w-full max-w-7xl mx-auto flex flex-col gap-6">
 
           <!-- Alert Section -->
+          {% if popup_notification %}
+          <div id="feePopup" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-fade-in">
+
+              <div class="flex items-center gap-3 mb-4">
+                <span class="material-symbols-outlined text-red-600 text-3xl">
+                  priority_high
+                </span>
+                <h3 class="text-xl font-bold text-slate-900">
+                  {{ popup_notification.title }}
+                </h3>
+              </div>
+
+              <p class="text-slate-700 mb-4">
+                {{ popup_notification.message }}
+              </p>
+
+              {% if popup_notification.due_date %}
+                <p class="text-sm text-red-600 font-semibold mb-4">
+                  Due Date: {{ popup_notification.due_date }}
+                </p>
+              {% endif %}
+
+              <div class="flex justify-end gap-3">
+                <button onclick="closeFeePopup()"
+                        class="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300">
+                  Close
+                </button>
+
+                <a href="{% url 'attendance:my_fees' %}"
+                   class="px-4 py-2 rounded-lg bg-primary text-white hover:bg-blue-700">
+                  Go to My Fees
+                </a>
+              </div>
+
+            </div>
+          </div>
+
+          <script>
+          function closeFeePopup() {
+            document.getElementById("feePopup").style.display = "none";
+          }
+          </script>
+          {% endif %}
+
           {% for stat in attendance_stats %}
             {% if stat.percentage < 75 %}
               <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800/30 p-5 shadow-sm">
@@ -207,12 +252,25 @@
                 <p class="text-[#616f89] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Pending Dues</p>
               </div>
               <div>
-                <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">$45,000</p>
-                <p class="text-orange-600 dark:text-orange-400 text-sm font-bold mt-1">Due by Oct 30, 2026</p>
+                <p class="text-[#111318] dark:text-white text-3xl font-bold leading-tight">
+                  Rs. {{ fee_remaining|floatformat:0 }}
+                </p>
+
+                {% if fee_due_date %}
+                  <p class="text-orange-600 dark:text-orange-400 text-sm font-bold mt-1">
+                    Due by {{ fee_due_date }}
+                  </p>
+                {% else %}
+                  <p class="text-[#616f89] dark:text-gray-400 text-sm mt-1">
+                    No due date set
+                  </p>
+                {% endif %}
               </div>
-              <button class="mt-2 w-fit px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
-                Pay Now
-              </button>
+
+              <a href="{% url 'attendance:my_fees' %}"
+                 class="mt-2 w-fit px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
+                View Fees
+              </a>
             </div>
 
           </div>
@@ -260,36 +318,38 @@
                 <div class="flex items-center gap-6">
                   <div class="relative size-24 flex-shrink-0">
                     <svg class="size-full -rotate-90" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-                      <circle class="stroke-current text-gray-200 dark:text-gray-700" cx="18" cy="18" fill="none" r="16" stroke-width="3"></circle>
-                      <circle class="stroke-current text-green-500" cx="18" cy="18" fill="none" r="16"
-                              stroke-dasharray="100" stroke-dashoffset="45" stroke-linecap="round" stroke-width="3"></circle>
+                      <circle class="stroke-current text-gray-200 dark:text-gray-700"
+                              cx="18" cy="18" fill="none" r="16" stroke-width="3"></circle>
+
+                      <circle class="stroke-current text-green-500"
+                              cx="18" cy="18" fill="none" r="16"
+                              stroke-width="3"
+                              stroke-dasharray="100"
+                              stroke-dashoffset="{{ fee_dashoffset }}"
+                              stroke-linecap="round"></circle>
                     </svg>
                     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-                      <span class="text-xs text-gray-500 font-medium">Paid</span>
-                      <span class="block text-sm font-bold text-[#111318] dark:text-white">55%</span>
+                      <span class="block text-sm font-bold text-[#111318] dark:text-white">{{ fee_percent }}%</span>
                     </div>
                   </div>
 
                   <div class="flex flex-col gap-3 flex-1">
                     <div class="flex justify-between items-center pb-2 border-b border-dashed border-gray-200 dark:border-gray-700">
-                      <span class="text-sm text-[#616f89] dark:text-gray-400">Total Fees</span>
-                      <span class="text-sm font-bold text-[#111318] dark:text-white">$100,000</span>
+                      <span class="text-sm font-bold text-[#111318] dark:text-white">Rs. {{ fee_total|floatformat:0 }}</span>
                     </div>
                     <div class="flex justify-between items-center pb-2 border-b border-dashed border-gray-200 dark:border-gray-700">
-                      <span class="text-sm text-[#616f89] dark:text-gray-400">Paid Amount</span>
-                      <span class="text-sm font-bold text-green-600">$55,000</span>
+                      <span class="text-sm font-bold text-green-600">Rs. {{ fee_paid|floatformat:0 }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-[#616f89] dark:text-gray-400">Due Amount</span>
-                      <span class="text-sm font-bold text-red-500">$45,000</span>
+                      <span class="text-sm font-bold text-red-500">Rs. {{ fee_remaining|floatformat:0 }}</span>
                     </div>
                   </div>
                 </div>
 
                 <div class="flex gap-3 mt-auto">
-                  <button class="flex-1 py-2.5 rounded-lg bg-primary hover:bg-blue-700 text-white text-sm font-bold shadow-md transition-colors">
-                    Pay Dues
-                  </button>
+                  <a href="{% url 'attendance:my_fees' %}" class="flex-1 py-2.5 rounded-lg bg-primary hover:bg-blue-700 text-white text-sm font-bold shadow-md transition-colors text-center">
+                    View Fees
+                  </a>
                   <button class="flex-1 py-2.5 rounded-lg border border-[#dbdfe6] dark:border-gray-700 text-[#111318] dark:text-white text-sm font-medium hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined text-sm">download</span>
                     Statement

@@ -35,8 +35,8 @@
     <div class="bg-white p-6 rounded-xl border border-red-200 shadow-sm">
       <p class="text-xs font-bold text-red-600 uppercase tracking-wider">Remaining</p>
       <h3 class="text-3xl font-bold mt-2 text-red-600">
-        Rs. {{ remaining_amount }}
-      </h3>
+  Rs. {{ remaining }}
+</h3>
       {% if due_date %}
         <p class="text-sm text-slate-500 mt-2">
           Due by <b>{{ due_date }}</b>
@@ -46,7 +46,7 @@
   </div>
 
   <!-- REMINDER -->
-  {% if remaining_amount > 0 %}
+  {% if remaining > 0 %}
   <div class="bg-primary/10 border border-primary/20 rounded-xl p-6 flex gap-4">
     <span class="material-symbols-outlined text-primary text-3xl">
       priority_high

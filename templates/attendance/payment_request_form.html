@@ -1,0 +1,32 @@
+{% extends "attendance/base.html" %}
+{% block content %}
+<div class="p-6 max-w-xl">
+  <h1 class="text-2xl font-bold mb-4">Submit Payment Proof</h1>
+
+  <form method="POST" enctype="multipart/form-data" class="space-y-4 bg-white p-5 rounded-lg border">
+    {% csrf_token %}
+
+    <div>
+      <label class="block text-sm font-semibold mb-1">Semester</label>
+      <input name="semester" type="number" value="1" class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block text-sm font-semibold mb-1">Amount (Rs)</label>
+      <input name="amount" type="number" required class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block text-sm font-semibold mb-1">Note</label>
+      <input name="note" type="text" class="w-full border rounded p-2" placeholder="e.g. bank transfer / khalti / installment 1">
+    </div>
+
+    <div>
+      <label class="block text-sm font-semibold mb-1">Upload Proof (Screenshot)</label>
+      <input name="proof" type="file" class="w-full">
+    </div>
+
+    <button class="bg-blue-600 text-white px-4 py-2 rounded font-bold">Submit</button>
+  </form>
+</div>
+{% endblock %}

@@ -223,18 +223,16 @@ class StudentProfile(models.Model):
 
 
 class FeeStructure(models.Model):
-    student = models.OneToOneField(
-        StudentProfile,
-        on_delete=models.CASCADE,
-        related_name="fee_structure"
-    )
-    total_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-
-    # deadline for paying the remaining fee
+    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name="fee_structures")
+    semester = models.PositiveIntegerField(default=1)  # ✅ default added
+    total_fee = models.DecimalField(max_digits=10, decimal_places=2)
     due_date = models.DateField(null=True, blank=True)
 
+    class Meta:
+        unique_together = ("student", "semester")  # ✅ one fee row per student per semester
+
     def __str__(self):
-        return f"{self.student.student_id} - Total: {self.total_fee}"
+        return f"{self.student.full_name} | Sem {self.semester}"
 
 
 class Payment(models.Model):
@@ -243,24 +241,80 @@ class Payment(models.Model):
         on_delete=models.CASCADE,
         related_name="payments"
     )
+    semester = models.PositiveIntegerField(default=1)  # ✅ default added
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    note = models.CharField(max_length=255, blank=True)
     paid_at = models.DateTimeField(auto_now_add=True)
-    note = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
-        return f"{self.student.student_id} - Paid: {self.amount}"
+        return f"{self.student.full_name} | Rs {self.amount}"
 
 
 class Notification(models.Model):
+    STATUS_CHOICES = (
+        ("PENDING", "Pending"),
+        ("SENT", "Sent"),
+        ("READ", "Read"),
+    )
+
     student = models.ForeignKey(
         StudentProfile,
         on_delete=models.CASCADE,
         related_name="notifications"
     )
+
     title = models.CharField(max_length=120)
     message = models.TextField()
+
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default="PENDING"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.student.student_id} - {self.title}"
+
+
+class PaymentRequest(models.Model):
+    STATUS_CHOICES = (
+        ("PENDING", "Pending"),
+        ("APPROVED", "Approved"),
+        ("REJECTED", "Rejected"),
+    )
+
+    student = models.ForeignKey(
+        StudentProfile,
+        on_delete=models.CASCADE,
+        related_name="payment_requests"
+    )
+    semester = models.IntegerField(default=1)  # ✅ add default to avoid migration prompt
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    note = models.CharField(max_length=255, blank=True)
+
+    proof = models.ImageField(upload_to="payment_proofs/", null=True, blank=True)
+
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="PENDING")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    reviewed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reviewed_payments"
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.student.student_id} | {self.amount} | {self.status}"
