@@ -1,7 +1,207 @@
 {% extends "attendance/base.html" %}
+{% block title %}My Attendance - SAFMS{% endblock %}
+
 {% block content %}
-<div class="p-6">
-  <h1 class="text-2xl font-bold">My Attendance</h1>
-  <p class="mt-2 text-gray-600">This page will show your attendance records.</p>
+<div class="space-y-8 font-display">
+
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div>
+      <h2 class="text-3xl font-black tracking-tight text-slate-900">My Attendance</h2>
+      <p class="text-slate-500 mt-1 font-medium">
+        Attendance overview for {{ profile.full_name|default:request.user.username }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-slate-500 text-sm font-medium">Total Classes</span>
+        <div class="p-2 bg-slate-100 rounded-lg text-slate-600">
+          <span class="material-symbols-outlined text-xl">auto_stories</span>
+        </div>
+      </div>
+      <p class="text-3xl font-bold">{{ total_classes }}</p>
+      <div class="mt-2">
+        <span class="text-xs text-slate-400">Scheduled sessions</span>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-slate-500 text-sm font-medium">Present</span>
+        <div class="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+          <span class="material-symbols-outlined text-xl">check_circle</span>
+        </div>
+      </div>
+      <p class="text-3xl font-bold">{{ total_present }}</p>
+      <div class="mt-2">
+        <span class="text-xs text-emerald-600 font-medium">{{ overall_percentage }}% attendance rate</span>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-slate-500 text-sm font-medium">Absent</span>
+        <div class="p-2 bg-red-50 rounded-lg text-red-600">
+          <span class="material-symbols-outlined text-xl">cancel</span>
+        </div>
+      </div>
+      <p class="text-3xl font-bold">{{ total_absent }}</p>
+      <div class="mt-2">
+        <span class="text-xs text-red-600 font-medium">
+          {% if total_classes > 0 %}
+            {{ total_absent|floatformat:0 }} missed classes
+          {% else %}
+            No records yet
+          {% endif %}
+        </span>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent shadow-sm relative overflow-hidden">
+      <div class="relative z-10">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-primary text-sm font-semibold">Attendance Rate</span>
+          <div class="p-2 bg-primary/10 rounded-lg text-primary">
+            <span class="material-symbols-outlined text-xl">analytics</span>
+          </div>
+        </div>
+        <p class="text-3xl font-bold text-primary">{{ overall_percentage }}%</p>
+        <div class="mt-2">
+          <span class="text-xs text-primary font-medium">
+            {% if overall_percentage >= 75 %}
+              Above target (75%)
+            {% else %}
+              Below target (75%)
+            {% endif %}
+          </span>
+        </div>
+      </div>
+      <div class="absolute -right-4 -bottom-4 opacity-5 pointer-events-none">
+        <span class="material-symbols-outlined text-9xl">trending_up</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+
+    <!-- Subject Wise Attendance -->
+    <div class="xl:col-span-2 space-y-6">
+      <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+          <h3 class="font-bold text-slate-800">Subject-wise Performance</h3>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="bg-slate-50">
+                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Subject Name</th>
+                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Present / Total</th>
+                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Rate</th>
+                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Progress</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {% for stat in subject_stats %}
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="size-2 rounded-full {% if stat.percentage >= 90 %}bg-emerald-500{% elif stat.percentage >= 75 %}bg-primary{% elif stat.percentage >= 60 %}bg-amber-500{% else %}bg-red-500{% endif %}"></div>
+                    <span class="text-sm font-medium">{{ stat.subject.name }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 text-sm font-medium">{{ stat.present }} / {{ stat.total }}</td>
+                <td class="px-6 py-4 text-sm font-bold
+                  {% if stat.percentage >= 90 %}text-emerald-600
+                  {% elif stat.percentage >= 75 %}text-slate-700
+                  {% elif stat.percentage >= 60 %}text-amber-600
+                  {% else %}text-red-600{% endif %}">
+                  {{ stat.percentage }}%
+                </td>
+                <td class="px-6 py-4">
+                  <div class="w-full bg-slate-100 rounded-full h-2 min-w-32">
+                    <div class="{% if stat.percentage >= 90 %}bg-emerald-500{% elif stat.percentage >= 75 %}bg-primary{% elif stat.percentage >= 60 %}bg-amber-500{% else %}bg-red-500{% endif %} h-2 rounded-full"
+                         style="width: {{ stat.percentage }}%"></div>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="px-6 py-6 text-center text-slate-500">No attendance records found</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="bg-white p-6 rounded-xl border border-slate-200 flex flex-wrap gap-8 items-center justify-center lg:justify-start">
+        <div class="flex items-center gap-2">
+          <span class="size-3 rounded-full bg-emerald-500"></span>
+          <span class="text-sm text-slate-600">Excellent (&gt;90%)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="size-3 rounded-full bg-primary"></span>
+          <span class="text-sm text-slate-600">Good (75% - 90%)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="size-3 rounded-full bg-amber-500"></span>
+          <span class="text-sm text-slate-600">Average (60% - 75%)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="size-3 rounded-full bg-red-500"></span>
+          <span class="text-sm text-slate-600">Low (&lt; 60%)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side -->
+    <div class="space-y-6">
+
+      <!-- Recent Attendance History -->
+      <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="font-bold text-slate-800">Attendance History</h3>
+        </div>
+
+        <div class="space-y-3">
+          {% for record in recent_records %}
+          <div class="flex items-start gap-3">
+            <div class="mt-1 size-2 rounded-full {% if record.status == 'Present' %}bg-emerald-500{% else %}bg-red-500{% endif %} shrink-0"></div>
+            <div class="min-w-0">
+              <p class="text-sm font-medium">
+                {{ record.status }} - {{ record.subject.name }}
+              </p>
+              <p class="text-[10px] text-slate-500">
+                {{ record.date }}{% if record.recorded_at %} • {{ record.recorded_at|date:"H:i" }}{% endif %}
+              </p>
+            </div>
+          </div>
+          {% empty %}
+          <p class="text-sm text-slate-500">No attendance history yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Notice -->
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 flex gap-4">
+        <span class="material-symbols-outlined text-amber-600">info</span>
+        <div>
+          <p class="text-sm font-bold text-amber-800">Minimum Requirement</p>
+          <p class="text-xs text-amber-700 mt-1">
+            Ensure you maintain at least 75% attendance to be eligible for the final examinations.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
 {% endblock %}

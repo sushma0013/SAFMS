@@ -22,6 +22,10 @@ from .models import StudentProfile, FeeStructure, Payment, Notification
 
 
 
+from .models import Subject, AttendanceRecord, StudentProfile
+
+
+
 
 
 
@@ -889,12 +893,59 @@ def teacher_add_student(request):
 #     })
 
 
+
 @login_required
 def my_attendance(request):
-    if request.user.profile.role != 'student':
+    if request.user.profile.role != "student":
         messages.error(request, "Students only.")
-        return redirect('home')
-    return render(request, "attendance/my_attendance.html")
+        return redirect("home")
+
+    try:
+        profile = request.user.student_profile
+    except StudentProfile.DoesNotExist:
+        messages.error(request, "Student profile not linked.")
+        return redirect("attendance:student_dashboard")
+
+    enrolled_subjects = Subject.objects.filter(students=request.user)
+
+    subject_stats = []
+    total_classes = 0
+    total_present = 0
+
+    for subject in enrolled_subjects:
+        total = AttendanceRecord.objects.filter(student=request.user, subject=subject).count()
+        present = AttendanceRecord.objects.filter(student=request.user, subject=subject, status="Present").count()
+        absent = AttendanceRecord.objects.filter(student=request.user, subject=subject, status="Absent").count()
+        percentage = round((present / total) * 100, 2) if total else 0
+
+        total_classes += total
+        total_present += present
+
+        subject_stats.append({
+            "subject": subject,
+            "total": total,
+            "present": present,
+            "absent": absent,
+            "percentage": percentage,
+        })
+
+    total_absent = total_classes - total_present
+    overall_percentage = round((total_present / total_classes) * 100, 2) if total_classes else 0
+
+    recent_records = AttendanceRecord.objects.filter(
+        student=request.user
+    ).select_related("subject").order_by("-date", "-recorded_at")[:10]
+
+    context = {
+        "profile": profile,
+        "subject_stats": subject_stats,
+        "total_classes": total_classes,
+        "total_present": total_present,
+        "total_absent": total_absent,
+        "overall_percentage": overall_percentage,
+        "recent_records": recent_records,
+    }
+    return render(request, "attendance/my_attendance.html", context)
 
 
 
@@ -960,12 +1011,128 @@ def my_fees(request):
     return render(request, "attendance/my_fees.html", context)
 
 
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.db.models import Sum
+from django.utils import timezone
+
+from .models import StudentProfile, Subject, AttendanceRecord, FeeStructure, Payment
+
+
 @login_required
 def student_report(request):
-    if request.user.profile.role != 'student':
+    if request.user.profile.role != "student":
         messages.error(request, "Students only.")
-        return redirect('home')
-    return render(request, "attendance/student_report.html")
+        return redirect("home")
+
+    try:
+        profile = request.user.student_profile
+    except StudentProfile.DoesNotExist:
+        messages.error(request, "Student profile not linked.")
+        return redirect("attendance:student_dashboard")
+
+    # -----------------------------
+    # Attendance summary
+    # -----------------------------
+    enrolled_subjects = Subject.objects.filter(students=request.user)
+
+    subject_stats = []
+    total_classes = 0
+    total_present = 0
+
+    for subject in enrolled_subjects:
+        total = AttendanceRecord.objects.filter(student=request.user, subject=subject).count()
+        present = AttendanceRecord.objects.filter(student=request.user, subject=subject, status="Present").count()
+        absent = AttendanceRecord.objects.filter(student=request.user, subject=subject, status="Absent").count()
+        percentage = round((present / total) * 100, 2) if total else 0
+
+        total_classes += total
+        total_present += present
+
+        subject_stats.append({
+            "subject": subject,
+            "total": total,
+            "present": present,
+            "absent": absent,
+            "percentage": percentage,
+        })
+
+    total_absent = total_classes - total_present
+    overall_percentage = round((total_present / total_classes) * 100, 2) if total_classes else 0
+
+    if overall_percentage >= 75:
+        attendance_status = "Good"
+        attendance_status_color = "text-green-600"
+        attendance_message = f"Your current attendance is {overall_percentage}%, which is above the 75% threshold."
+        exam_eligible = True
+    else:
+        attendance_status = "Warning"
+        attendance_status_color = "text-orange-600"
+        attendance_message = f"Your current attendance is {overall_percentage}%, which is below the 75% threshold."
+        exam_eligible = False
+
+    # -----------------------------
+    # Fee summary
+    # -----------------------------
+    fee = FeeStructure.objects.filter(student=profile).order_by("-semester").first()
+
+    total_fee = fee.total_fee if fee else 0
+    due_date = fee.due_date if fee else None
+    current_semester = fee.semester if fee else 1
+
+    payments = Payment.objects.filter(student=profile, semester=current_semester).order_by("-paid_at")
+    paid_amount = payments.aggregate(total=Sum("amount"))["total"] or 0
+    remaining_due = total_fee - paid_amount if fee else 0
+
+    if fee:
+        if remaining_due <= 0:
+            fee_status = "Paid"
+            fee_status_color = "text-green-600"
+            fee_clearance = True
+        elif paid_amount > 0:
+            fee_status = "Partial"
+            fee_status_color = "text-orange-500"
+            fee_clearance = False
+        else:
+            fee_status = "Due"
+            fee_status_color = "text-red-600"
+            fee_clearance = False
+    else:
+        fee_status = "Not Set"
+        fee_status_color = "text-slate-500"
+        fee_clearance = False
+
+    report_date = timezone.localdate()
+
+    context = {
+        "profile": profile,
+        "report_date": report_date,
+
+        # attendance
+        "subject_stats": subject_stats,
+        "total_classes": total_classes,
+        "total_present": total_present,
+        "total_absent": total_absent,
+        "overall_percentage": overall_percentage,
+        "attendance_status": attendance_status,
+        "attendance_status_color": attendance_status_color,
+        "attendance_message": attendance_message,
+        "exam_eligible": exam_eligible,
+
+        # fees
+        "total_fee": total_fee,
+        "paid_amount": paid_amount,
+        "remaining_due": remaining_due,
+        "due_date": due_date,
+        "fee_status": fee_status,
+        "fee_status_color": fee_status_color,
+        "fee_clearance": fee_clearance,
+        "payments": payments,
+        "current_semester": current_semester,
+    }
+
+    return render(request, "attendance/student_report.html", context)
 
 
 @login_required

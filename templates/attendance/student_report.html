@@ -1,7 +1,323 @@
 {% extends "attendance/base.html" %}
+{% block title %}Student Academic & Financial Report - SAFMS{% endblock %}
+
 {% block content %}
-<div class="p-6">
-  <h1 class="text-2xl font-bold">Report</h1>
-  <p class="mt-2 text-gray-600">This page will show student reports.</p>
+
+<style>
+  @media print {
+    body * {
+      visibility: hidden !important;
+    }
+
+    #report-print-area,
+    #report-print-area * {
+      visibility: visible !important;
+    }
+
+    #report-print-area {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      background: white;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .no-print {
+      display: none !important;
+    }
+
+    @page {
+      size: A4;
+      margin: 12mm;
+    }
+  }
+</style>
+
+<div class="space-y-8 font-display">
+
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
+    <div>
+      <h1 class="text-2xl font-black text-slate-900 tracking-tight">Student Academic &amp; Financial Report</h1>
+      <p class="text-slate-500 text-sm">Comprehensive overview of attendance and fee status.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="window.print()" class="inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-bold text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors">
+        <span class="material-symbols-outlined mr-2 text-lg">print</span> Print
+      </button>
+    </div>
+  </div>
+
+  <div id="report-print-area">
+
+    <!-- Alerts -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      {% if remaining_due > 0 %}
+      <div class="flex items-center gap-4 p-4 rounded-xl bg-orange-50 border border-orange-200">
+        <div class="p-2 rounded-full bg-orange-100 text-orange-600">
+          <span class="material-symbols-outlined">warning</span>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-orange-800">Fee Due Reminder</h3>
+          <p class="text-xs text-orange-700">
+            {% if due_date %}
+              Your payment is due on {{ due_date }}. Remaining: Rs. {{ remaining_due }}.
+            {% else %}
+              Your remaining fee is Rs. {{ remaining_due }}.
+            {% endif %}
+          </p>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="flex items-center gap-4 p-4 rounded-xl {% if overall_percentage >= 75 %}bg-green-50 border-green-200{% else %}bg-red-50 border-red-200{% endif %} border">
+        <div class="p-2 rounded-full {% if overall_percentage >= 75 %}bg-green-100 text-green-600{% else %}bg-red-100 text-red-600{% endif %}">
+          <span class="material-symbols-outlined">{% if overall_percentage >= 75 %}check_circle{% else %}warning{% endif %}</span>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold {% if overall_percentage >= 75 %}text-green-800{% else %}text-red-800{% endif %}">
+            Attendance Status: {{ attendance_status }}
+          </h3>
+          <p class="text-xs {% if overall_percentage >= 75 %}text-green-700{% else %}text-red-700{% endif %}">
+            {{ attendance_message }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Student Info -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6 mb-8">
+      <h2 class="text-lg font-bold mb-6 text-slate-800 border-b border-slate-100 pb-3">Student Information</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-12">
+        <div>
+          <p class="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-1">Full Name</p>
+          <p class="text-sm font-medium text-slate-900">{{ profile.full_name|default:request.user.username }}</p>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-1">Student ID</p>
+          <p class="text-sm font-medium text-slate-900">{{ profile.student_id|default:"-" }}</p>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-1">Major</p>
+          <p class="text-sm font-medium text-slate-900">{{ profile.major|default:"-" }}</p>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-1">Semester</p>
+          <p class="text-sm font-medium text-slate-900">{{ profile.semester|default:"-" }}</p>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-1">Academic Advisor</p>
+          <p class="text-sm font-medium text-slate-900">
+            {% if profile.academic_advisor %}
+              {{ profile.academic_advisor.get_full_name|default:profile.academic_advisor.username }}
+            {% else %}
+              -
+            {% endif %}
+          </p>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-1">Report Date</p>
+          <p class="text-sm font-medium text-slate-900">{{ report_date }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attendance Summary -->
+    <div class="mb-8">
+      <h2 class="text-lg font-bold mb-4 text-slate-800">Attendance Summary</h2>
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200">
+          <p class="text-xs text-slate-500 mb-1">Total Classes</p>
+          <p class="text-2xl font-black text-primary">{{ total_classes }}</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200">
+          <p class="text-xs text-slate-500 mb-1">Present</p>
+          <p class="text-2xl font-black text-green-600">{{ total_present }}</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200">
+          <p class="text-xs text-slate-500 mb-1">Absent</p>
+          <p class="text-2xl font-black text-red-600">{{ total_absent }}</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200">
+          <p class="text-xs text-slate-500 mb-1">Overall %</p>
+          <p class="text-2xl font-black text-slate-900">{{ overall_percentage }}%</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200">
+          <p class="text-xs text-slate-500 mb-1">Status</p>
+          <p class="text-2xl font-black {{ attendance_status_color }}">{{ attendance_status }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subject-wise Attendance -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-8">
+      <div class="p-4 border-b border-slate-100">
+        <h3 class="font-bold text-slate-800">Subject-wise Attendance</h3>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="bg-slate-50 text-slate-500 font-bold">
+              <th class="px-6 py-3">Subject Name</th>
+              <th class="px-6 py-3">Total Classes</th>
+              <th class="px-6 py-3">Present</th>
+              <th class="px-6 py-3">Absent</th>
+              <th class="px-6 py-3">Attendance %</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for stat in subject_stats %}
+            <tr>
+              <td class="px-6 py-4 font-medium">{{ stat.subject.name }}</td>
+              <td class="px-6 py-4">{{ stat.total }}</td>
+              <td class="px-6 py-4">{{ stat.present }}</td>
+              <td class="px-6 py-4">{{ stat.absent }}</td>
+              <td class="px-6 py-4">
+                <span class="font-bold
+                  {% if stat.percentage >= 75 %}
+                    text-green-600
+                  {% elif stat.percentage >= 60 %}
+                    text-orange-600
+                  {% else %}
+                    text-red-600
+                  {% endif %}">
+                  {{ stat.percentage }}%
+                </span>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="px-6 py-4 text-center text-slate-500">No attendance records found</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Fee Summary -->
+    <div class="mb-8">
+      <h2 class="text-lg font-bold mb-4 text-slate-800">Fee Summary</h2>
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200">
+          <p class="text-xs text-slate-500 mb-1">Total Fee</p>
+          <p class="text-2xl font-black text-slate-900">Rs. {{ total_fee }}</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200">
+          <p class="text-xs text-slate-500 mb-1">Paid Amount</p>
+          <p class="text-2xl font-black text-green-600">Rs. {{ paid_amount }}</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200">
+          <p class="text-xs text-slate-500 mb-1">Remaining Due</p>
+          <p class="text-2xl font-black text-red-600">Rs. {{ remaining_due }}</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200">
+          <p class="text-xs text-slate-500 mb-1">Due Date</p>
+          <p class="text-sm font-bold mt-2 text-slate-900">
+            {% if due_date %}{{ due_date }}{% else %}-{% endif %}
+          </p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200">
+          <p class="text-xs text-slate-500 mb-1">Fee Status</p>
+          <p class="text-lg font-black {{ fee_status_color }} mt-1">{{ fee_status }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment History -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-8">
+      <div class="p-4 border-b border-slate-100">
+        <h3 class="font-bold text-slate-800">Payment History</h3>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="bg-slate-50 text-slate-500 font-bold">
+              <th class="px-6 py-3">Date</th>
+              <th class="px-6 py-3">Amount</th>
+              <th class="px-6 py-3">Note</th>
+              <th class="px-6 py-3">Semester</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for p in payments %}
+            <tr>
+              <td class="px-6 py-4">{{ p.paid_at|date:"M d, Y" }}</td>
+              <td class="px-6 py-4 font-bold">Rs. {{ p.amount }}</td>
+              <td class="px-6 py-4 text-slate-500">{{ p.note|default:"-" }}</td>
+              <td class="px-6 py-4">{{ p.semester }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="px-6 py-4 text-center text-slate-500">No payment history found</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Remarks -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6 mb-8">
+      <h2 class="text-lg font-bold mb-6 text-slate-800 border-b border-slate-100 pb-3">Final Status &amp; Remarks</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+            <span class="text-sm font-medium text-slate-600">Exam Eligibility</span>
+            <span class="px-3 py-1 text-xs font-bold rounded-full {% if exam_eligible %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+              {% if exam_eligible %}Yes{% else %}No{% endif %}
+            </span>
+          </div>
+          <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+            <span class="text-sm font-medium text-slate-600">Fee Clearance</span>
+            <span class="px-3 py-1 text-xs font-bold rounded-full {% if fee_clearance %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+              {% if fee_clearance %}Yes{% else %}No{% endif %}
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2">General Remarks</h4>
+          <p class="text-sm text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-lg italic">
+            {% if not exam_eligible and not fee_clearance %}
+              Attendance is below required threshold and fees are not fully cleared. Please improve attendance and clear pending dues.
+            {% elif not exam_eligible %}
+              Attendance is below the required threshold. Please improve attendance to maintain exam eligibility.
+            {% elif not fee_clearance %}
+              Attendance is satisfactory, but pending fees must be cleared before final processing.
+            {% else %}
+              Attendance and fee records are in good standing.
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-12 pt-8 border-t border-slate-200">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm font-medium">
+        <div class="flex gap-6 flex-wrap">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full {% if exam_eligible %}bg-green-500{% else %}bg-red-500{% endif %}"></div>
+            <span class="text-slate-600">
+              Attendance requirement met:
+              <span class="text-slate-900">{% if exam_eligible %}Yes{% else %}No{% endif %}</span>
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full {% if fee_clearance %}bg-green-500{% else %}bg-red-500{% endif %}"></div>
+            <span class="text-slate-600">
+              Fee fully cleared:
+              <span class="text-slate-900">{% if fee_clearance %}Yes{% else %}No{% endif %}</span>
+            </span>
+          </div>
+        </div>
+        <p class="text-slate-400 text-xs">© 2026 SAFMS System - Official Digital Academic Record</p>
+      </div>
+    </footer>
+
+  </div>
 </div>
-{% endblock %}
+{% endblock %} update in here ready to copy paste
