@@ -82,5 +82,7 @@ path("fee-manager/requests/<int:pk>/approve/", views.approve_payment_request, na
 path("fee-manager/requests/<int:pk>/reject/", views.reject_payment_request, name="reject_payment_request"),
 path("student/notification/read/<int:notif_id>/", views.mark_notification_read, name="mark_notification_read"),
 
+path("student/my-fees/khalti/initiate/", views.khalti_initiate_payment, name="khalti_initiate"),
+path("student/my-fees/khalti/verify/", views.khalti_verify_payment, name="khalti_verify"),
 ]
 

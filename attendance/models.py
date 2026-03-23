@@ -235,20 +235,94 @@ class FeeStructure(models.Model):
         return f"{self.student.full_name} | Sem {self.semester}"
 
 
+# class Payment(models.Model):
+#     student = models.ForeignKey(
+#         StudentProfile,
+#         on_delete=models.CASCADE,
+#         related_name="payments"
+#     )
+#     semester = models.PositiveIntegerField(default=1)  # ✅ default added
+#     amount = models.DecimalField(max_digits=10, decimal_places=2)
+#     note = models.CharField(max_length=255, blank=True)
+#     paid_at = models.DateTimeField(auto_now_add=True)
+
+#     def __str__(self):
+#         return f"{self.student.full_name} | Rs {self.amount}"
 class Payment(models.Model):
+    METHOD_CHOICES = (
+        ("MANUAL", "Manual"),
+        ("KHALTI", "Khalti"),
+    )
+
+    STATUS_CHOICES = (
+        ("PENDING", "Pending"),
+        ("COMPLETED", "Completed"),
+        ("FAILED", "Failed"),
+    )
+
     student = models.ForeignKey(
         StudentProfile,
         on_delete=models.CASCADE,
         related_name="payments"
     )
-    semester = models.PositiveIntegerField(default=1)  # ✅ default added
+    semester = models.PositiveIntegerField(default=1)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     note = models.CharField(max_length=255, blank=True)
     paid_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.student.full_name} | Rs {self.amount}"
+    payment_method = models.CharField(
+        max_length=20,
+        choices=METHOD_CHOICES,
+        default="MANUAL"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="COMPLETED"
+    )
 
+    pidx = models.CharField(max_length=100, blank=True, null=True, unique=True)
+    transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    purchase_order_id = models.CharField(max_length=100, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.student.full_name} | Rs {self.amount} | {self.payment_method}"
+
+
+class KhaltiPayment(models.Model):
+    STATUS_CHOICES = (
+        ("INITIATED", "Initiated"),
+        ("COMPLETED", "Completed"),
+        ("FAILED", "Failed"),
+    )
+
+    student = models.ForeignKey(
+        StudentProfile,
+        on_delete=models.CASCADE,
+        related_name="khalti_payments"
+    )
+    semester = models.PositiveIntegerField(default=1)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    purchase_order_id = models.CharField(max_length=100, unique=True)
+    purchase_order_name = models.CharField(max_length=255)
+
+    pidx = models.CharField(max_length=100, null=True, blank=True, unique=True)
+    transaction_id = models.CharField(max_length=100, null=True, blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="INITIATED"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.student.full_name} | {self.purchase_order_id} | {self.status}"
+    
+ 
 
 class Notification(models.Model):
     STATUS_CHOICES = (
@@ -318,3 +392,5 @@ class PaymentRequest(models.Model):
 
     def __str__(self):
         return f"{self.student.student_id} | {self.amount} | {self.status}"
+    
+    

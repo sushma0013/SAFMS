@@ -1,30 +1,66 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
-from django.utils import timezone
+# from django.shortcuts import render, redirect, get_object_or_404
+# from django.contrib.auth.decorators import login_required
+# from django.http import HttpResponse
+# from django.utils import timezone
+# from django.contrib import messages
+# from .models import QRSession, AttendanceRecord, Subject
+# from datetime import timedelta
+# from .utils import close_session_and_mark_absent
+
+# from django.db.models import Count,Q
+# from django.contrib.auth.models import User
+# from .models import StudentProfile
+# from django.contrib.auth.decorators import login_required, user_passes_test
+# from .models import StudentProfile, FeeStructure, Payment
+
+# from django.db.models import Sum
+# from django.db.models import Sum
+# from datetime import timedelta
+# from .models import StudentProfile, FeeStructure, Payment, Notification
+
+# import json
+# import uuid
+# import requests
+
+# from decimal import Decimal
+# from django.conf import settings
+# from django.urls import reverse
+# from django.http import HttpResponseBadRequest
+
+
+
+# from .models import Subject, AttendanceRecord, StudentProfile
+
+import json
+import uuid
+import requests
+
+from decimal import Decimal
+from datetime import timedelta
+
+from django.conf import settings
 from django.contrib import messages
-from .models import QRSession, AttendanceRecord, Subject
-from datetime import timedelta
-from .utils import close_session_and_mark_absent
-
-from django.db.models import Count,Q
-from django.contrib.auth.models import User
-from .models import StudentProfile
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .models import StudentProfile, FeeStructure, Payment
+from django.contrib.auth.models import User
+from django.db.models import Count, Q, Sum, Max
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.utils import timezone
 
-from django.db.models import Sum
-from django.db.models import Sum
-from datetime import timedelta
-from .models import StudentProfile, FeeStructure, Payment, Notification
+from .models import (
+    QRSession,
+    AttendanceRecord,
+    Subject,
+    StudentProfile,
+    FeeStructure,
+    Payment,
+    Notification,
+    PaymentRequest,
+    KhaltiPayment,   # NEW
+)
 
-
-
-
-
-from .models import Subject, AttendanceRecord, StudentProfile
-
-
+from .utils import close_session_and_mark_absent
 
 
 
@@ -145,95 +181,7 @@ def teacher_dashboard(request):
         'low_attendance_students': low_attendance_students,
     })
 
-# @login_required
-# def teacher_dashboard(request):
-#     if request.user.profile.role != 'teacher':
-#         messages.error(request, "Teachers only.")
-#         return redirect('home')
 
-#     subjects = Subject.objects.filter(teacher=request.user)
-#     today = timezone.now().date()
-
-#     subject_stats = []
-#     today_present = 0
-#     today_total = 0
-
-#     # =========================
-#     # SUBJECT LOOP
-#     # =========================
-#     for subject in subjects:
-#         total_students = subject.students.count()
-
-#         session = QRSession.objects.filter(
-#             subject=subject,
-#             session_date=today
-#         ).order_by('-created_at').first()
-
-#         if session:
-#             present = AttendanceRecord.objects.filter(
-#                 session=session,
-#                 status='Present'
-#             ).count()
-#         else:
-#             present = 0
-
-#         today_present += present
-#         today_total += total_students
-
-#         subject_stats.append({
-#             'subject': subject,
-#             'total': total_students,
-#             'present': present,
-#         })
-
-#     # =========================
-#     # TODAY ATTENDANCE %
-#     # =========================
-#     attendance_today = round(
-#         (today_present / today_total) * 100, 2
-#     ) if today_total else 0
-
-#     # =========================
-#     # STUDENTS BELOW 80%
-#     # =========================
-#     low_attendance_students = []
-
-#     students = AttendanceRecord.objects.filter(
-#         subject__teacher=request.user
-#     ).values('student').distinct()
-
-#     for s in students:
-#         student_id = s['student']
-
-#         total_classes = AttendanceRecord.objects.filter(
-#             student_id=student_id,
-#             subject__teacher=request.user
-#         ).count()
-
-#         present_classes = AttendanceRecord.objects.filter(
-#             student_id=student_id,
-#             subject__teacher=request.user,
-#             status='Present'
-#         ).count()
-
-#         if total_classes > 0:
-#             percentage = (present_classes / total_classes) * 100
-#             if percentage < 80:
-#                 low_attendance_students.append({
-#                     'student': User.objects.get(id=student_id),
-#                     'percentage': round(percentage, 2)
-#                 })
-                
-
-#     # =========================
-#     # FINAL RETURN
-#     # =========================
-#     return render(request, 'attendance/teacher_dashboard.html', {
-#         'subjects': subjects,
-#         'subject_stats': subject_stats,
-#         'attendance_today': attendance_today,
-#         'low_attendance_students': low_attendance_students,
-#     })
 
 
 
@@ -401,9 +349,15 @@ def student_dashboard(request):
         fee_total = float(fee.total_fee)
         fee_due_date = fee.due_date
 
-        fee_paid = Payment.objects.filter(student=profile, semester=fee.semester).aggregate(
-            total=Sum("amount")
-        )["total"] or 0
+        fee_paid = Payment.objects.filter(
+    student=profile,
+    semester=fee.semester,
+    status="COMPLETED"
+).aggregate(total=Sum("amount"))["total"] or 0
+
+        # fee_paid = Payment.objects.filter(student=profile, semester=fee.semester).aggregate(
+        #     total=Sum("amount")
+        # )["total"] or 0
         fee_paid = float(fee_paid)
 
         fee_remaining = max(fee_total - fee_paid, 0)
@@ -987,9 +941,10 @@ def my_fees(request):
 
     # ✅ payments only for this semester
     payments = Payment.objects.filter(
-        student=profile,
-        semester=current_semester
-    ).order_by("-paid_at")
+    student=profile,
+    semester=current_semester,
+    status="COMPLETED"
+).order_by("-paid_at")
 
     paid_amount = payments.aggregate(total=Sum("amount"))["total"] or 0
 
@@ -1081,7 +1036,11 @@ def student_report(request):
     due_date = fee.due_date if fee else None
     current_semester = fee.semester if fee else 1
 
-    payments = Payment.objects.filter(student=profile, semester=current_semester).order_by("-paid_at")
+    payments = Payment.objects.filter(
+    student=profile,
+    semester=current_semester,
+    status="COMPLETED"
+).order_by("-paid_at")
     paid_amount = payments.aggregate(total=Sum("amount"))["total"] or 0
     remaining_due = total_fee - paid_amount if fee else 0
 
@@ -1150,20 +1109,23 @@ from datetime import timedelta
 
 from .models import StudentProfile, FeeStructure, Payment
 
-def staff_only(user):
-    return user.is_staff  # fee manager must be staff
+def fee_manager_only(user):
+    return user.is_authenticated and user.groups.filter(name="FeeManager").exists()
 
 @login_required
-@user_passes_test(staff_only)
+@user_passes_test(fee_manager_only)
 def fee_manager_dashboard(request):
+
     total_students = StudentProfile.objects.count()
     total_fee_set = FeeStructure.objects.count()
 
-    total_collected = Payment.objects.aggregate(total=Sum("amount"))["total"] or 0
+    # Only completed payments counted
+    total_collected = Payment.objects.filter(
+        status="COMPLETED"
+    ).aggregate(total=Sum("amount"))["total"] or 0
 
-    # Students with due (total_fee - paid > 0)
-    # Simple approximation: count students where paid < total_fee
     fee_rows = FeeStructure.objects.select_related("student").all()
+
     due_students = 0
     due_soon_students = 0
 
@@ -1171,14 +1133,24 @@ def fee_manager_dashboard(request):
     due_soon_date = today + timedelta(days=7)
 
     for fee in fee_rows:
-        paid = fee.student.payments.aggregate(total=Sum("amount"))["total"] or 0
+        paid = Payment.objects.filter(
+            student=fee.student,
+            semester=fee.semester,
+            status="COMPLETED"
+        ).aggregate(total=Sum("amount"))["total"] or 0
+
         remaining = fee.total_fee - paid
+
         if remaining > 0:
             due_students += 1
+
             if fee.due_date and today <= fee.due_date <= due_soon_date:
                 due_soon_students += 1
 
-    recent_payments = Payment.objects.select_related("student").order_by("-paid_at")[:8]
+    # Only completed payments
+    recent_payments = Payment.objects.filter(
+        status="COMPLETED"
+    ).select_related("student").order_by("-paid_at")[:8]
 
     context = {
         "total_students": total_students,
@@ -1188,8 +1160,8 @@ def fee_manager_dashboard(request):
         "due_soon_students": due_soon_students,
         "recent_payments": recent_payments,
     }
-    return render(request, "attendance/fee_manager_dashboard.html", context)
 
+    return render(request, "attendance/fee_manager_dashboard.html", context)
 
 from django.db.models import Sum
 from django.utils import timezone
@@ -1197,6 +1169,7 @@ from .models import PaymentRequest, Payment, Notification
 
 @login_required
 def create_payment_request(request):
+
     if request.user.profile.role != "student":
         messages.error(request, "Students only.")
         return redirect("home")
@@ -1224,31 +1197,32 @@ def create_payment_request(request):
     return render(request, "attendance/payment_request_form.html")
 
 
-def staff_only(user):
-    return user.is_staff
+
 
 @login_required
-@user_passes_test(staff_only)
+@user_passes_test(fee_manager_only)
 def fee_manager_requests(request):
     requests = PaymentRequest.objects.select_related("student").order_by("-created_at")
     return render(request, "attendance/fee_manager_requests.html", {"requests": requests})
 
-
 @login_required
-@user_passes_test(staff_only)
+@user_passes_test(fee_manager_only)
 def approve_payment_request(request, pk):
+
     pr = get_object_or_404(PaymentRequest, pk=pk)
 
     if pr.status != "PENDING":
         messages.info(request, "Already reviewed.")
         return redirect("attendance:fee_manager_requests")
 
-    # ✅ Create Payment automatically
+    # Create final Payment record
     Payment.objects.create(
         student=pr.student,
         semester=pr.semester,
         amount=pr.amount,
         note=f"Approved: {pr.note}",
+        payment_method="MANUAL",   # manual payment
+        status="COMPLETED",        # approved = completed
     )
 
     pr.status = "APPROVED"
@@ -1267,11 +1241,15 @@ def approve_payment_request(request, pk):
     messages.success(request, "Approved and added to Payments.")
     return redirect("attendance:fee_manager_requests")
 
-
 @login_required
-@user_passes_test(staff_only)
+@user_passes_test(fee_manager_only)
 def reject_payment_request(request, pk):
+
     pr = get_object_or_404(PaymentRequest, pk=pk)
+
+    if pr.status != "PENDING":
+        messages.info(request, "Already reviewed.")
+        return redirect("attendance:fee_manager_requests")
 
     pr.status = "REJECTED"
     pr.reviewed_by = request.user
@@ -1285,8 +1263,10 @@ def reject_payment_request(request, pk):
         status="SENT",
     )
 
-    messages.error(request, "Rejected.")
+    messages.error(request, "Payment request rejected.")
     return redirect("attendance:fee_manager_requests")
+
+
 
 from django.http import JsonResponse
 
@@ -1303,6 +1283,154 @@ def mark_notification_read(request, notif_id):
         return JsonResponse({"ok": True})
     except:
         return JsonResponse({"ok": False}, status=400)
+    
+@login_required
+def khalti_initiate_payment(request):
+    if request.user.profile.role != "student":
+        messages.error(request, "Students only.")
+        return redirect("home")
+
+    student = get_object_or_404(StudentProfile, user=request.user)
+
+    fee = FeeStructure.objects.filter(student=student).order_by("-semester").first()
+    if not fee:
+        messages.error(request, "Fee structure not found.")
+        return redirect("attendance:my_fees")
+
+    semester = fee.semester
+
+    paid_amount = Payment.objects.filter(
+        student=student,
+        semester=semester,
+        status="COMPLETED"
+    ).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+
+    remaining = fee.total_fee - paid_amount
+
+    if remaining <= 0:
+        messages.success(request, "No remaining amount to pay.")
+        return redirect("attendance:my_fees")
+
+    purchase_order_id = f"FEE-{student.id}-{semester}-{uuid.uuid4().hex[:8]}"
+    return_url = request.build_absolute_uri(reverse("attendance:khalti_verify"))
+
+    payload = {
+        "return_url": return_url,
+        "website_url": settings.KHALTI_WEBSITE_URL,
+        "amount": int(remaining * 100),  # paisa
+        "purchase_order_id": purchase_order_id,
+        "purchase_order_name": f"Semester {semester} Fee Payment",
+    }
+
+    headers = {
+        "Authorization": f"Key {settings.KHALTI_SECRET_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    response = requests.post(
+        "https://dev.khalti.com/api/v2/epayment/initiate/",
+        headers=headers,
+        json=payload,
+        timeout=20,
+    )
+
+    print("KHALTI INITIATE STATUS:", response.status_code)
+    print("KHALTI INITIATE BODY:", response.text)
+    print("RETURN URL:", return_url)
+    print("WEBSITE URL:", settings.KHALTI_WEBSITE_URL)
+
+    if response.status_code != 200:
+        messages.error(request, f"Khalti initiate failed: {response.text}")
+        return redirect("attendance:my_fees")
+
+    data = response.json()
+    payment_url = data.get("payment_url")
+    pidx = data.get("pidx")
+
+    if not payment_url or not pidx:
+        messages.error(request, f"Khalti did not return payment_url/pidx: {data}")
+        return redirect("attendance:my_fees")
+
+    KhaltiPayment.objects.create(
+        student=student,
+        semester=semester,
+        amount=remaining,
+        purchase_order_id=purchase_order_id,
+        purchase_order_name=payload["purchase_order_name"],
+        pidx=pidx,
+        status="INITIATED",
+    )
+
+    return redirect(payment_url)
+
+@login_required
+def khalti_verify_payment(request):
+    # Khalti sends pidx back after payment
+    pidx = request.GET.get("pidx")
+    if not pidx:
+        messages.error(request, "Missing Khalti payment identifier.")
+        return redirect("attendance:my_fees")
+
+    khalti_payment = get_object_or_404(KhaltiPayment, pidx=pidx)
+
+    headers = {
+        "Authorization": f"Key {settings.KHALTI_SECRET_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    payload = {"pidx": pidx}
+
+    response = requests.post(
+        "https://dev.khalti.com/api/v2/epayment/lookup/",
+        headers=headers,
+        data=json.dumps(payload)
+    )
+
+    if response.status_code != 200:
+        messages.error(request, "Payment verification failed.")
+        return redirect("attendance:my_fees")
+
+    data = response.json()
+    payment_status = data.get("status")
+
+    # Payment success
+    if payment_status == "Completed":
+        # Prevent duplicate Payment rows
+        if khalti_payment.status != "COMPLETED":
+            khalti_payment.status = "COMPLETED"
+            khalti_payment.transaction_id = data.get("transaction_id")
+            khalti_payment.completed_at = timezone.now()
+            khalti_payment.save()
+
+            Payment.objects.create(
+                student=khalti_payment.student,
+                semester=khalti_payment.semester,
+                amount=khalti_payment.amount,
+                note="Paid via Khalti",
+                payment_method="KHALTI",
+                status="COMPLETED",
+                pidx=khalti_payment.pidx,
+                transaction_id=khalti_payment.transaction_id,
+                purchase_order_id=khalti_payment.purchase_order_id,
+            )
+
+            Notification.objects.create(
+                student=khalti_payment.student,
+                title="Fee Payment Successful",
+                message=f"Your Khalti payment of Rs {khalti_payment.amount} was successful.",
+                amount=khalti_payment.amount,
+                status="SENT",
+            )
+
+        messages.success(request, "Payment completed successfully.")
+    else:
+        khalti_payment.status = "FAILED"
+        khalti_payment.save()
+        messages.error(request, f"Payment not completed. Status: {payment_status}")
+
+    return redirect("attendance:my_fees")
+    
+    
 
 
 
