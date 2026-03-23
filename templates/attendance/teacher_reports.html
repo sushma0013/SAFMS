@@ -1,8 +1,93 @@
-{% extends "attendance/base.html" %}
+{% extends "attendance/base_teacher.html" %}
+
+{% block title %}Teacher Reports{% endblock %}
 
 {% block content %}
-<div class="p-6">
-  <h1 class="text-2xl font-bold">Teacher Reports</h1>
-  <p class="mt-2 text-gray-600">This page is under development.</p>
+
+<div class="p-6 space-y-6">
+
+  <!-- HEADER -->
+  <div class="flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-bold">Teacher Reports</h1>
+      <p class="text-gray-600 text-sm">
+        Teacher: {{ teacher.username }} | Date: {{ today }}
+      </p>
+    </div>
+
+    <button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+      Print
+    </button>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white p-4 rounded shadow">
+      <p>Total Students</p>
+      <h2 class="text-xl font-bold">{{ total_students }}</h2>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow">
+      <p>Present Today</p>
+      <h2 class="text-xl font-bold text-green-600">{{ present_today_count }}</h2>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow">
+      <p>Absent Today</p>
+      <h2 class="text-xl font-bold text-red-600">{{ absent_today_count }}</h2>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow">
+      <p>At Risk (&lt;80%)</p>
+      <h2 class="text-xl font-bold text-orange-600">{{ low_attendance_count }}</h2>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="bg-white rounded shadow overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-3 text-left">Name</th>
+          <th class="p-3">ID</th>
+          <th class="p-3">Total</th>
+          <th class="p-3">Present</th>
+          <th class="p-3">Absent</th>
+          <th class="p-3">%</th>
+          <th class="p-3">Last</th>
+          <th class="p-3">Status</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for row in report_rows %}
+        <tr class="border-t">
+          <td class="p-3">{{ row.student_name }}</td>
+          <td class="p-3 text-center">{{ row.student_id }}</td>
+          <td class="p-3 text-center">{{ row.total_classes }}</td>
+          <td class="p-3 text-center text-green-600">{{ row.present_classes }}</td>
+          <td class="p-3 text-center text-red-600">{{ row.absent_classes }}</td>
+          <td class="p-3 text-center">{{ row.attendance_percent }}%</td>
+          <td class="p-3 text-center">{{ row.last_status }}</td>
+          <td class="p-3 text-center">
+            {% if row.is_risk %}
+              <span class="text-red-600 font-bold">Risk</span>
+            {% else %}
+              <span class="text-green-600 font-bold">Good</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="text-center p-4 text-gray-500">
+            No data found
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
 </div>
+
 {% endblock %}

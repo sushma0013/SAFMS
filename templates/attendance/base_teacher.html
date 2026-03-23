@@ -1,0 +1,69 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Teacher Panel{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<div class="flex min-h-screen">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white shadow-md flex flex-col">
+        <div class="p-6 border-b">
+            <h2 class="text-xl font-bold text-blue-600">Teacher Panel</h2>
+            <p class="text-sm text-gray-500 mt-1">{{ request.user.username }}</p>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="{% url 'attendance:teacher_dashboard' %}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="{% url 'attendance:teacher_profile' %}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
+                <span class="material-symbols-outlined">person</span>
+                <span>My Profile</span>
+            </a>
+
+            <a href="{% url 'attendance:my_classes' %}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
+                <span class="material-symbols-outlined">school</span>
+                <span>My Classes</span>
+            </a>
+
+            <a href="{% url 'attendance:teacher_students' %}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
+                <span class="material-symbols-outlined">groups</span>
+                <span>Students</span>
+            </a>
+
+            <a href="{% url 'attendance:teacher_reports' %}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
+                <span class="material-symbols-outlined">bar_chart</span>
+                <span>Reports</span>
+            </a>
+
+            <a href="{% url 'attendance:teacher_settings' %}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
+                <span class="material-symbols-outlined">settings</span>
+                <span>Settings</span>
+            </a>
+
+            <a href="{% url 'logout' %}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-red-50 text-red-600">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 p-6">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+</div>
+
+</body>
+</html>

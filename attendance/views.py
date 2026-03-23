@@ -47,6 +47,10 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from .models import AttendanceRecord 
 
 from .models import (
     QRSession,
@@ -57,7 +61,8 @@ from .models import (
     Payment,
     Notification,
     PaymentRequest,
-    KhaltiPayment,   # NEW
+    KhaltiPayment, 
+
 )
 
 from .utils import close_session_and_mark_absent
@@ -787,7 +792,106 @@ def link_student(request):
 
 @login_required
 def teacher_reports(request):
-    return render(request, "attendance/teacher_reports.html")
+    # only teacher can open
+    if request.user.profile.role != "teacher":
+        messages.error(request, "Teachers only.")
+        return redirect("home")
+
+    today = timezone.localdate()
+
+    # all subjects taught by this teacher
+    subjects = Subject.objects.filter(teacher=request.user)
+
+    # all students under this teacher
+    students = User.objects.filter(enrolled_subjects__in=subjects).distinct()
+
+    # -----------------------------
+    # top summary counts
+    # -----------------------------
+    total_students = students.count()
+
+    present_today_count = AttendanceRecord.objects.filter(
+        subject__in=subjects,
+        date=today,
+        status="Present"
+    ).values("student").distinct().count()
+
+    absent_today_count = total_students - present_today_count
+
+    # -----------------------------
+    # build student report rows
+    # -----------------------------
+    report_rows = []
+    low_attendance_count = 0
+
+    for student in students:
+        total_classes = AttendanceRecord.objects.filter(
+            student=student,
+            subject__in=subjects
+        ).count()
+
+        present_classes = AttendanceRecord.objects.filter(
+            student=student,
+            subject__in=subjects,
+            status="Present"
+        ).count()
+
+        absent_classes = AttendanceRecord.objects.filter(
+            student=student,
+            subject__in=subjects,
+            status="Absent"
+        ).count()
+
+        attendance_percent = round((present_classes / total_classes) * 100, 2) if total_classes else 0
+
+        # latest attendance record
+        last_record = AttendanceRecord.objects.filter(
+            student=student,
+            subject__in=subjects
+        ).order_by("-recorded_at").first()
+
+        last_status = last_record.status if last_record else "No Record"
+        last_subject = last_record.subject.code if last_record else "-"
+        last_date = last_record.date if last_record else None
+
+        # student full name from StudentProfile if exists
+        try:
+            student_name = student.student_profile.full_name
+            student_id = student.student_profile.student_id
+        except:
+            student_name = student.username
+            student_id = student.id
+
+        # risk check
+        is_risk = total_classes > 0 and attendance_percent < 80
+        if is_risk:
+            low_attendance_count += 1
+
+        report_rows.append({
+            "student_name": student_name,
+            "student_id": student_id,
+            "total_classes": total_classes,
+            "present_classes": present_classes,
+            "absent_classes": absent_classes,
+            "attendance_percent": attendance_percent,
+            "last_status": last_status,
+            "last_subject": last_subject,
+            "last_date": last_date,
+            "is_risk": is_risk,
+        })
+
+    context = {
+        "today": today,
+        "teacher": request.user,
+        "subjects": subjects,
+        "total_students": total_students,
+        "present_today_count": present_today_count,
+        "absent_today_count": absent_today_count,
+        "low_attendance_count": low_attendance_count,
+        "report_rows": report_rows,
+    }
+
+    return render(request, "attendance/teacher_reports.html", context)
 
 @login_required
 def teacher_settings(request):
@@ -1430,7 +1534,38 @@ def khalti_verify_payment(request):
 
     return redirect("attendance:my_fees")
     
-    
+@login_required
+def teacher_student_detail(request, student_id):
+    student = get_object_or_404(User, id=student_id)
+    records = AttendanceRecord.objects.filter(student=student).order_by('-date', '-recorded_at')
 
+    return render(request, "attendance/teacher_student_detail.html", {
+        "student": student,
+        "records": records,
+    }) 
+@login_required
+def teacher_edit_attendance(request, student_id):
+    student = get_object_or_404(User, id=student_id)
+    record = AttendanceRecord.objects.filter(student=student).order_by('-date', '-recorded_at').first()
 
+    if request.method == "POST":
+        new_status = request.POST.get("status")
+        if record and new_status in ["Present", "Absent"]:
+            record.status = new_status
+            record.save()
+        return redirect("attendance:teacher_students")
+
+    return render(request, "attendance/teacher_edit_attendance.html", {
+        "student": student,
+        "record": record,
+    })
+@login_required
+def teacher_attendance_history(request, student_id):
+    student = get_object_or_404(User, id=student_id)
+    history = AttendanceRecord.objects.filter(student=student).order_by('-date', '-recorded_at')
+
+    return render(request, "attendance/teacher_attendance_history.html", {
+        "student": student,
+        "history": history,
+    })
 

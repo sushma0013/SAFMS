@@ -1,0 +1,31 @@
+{% extends "attendance/base_teacher.html" %}
+{% block content %}
+<div class="p-6">
+  <h1 class="text-2xl font-bold mb-4">{{ student.username }} - Attendance History</h1>
+
+  <div class="bg-white rounded shadow border overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="p-3 text-left">Date</th>
+          <th class="p-3 text-left">Subject</th>
+          <th class="p-3 text-left">Status</th>
+          <th class="p-3 text-left">Recorded At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in history %}
+        <tr class="border-t">
+          <td class="p-3">{{ r.date }}</td>
+          <td class="p-3">{{ r.subject.name }}</td>
+          <td class="p-3">{{ r.status }}</td>
+          <td class="p-3">{{ r.recorded_at }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="p-3 text-center">No history found</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

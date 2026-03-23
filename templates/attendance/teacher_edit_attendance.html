@@ -1,0 +1,23 @@
+{% extends "attendance/base_teacher.html" %}
+{% block content %}
+<div class="p-6 max-w-xl">
+  <h1 class="text-2xl font-bold mb-4">Edit Attendance - {{ student.username }}</h1>
+
+  {% if record %}
+  <form method="post" class="bg-white p-6 rounded shadow border space-y-4">
+    {% csrf_token %}
+    <p><strong>Date:</strong> {{ record.date }}</p>
+    <p><strong>Subject:</strong> {{ record.subject.name }}</p>
+
+    <select name="status" class="w-full border rounded p-2">
+      <option value="Present" {% if record.status == "Present" %}selected{% endif %}>Present</option>
+      <option value="Absent" {% if record.status == "Absent" %}selected{% endif %}>Absent</option>
+    </select>
+
+    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Update</button>
+  </form>
+  {% else %}
+    <p>No attendance record found.</p>
+  {% endif %}
+</div>
+{% endblock %}

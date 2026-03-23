@@ -53,7 +53,29 @@ from . import views
 app_name = 'attendance'
 
 urlpatterns = [
-    # Teacher
+     # Teacher
+    # path('teacher/dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
+path('teacher/classes/', views.my_classes, name='my_classes'),
+# path('teacher/students/', views.teacher_students, name='teacher_students'),
+path('teacher/reports/', views.teacher_reports, name='teacher_reports'),
+path('teacher/settings/', views.teacher_settings, name='teacher_settings'),
+path('teacher/student/<int:student_id>/', views.teacher_student_detail, name='teacher_student_detail'),
+path('teacher/student/<int:student_id>/edit-attendance/', views.teacher_edit_attendance, name='teacher_edit_attendance'),
+path('teacher/student/<int:student_id>/history/', views.teacher_attendance_history, name='teacher_attendance_history'), 
+path('teacher/student/<int:student_id>/', views.teacher_student_detail, name='teacher_student_detail'),
+path('teacher/student/<int:student_id>/edit-attendance/', views.teacher_edit_attendance, name='teacher_edit_attendance'),
+path('teacher/student/<int:student_id>/history/', views.teacher_attendance_history, name='teacher_attendance_history'),
+   
+
+    
+
+   
+
+    
+
+   
+
+
     path('teacher/dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
     path('generate-qr/<int:subject_id>/', views.generate_qr, name='generate_qr'),
     path('teacher/profile/', views.teacher_profile, name='teacher_profile'),
