@@ -64,17 +64,21 @@ from django.contrib.auth.decorators import login_required
 
 
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
+
+
 @login_required
 def dashboard_redirect(request):
-    role = getattr(request.user.profile, "role", None)
+    profile = getattr(request.user, "profile", None)
 
-    if role == "admin":
-        return redirect("attendance:fee_manager_dashboard")
+    if request.user.is_superuser:
+        return redirect("admin:index")
 
-    if role == "teacher":
+    if profile and profile.role == "teacher":
         return redirect("attendance:teacher_dashboard")
 
-    if role == "student":
+    if profile and profile.role == "student":
         return redirect("attendance:student_dashboard")
 
     return redirect("home")

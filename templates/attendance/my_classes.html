@@ -1,279 +1,144 @@
-{% comment %} <h2>My Classesjjjj</h2>
+{% extends "attendance/base_teacher.html" %}
 
-<ul>
-{% for subject in subjects %}
-    <li>
-        {{ subject.name }} ({{ subject.code }}) – 
-        {{ subject.students.count }} students
-    </li>
-{% empty %}
-    <li>No classes assigned</li>
-{% endfor %}
-</ul> {% endcomment %}
+{% block title %}My Classes{% endblock %}
 
+{% block content %}
+<div class="space-y-6">
 
-<!DOCTYPE html>
-<html class="light" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Teacher - My Classes View</title>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#135bec",
-                        "background-light": "#f6f6f8",
-                        "background-dark": "#101622",
-                    },
-                    fontFamily: {
-                        "display": ["Lexend", "sans-serif"]
-                    },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
-                },
-            },
-        }
-    </script>
-<style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        body {
-            font-family: 'Lexend', sans-serif;
-        }
-    </style>
-</head>
-<body class="bg-background-light dark:bg-background-dark min-h-screen">
-<div class="flex h-screen overflow-hidden">
-<aside class="w-64 flex flex-col bg-white dark:bg-background-dark border-r border-[#f0f2f4] dark:border-gray-800">
-<div class="flex flex-col h-full p-4 justify-between">
-<div class="flex flex-col gap-8">
-<div class="flex items-center gap-3 px-2">
-<div class="text-primary flex items-center justify-center">
-<span class="material-symbols-outlined text-[32px] font-bold">school</span>
-</div>
-<h2 class="text-[#111318] dark:text-white text-xl font-bold tracking-tight">SmartAttend</h2>
-</div>
-<div class="flex gap-3 px-2 py-4 border-y border-[#f0f2f4] dark:border-gray-800">
-<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Portrait of a female faculty member" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBofLlpUOePMMIM6aHl3iWbUUspLfK0DapqK1fLudl3HXqFgIoJDtHdXzMDFtVzTXr5h0OKwfu4RMFzNo9Evjckpf84ZqJByZODzPIxo9xuzluoAgQuxFgo9EoWwK3iKlaunHHkkncU_CKDlYWeCb8waBTRBDVMp78ZE3GRjOI1TKrpNM3ei1f4qMUZQ0UihXV_DpEziQbp1S_nywkN1w5OgZnFdRDnG7MeKPkVBrVy-PHERwTm0RJyg1JQ67mq3iwdfs6aGNUfSSw");'></div>
-<div class="flex flex-col overflow-hidden">
-    <h1 class="text-[#111318] dark:text-white text-sm font-medium leading-normal truncate">
-  {{ request.user.username }}
-</h1>
-<p class="text-[#616f89] dark:text-gray-400 text-xs font-normal leading-normal truncate">
-  Teacher
-</p>
-
-{% comment %} <h1 class="text-[#111318] dark:text-white text-sm font-medium leading-normal truncate">Sarah Jenkins</h1>
-<p class="text-[#616f89] dark:text-gray-400 text-xs font-normal leading-normal truncate">Senior Faculty</p> {% endcomment %}
-</div>
-</div>
-<nav class="flex flex-col gap-2">
-
-  <!-- My Classes -->
-  <a href="{% url 'attendance:my_classes' %}"
-     class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary">
-    <span class="material-symbols-outlined text-[24px]">calendar_today</span>
-    <p class="text-sm font-semibold leading-normal">My Classes</p>
-  </a>
-
-  <!-- Students -->
-  <a href="{% url 'attendance:teacher_students' %}"
-     class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#616f89] hover:bg-[#f0f2f4] dark:hover:bg-gray-800">
-    <span class="material-symbols-outlined text-[24px]">groups</span>
-    <p class="text-sm font-medium leading-normal">Students</p>
-  </a>
-
-  <!-- Reports -->
-  <a href="{% url 'attendance:teacher_reports' %}"
-     class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#616f89] hover:bg-[#f0f2f4] dark:hover:bg-gray-800">
-    <span class="material-symbols-outlined text-[24px]">bar_chart</span>
-    <p class="text-sm font-medium leading-normal">Reports</p>
-  </a>
-
-  <!-- Settings -->
-  <a href="{% url 'attendance:teacher_settings' %}"
-     class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#616f89] hover:bg-[#f0f2f4] dark:hover:bg-gray-800">
-    <span class="material-symbols-outlined text-[24px]">settings</span>
-    <p class="text-sm font-medium leading-normal">Settings</p>
-  </a>
-
-</nav>
-
-<button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90">
-<span class="truncate">Create Class</span>
-</button>
-</div>
-</aside>
-<main class="flex-1 flex flex-col overflow-y-auto">
-<header class="sticky top-0 z-10 flex items-center justify-between whitespace-nowrap border-b border-solid border-[#f0f2f4] dark:border-gray-800 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-10 py-3">
-<div class="flex items-center gap-8">
-<label class="flex flex-col min-w-40 !h-10 max-w-64">
-<div class="flex w-full flex-1 items-stretch rounded-lg h-full overflow-hidden">
-<div class="text-[#616f89] flex border-none bg-[#f0f2f4] dark:bg-gray-800 items-center justify-center pl-4">
-<span class="material-symbols-outlined text-[20px]">search</span>
-</div>
-<input class="form-input flex w-full min-w-0 flex-1 border-none bg-[#f0f2f4] dark:bg-gray-800 text-[#111318] dark:text-white focus:ring-0 h-full placeholder:text-[#616f89] px-4 pl-2 text-sm font-normal" placeholder="Search sessions..." value=""/>
-</div>
-</label>
-</div>
-<div class="flex flex-1 justify-end gap-4">
-<div class="flex gap-2">
-<button class="flex items-center justify-center rounded-lg size-10 bg-[#f0f2f4] dark:bg-gray-800 text-[#111318] dark:text-white hover:bg-[#e2e5e9] dark:hover:bg-gray-700">
-<span class="material-symbols-outlined text-[20px]">notifications</span>
-</button>
-<button class="flex items-center justify-center rounded-lg size-10 bg-[#f0f2f4] dark:bg-gray-800 text-[#111318] dark:text-white hover:bg-[#e2e5e9] dark:hover:bg-gray-700">
-<span class="material-symbols-outlined text-[20px]">calendar_today</span>
-</button>
-</div>
-</div>
-</header>
-<div class="p-10 max-w-6xl mx-auto w-full">
-<div class="flex flex-wrap justify-between items-end gap-3 mb-8">
-<div class="flex min-w-72 flex-col gap-1">
-<p class="text-[#111318] dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">My Classes</p>
-<p class="text-[#616f89] dark:text-gray-400 text-base font-normal leading-normal">Monday, October 23rd, 2023</p>
-</div>
-<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 px-6 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
-<span class="truncate">+ Add New Session</span>
-</button>
-</div>
-<div class="mb-6">
-<h2 class="text-[#111318] dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">Today's Classes</h2>
-<div class="h-1 w-12 bg-primary rounded-full mt-2"></div>
-</div>
-<div class="grid grid-cols-1 gap-6 mb-12">
-<div class="group relative bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-[#f0f2f4] dark:border-gray-800 flex flex-col md:flex-row">
-<div class="w-full md:w-80 h-48 md:h-auto bg-center bg-no-repeat bg-cover relative" data-alt="English classroom setting" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAVEPWoajjn1B3mVnjQrF9xyQ189cIMECrXto7HxNASnD1CVcIV8E3wIc6kUBAT4YFg_0AioNIRoz74cm0IdjAjQOBZuMVXNLGZ8RbfyaP7rz9644eBItCT1Pz79kisI172DQadgL50QeEOhpnrEgcfVj41JPXnXziW8tm4TIi-6GDBqCTKkWGJcPvY9AN4EYGddS802IVDpG9vF4N0k-_w34_UhfStEGvCzyN9cQ_9VkR1h4beWF_tcFWql-WZr0WUttNpRxAYZls");'>
-<div class="absolute top-4 left-4">
-<span class="bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-full tracking-wider uppercase">Upcoming</span>
-</div>
-</div>
-<div class="flex-1 p-6 flex flex-col justify-between">
-<div>
-<div class="flex justify-between items-start mb-2">
-    {% for s in sessions_today %}
-<div class="group relative bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-[#f0f2f4] dark:border-gray-800 flex flex-col md:flex-row">
-  <div class="flex-1 p-6 flex flex-col justify-between">
-    <div>
-      <div class="flex justify-between items-start mb-2">
-        <h3 class="text-[#111318] dark:text-white text-2xl font-bold tracking-tight">
-          {{ s.subject.name }}
-        </h3>
-        <span class="bg-[#f0f2f4] dark:bg-gray-800 text-[#616f89] dark:text-gray-300 text-xs font-semibold px-2 py-1 rounded">
-          {{ s.subject.code }}
-        </span>
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <div class="flex items-center gap-2 text-[#616f89] dark:text-gray-400">
-          <span class="material-symbols-outlined text-[18px]">schedule</span>
-          <p class="text-base font-medium">
-            {{ s.created_at|date:"h:i A" }} - {{ s.valid_until|date:"h:i A" }}
-          </p>
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">My Classes</h1>
+            <p class="text-sm text-gray-500">{{ today|date:"l, F j, Y" }}</p>
         </div>
 
-        <div class="flex items-center gap-2 text-[#616f89] dark:text-gray-400">
-          <span class="material-symbols-outlined text-[18px]">timer</span>
-          <p class="text-base font-normal">
-            Duration:
-            {{ s.valid_until|timeuntil:s.created_at }}
-          </p>
-        </div>
-
-        <div class="flex items-center gap-2 text-[#616f89] dark:text-gray-400">
-          <span class="material-symbols-outlined text-[18px]">groups</span>
-          <p class="text-base font-normal">
-            Marked: {{ s.total_marked }} | Present: {{ s.present_count }}
-          </p>
-        </div>
-      </div>
+        <a href="{% url 'attendance:teacher_dashboard' %}"
+           class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+            <span class="material-symbols-outlined text-base">arrow_back</span>
+            Back to Dashboard
+        </a>
     </div>
 
-    <div class="flex gap-3 mt-6">
-      <a class="h-10 px-6 rounded-lg bg-primary text-white text-sm font-bold hover:bg-primary/90 flex items-center justify-center"
-         href="{% url 'attendance:generate_qr' s.subject.id %}">
-        Generate QR Again
-      </a>
-    </div>
-  </div>
-</div>
-{% empty %}
-<p class="text-[#616f89] dark:text-gray-400">No sessions created today.</p>
-{% endfor %}
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-xl shadow-sm border p-5">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-sm font-medium text-gray-500">Today's Sessions</p>
+                <span class="material-symbols-outlined text-blue-600">calendar_today</span>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900">{{ sessions_today|length }}</h2>
+            <p class="text-sm text-gray-500 mt-2">Total QR sessions created today</p>
+        </div>
 
-{% comment %} <h3 class="text-[#111318] dark:text-white text-2xl font-bold tracking-tight">English Language &amp; Composition</h3>
-<span class="bg-[#f0f2f4] dark:bg-gray-800 text-[#616f89] dark:text-gray-300 text-xs font-semibold px-2 py-1 rounded">Room 402</span>
-</div>
-<div class="flex flex-col gap-2">
-<div class="flex items-center gap-2 text-[#616f89] dark:text-gray-400">
-<span class="material-symbols-outlined text-[18px]">schedule</span>
-<p class="text-base font-medium">2:00 PM - 3:00 PM</p>
-</div>
-<div class="flex items-center gap-2 text-[#616f89] dark:text-gray-400">
-<span class="material-symbols-outlined text-[18px]">timer</span>
-<p class="text-base font-normal">Duration: 1 Hour</p>
-</div> {% endcomment %}
-</div>
-</div>
-<div class="flex items-center justify-between mt-8">
-<div class="flex -space-x-2">
-<div class="size-8 rounded-full border-2 border-white dark:border-gray-900 bg-gray-200 overflow-hidden">
-<img class="w-full h-full object-cover" data-alt="Student avatar 1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcPWBhkkS0wOeW_DYX7zhxLst6WyIvNSrDidX0llDaKxrfjLvOVVgNfxtOx6LoCdrSAty45xXtGb-71qFFbnx1MrbtglMO3HgRqD8HfRnJOqSLDI2z6UWb7PmALO_arbQ9uh2heyfB0uu2almoUBRMPsNgQgHw2dClCLNSnOzyenIg-0iBQCL2IiPrOo87A-ulfjFDCVN9szRYc3iSCP2Ypq4DQmpvSVzJnm2pC30-PVwXoIjaPJEFw2WkxL282LGkj0xFvsB_Jhk"/>
-</div>
-<div class="size-8 rounded-full border-2 border-white dark:border-gray-900 bg-gray-200 overflow-hidden">
-<img class="w-full h-full object-cover" data-alt="Student avatar 2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2dZJZ1MtrJC3PLMg7vF3GIj8Qfsw00iZy588tBADJ8W2E3ASRmbDVeDK3l_r3M-4r9XeMUG2SUSJaDhTeFfhR_ZuiQ7NKoxuFGsMpBbIszmVD1rq1I_wZPqljjYKviafT7bIE4jKGQU68WjCA3KBuyEivC_aXpdN1Z1tqns54KMBC6ET7eObbALD3_yW4NSNegbH2AFKG2x_ZbsR2xYiuirpIjuZjP60wIMctDzlKzclRuyEWzfukFtlkvGUSexXwCvHqW9TyJHk"/>
-</div>
-<div class="size-8 rounded-full border-2 border-white dark:border-gray-900 bg-gray-300 flex items-center justify-center text-[10px] font-bold">
-                                    +24
+        <div class="bg-white rounded-xl shadow-sm border p-5">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-sm font-medium text-gray-500">Total Present</p>
+                <span class="material-symbols-outlined text-green-600">check_circle</span>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900">
+                {% with total_present=0 %}
+                    {% for s in sessions_today %}
+                        {% if forloop.first %}{% endif %}
+                    {% endfor %}
+                {% endwith %}
+                {{ sessions_today|length }}
+            </h2>
+            <p class="text-sm text-gray-500 mt-2">See session cards below for details</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border p-5">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-sm font-medium text-gray-500">Manage Attendance</p>
+                <span class="material-symbols-outlined text-purple-600">qr_code_2</span>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900">QR</h2>
+            <p class="text-sm text-gray-500 mt-2">Generate fresh QR for any subject</p>
+        </div>
+    </div>
+
+    <!-- Sessions List -->
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">Today's QR Sessions</h2>
+        </div>
+
+        {% if sessions_today %}
+            <div class="space-y-4">
+                {% for s in sessions_today %}
+                <div class="border rounded-xl p-5 bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+                        <!-- Left -->
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-3 flex-wrap">
+                                <h3 class="text-xl font-bold text-gray-900">
+                                    {{ s.subject.name }}
+                                </h3>
+                                <span class="px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs font-semibold">
+                                    {{ s.subject.code }}
+                                </span>
+
+                                {% if s.is_closed %}
+                                    <span class="px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs font-semibold">
+                                        Closed
+                                    </span>
+                                {% else %}
+                                    <span class="px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-semibold">
+                                        Active
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base">schedule</span>
+                                    <span>
+                                        {{ s.created_at|date:"h:i A" }} - {{ s.valid_until|date:"h:i A" }}
+                                    </span>
                                 </div>
-</div>
-<div class="flex gap-3">
-<button class="h-10 px-4 rounded-lg border border-[#f0f2f4] dark:border-gray-800 text-[#111318] dark:text-white text-sm font-bold hover:bg-[#f0f2f4] dark:hover:bg-gray-800">
-                                    Details
-                                </button>
-<button class="h-10 px-6 rounded-lg bg-primary text-white text-sm font-bold hover:bg-primary/90">
-                                    Take Attendance
-                                </button>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="mb-6">
-<h2 class="text-[#111318] dark:text-white text-[20px] font-bold leading-tight tracking-[-0.015em]">Later Today</h2>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-<div class="p-4 bg-white dark:bg-gray-900 rounded-xl border border-[#f0f2f4] dark:border-gray-800 shadow-sm flex items-center gap-4">
-<div class="size-16 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-<span class="material-symbols-outlined text-[32px]">biotech</span>
-</div>
-<div class="flex-1">
-<p class="text-[#111318] dark:text-white font-bold">Biology II</p>
-<p class="text-[#616f89] dark:text-gray-400 text-sm">4:30 PM - 5:30 PM • Lab 12</p>
-</div>
-<button class="size-10 rounded-lg flex items-center justify-center hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#616f89]">
-<span class="material-symbols-outlined">more_vert</span>
-</button>
-</div>
-<div class="p-4 bg-white dark:bg-gray-900 rounded-xl border border-[#f0f2f4] dark:border-gray-800 shadow-sm flex items-center gap-4 opacity-75">
-<div class="size-16 rounded-lg bg-[#f0f2f4] dark:bg-gray-800 flex items-center justify-center text-[#616f89]">
-<span class="material-symbols-outlined text-[32px]">functions</span>
-</div>
-<div class="flex-1">
-<p class="text-[#111318] dark:text-white font-bold">Advanced Math</p>
-<p class="text-[#616f89] dark:text-gray-400 text-sm">Completed • 09:00 AM</p>
-</div>
-<div class="px-2 py-1 rounded bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider">
-                        Done
-                    </div>
-</div>
-</div>
-</div>
-</main>
-</div>
 
-</body></html>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base">event</span>
+                                    <span>{{ s.session_date }}</span>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base">groups</span>
+                                    <span>Marked: {{ s.total_marked }}</span>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base">check_circle</span>
+                                    <span class="text-green-600 font-medium">Present: {{ s.present_count }}</span>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base">cancel</span>
+                                    <span class="text-red-600 font-medium">Absent: {{ s.absent_count }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right -->
+                        <div class="flex flex-wrap gap-3">
+                            <a href="{% url 'attendance:generate_qr' s.subject.id %}"
+                               class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+                                <span class="material-symbols-outlined text-base">qr_code_2</span>
+                                Generate QR Again
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-10">
+                <span class="material-symbols-outlined text-5xl text-gray-300 mb-3">calendar_month</span>
+                <p class="text-gray-500">No sessions created today.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

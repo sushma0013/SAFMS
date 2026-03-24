@@ -47,10 +47,17 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+
+
+
 from .models import AttendanceRecord 
+from django.shortcuts import render, redirect
+
+
+
+
+from .models import Subject, QRSession, AttendanceRecord
+
 
 from .models import (
     QRSession,
@@ -90,19 +97,18 @@ NGROK_BASE_URL = "https://sericultural-undefiable-davina.ngrok-free.dev"
 
 # ============= TEACHER VIEWS =============
 
+
+
 @login_required
 def teacher_dashboard(request):
-    # -------------------------
-    # ROLE CHECK
-    # -------------------------
     if request.user.profile.role != 'teacher':
         messages.error(request, "Teachers only.")
         return redirect('home')
 
-    # -------------------------
-    # AUTO-CLOSE EXPIRED QR
-    # -------------------------
     now = timezone.now()
+    today = timezone.localdate()
+
+    # Auto-close expired QR sessions
     expired_sessions = QRSession.objects.filter(
         created_by=request.user,
         is_closed=False,
@@ -112,12 +118,10 @@ def teacher_dashboard(request):
     for session in expired_sessions:
         close_session_and_mark_absent(session)
 
-    # -------------------------
-    # NORMAL DASHBOARD LOGIC
-    # -------------------------
+    # Teacher subjects
     subjects = Subject.objects.filter(teacher=request.user)
-    today = timezone.now().date()
 
+    # Stats for subject cards/table
     subject_stats = []
     today_present = 0
     today_total = 0
@@ -135,6 +139,8 @@ def teacher_dashboard(request):
             status='Present'
         ).count() if session else 0
 
+        absent = total_students - present
+
         today_present += present
         today_total += total_students
 
@@ -142,17 +148,13 @@ def teacher_dashboard(request):
             'subject': subject,
             'total': total_students,
             'present': present,
+            'absent': absent,
         })
 
-    attendance_today = round(
-        (today_present / today_total) * 100, 2
-    ) if today_total else 0
+    attendance_today = round((today_present / today_total) * 100, 2) if today_total else 0
 
-    # -------------------------
-    # LOW ATTENDANCE (<80%)
-    # -------------------------
+    # Low attendance students
     low_attendance_students = []
-
     students = AttendanceRecord.objects.filter(
         subject__teacher=request.user
     ).values('student').distinct()
@@ -172,18 +174,31 @@ def teacher_dashboard(request):
         ).count()
 
         if total_classes > 0:
-            percentage = (present_classes / total_classes) * 100
+            percentage = round((present_classes / total_classes) * 100, 2)
             if percentage < 80:
                 low_attendance_students.append({
                     'student': User.objects.get(id=student_id),
-                    'percentage': round(percentage, 2)
+                    'percentage': percentage
                 })
+
+    low_attendance_count = len(low_attendance_students)
+    total_students_count = sum(subject.students.count() for subject in subjects)
+
+    # Recent sessions
+    recent_sessions = QRSession.objects.filter(
+        created_by=request.user
+    ).select_related('subject').order_by('-created_at')[:5]
 
     return render(request, 'attendance/teacher_dashboard.html', {
         'subjects': subjects,
         'subject_stats': subject_stats,
         'attendance_today': attendance_today,
         'low_attendance_students': low_attendance_students,
+        'low_attendance_count': low_attendance_count,
+        'total_students_count': total_students_count,
+        'recent_sessions': recent_sessions,
+        'today': today,
+        'now': now,
     })
 
 
@@ -291,123 +306,131 @@ from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 
-@login_required
-def student_dashboard(request):
-    if request.user.profile.role != "student":
-        messages.error(request, "Students only.")
-        return redirect("home")
+# @login_required
+# def student_dashboard(request):
+#     if request.user.profile.role != "student":
+#         messages.error(request, "Students only.")
+#         return redirect("home")
 
-    # ✅ get StudentProfile of logged-in student
-    try:
-        profile = request.user.student_profile  # related_name="student_profile"
-    except StudentProfile.DoesNotExist:
-        messages.error(request, "Your student profile is not linked. Contact admin.")
-        return redirect("home")
+# @login_required
+# def student_dashboard(request):
+#     print("LOGGED IN USER:", request.user.username)
+#     print("ROLE:", getattr(request.user.profile, "role", "NO PROFILE"))
 
-    # ==============================
-    # ✅ ATTENDANCE DATA
-    # ==============================
-    enrolled_subjects = Subject.objects.filter(students=request.user)
+#     if request.user.profile.role != 'student':
+#         messages.error(request, "Students only.")
+#         return redirect('home')
+#     # ✅ get StudentProfile of logged-in student
+#     try:
+#         profile = request.user.student_profile  # related_name="student_profile"
+#     except StudentProfile.DoesNotExist:
+#         messages.error(request, "Your student profile is not linked. Contact admin.")
+#         return redirect("home")
 
-    attendance_stats = []
-    total_classes_all = 0
-    total_present_all = 0
+#     # ==============================
+#     # ✅ ATTENDANCE DATA
+#     # ==============================
+#     enrolled_subjects = Subject.objects.filter(students=request.user)
 
-    for subject in enrolled_subjects:
-        total = AttendanceRecord.objects.filter(student=request.user, subject=subject).count()
-        present = AttendanceRecord.objects.filter(student=request.user, subject=subject, status="Present").count()
-        percent = round((present / total) * 100, 2) if total else 0
+#     attendance_stats = []
+#     total_classes_all = 0
+#     total_present_all = 0
 
-        total_classes_all += total
-        total_present_all += present
+#     for subject in enrolled_subjects:
+#         total = AttendanceRecord.objects.filter(student=request.user, subject=subject).count()
+#         present = AttendanceRecord.objects.filter(student=request.user, subject=subject, status="Present").count()
+#         percent = round((present / total) * 100, 2) if total else 0
 
-        attendance_stats.append({
-            "subject": subject,
-            "total": total,
-            "present": present,
-            "percentage": percent
-        })
+#         total_classes_all += total
+#         total_present_all += present
 
-    attendance_records = (
-        AttendanceRecord.objects.filter(student=request.user)
-        .select_related("subject")
-        .order_by("-id")[:10]
-    )
+#         attendance_stats.append({
+#             "subject": subject,
+#             "total": total,
+#             "present": present,
+#             "percentage": percent
+#         })
 
-    # ==============================
-    # ✅ FEE SUMMARY + POPUP NOTIFICATION
-    # ==============================
-    today = timezone.localdate()
-    due_soon_date = today + timedelta(days=7)
+#     attendance_records = (
+#         AttendanceRecord.objects.filter(student=request.user)
+#         .select_related("subject")
+#         .order_by("-id")[:10]
+#     )
 
-    # defaults (so template never crashes)
-    fee_total = 0.0
-    fee_paid = 0.0
-    fee_remaining = 0.0
-    fee_due_date = None
-    fee_percent = 0
-    popup_notification = None
+#     # ==============================
+#     # ✅ FEE SUMMARY + POPUP NOTIFICATION
+#     # ==============================
+#     today = timezone.localdate()
+#     due_soon_date = today + timedelta(days=7)
 
-    fee = FeeStructure.objects.filter(student=profile).order_by("-semester").first()
+#     # defaults (so template never crashes)
+#     fee_total = 0.0
+#     fee_paid = 0.0
+#     fee_remaining = 0.0
+#     fee_due_date = None
+#     fee_percent = 0
+#     popup_notification = None
 
-    if fee:
-        fee_total = float(fee.total_fee)
-        fee_due_date = fee.due_date
+#     fee = FeeStructure.objects.filter(student=profile).order_by("-semester").first()
 
-        fee_paid = Payment.objects.filter(
-    student=profile,
-    semester=fee.semester,
-    status="COMPLETED"
-).aggregate(total=Sum("amount"))["total"] or 0
+#     if fee:
+#         fee_total = float(fee.total_fee)
+#         fee_due_date = fee.due_date
 
-        # fee_paid = Payment.objects.filter(student=profile, semester=fee.semester).aggregate(
-        #     total=Sum("amount")
-        # )["total"] or 0
-        fee_paid = float(fee_paid)
+#         fee_paid = Payment.objects.filter(
+#     student=profile,
+#     semester=fee.semester,
+#     status="COMPLETED"
+# ).aggregate(total=Sum("amount"))["total"] or 0
 
-        fee_remaining = max(fee_total - fee_paid, 0)
-        fee_percent = int((fee_paid / fee_total) * 100) if fee_total > 0 else 0
+#         # fee_paid = Payment.objects.filter(student=profile, semester=fee.semester).aggregate(
+#         #     total=Sum("amount")
+#         # )["total"] or 0
+#         fee_paid = float(fee_paid)
 
-        # ✅ create/update popup reminder only if due soon AND still remaining
-        if fee_due_date and fee_remaining > 0 and today <= fee_due_date <= due_soon_date:
-            title = "Fee Due Reminder"
-            msg = f"Your remaining fee is Rs. {fee_remaining} and due on {fee_due_date}. Please pay before deadline."
+#         fee_remaining = max(fee_total - fee_paid, 0)
+#         fee_percent = int((fee_paid / fee_total) * 100) if fee_total > 0 else 0
 
-            Notification.objects.update_or_create(
-                student=profile,
-                title=title,
-                is_read=False,
-                defaults={
-                    "message": msg,
-                    "amount": fee_remaining,
-                    "status": "PENDING",
-                }
-            )
+#         # ✅ create/update popup reminder only if due soon AND still remaining
+#         if fee_due_date and fee_remaining > 0 and today <= fee_due_date <= due_soon_date:
+#             title = "Fee Due Reminder"
+#             msg = f"Your remaining fee is Rs. {fee_remaining} and due on {fee_due_date}. Please pay before deadline."
 
-            popup_notification = Notification.objects.filter(
-                student=profile,
-                is_read=False,
-                title=title
-            ).order_by("-created_at").first()
+#             Notification.objects.update_or_create(
+#                 student=profile,
+#                 title=title,
+#                 is_read=False,
+#                 defaults={
+#                     "message": msg,
+#                     "amount": fee_remaining,
+#                     "status": "PENDING",
+#                 }
+#             )
 
-    return render(request, "attendance/student_dashboard.html", {
-        "profile": profile,
-        "enrolled_subjects": enrolled_subjects,
-        "attendance_stats": attendance_stats,
-        "attendance_records": attendance_records,
-        "total_classes_all": total_classes_all,
-        "total_present_all": total_present_all,
+#             popup_notification = Notification.objects.filter(
+#                 student=profile,
+#                 is_read=False,
+#                 title=title
+#             ).order_by("-created_at").first()
 
-        # ✅ fee values for dashboard cards
-        "fee_total": fee_total,
-        "fee_paid": fee_paid,
-        "fee_remaining": fee_remaining,
-        "fee_due_date": fee_due_date,
-        "fee_percent": fee_percent,
+#     return render(request, "attendance/student_dashboard.html", {
+#         "profile": profile,
+#         "enrolled_subjects": enrolled_subjects,
+#         "attendance_stats": attendance_stats,
+#         "attendance_records": attendance_records,
+#         "total_classes_all": total_classes_all,
+#         "total_present_all": total_present_all,
 
-        # ✅ popup notification
-        "popup_notification": popup_notification,
-    })
+#         # ✅ fee values for dashboard cards
+#         "fee_total": fee_total,
+#         "fee_paid": fee_paid,
+#         "fee_remaining": fee_remaining,
+#         "fee_due_date": fee_due_date,
+#         "fee_percent": fee_percent,
+
+#         # ✅ popup notification
+#         "popup_notification": popup_notification,
+#     })
 
 
 from django.contrib.auth.decorators import login_required
@@ -1569,3 +1592,90 @@ def teacher_attendance_history(request, student_id):
         "history": history,
     })
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Sum
+
+from .models import Subject, AttendanceRecord, FeeStructure, Payment, Notification, StudentProfile
+
+
+@login_required
+def student_dashboard(request):
+    print("LOGGED IN USER:", request.user.username)
+
+    if not hasattr(request.user, 'profile') or request.user.profile.role != 'student':
+        messages.error(request, "Students only.")
+        return redirect('home')
+
+    try:
+        profile = request.user.student_profile
+    except StudentProfile.DoesNotExist:
+        messages.error(request, "Student profile not found.")
+        return redirect("home")
+
+    # ======================
+    # ATTENDANCE
+    # ======================
+    enrolled_subjects = Subject.objects.filter(students=request.user)
+
+    attendance_stats = []
+    total_classes_all = 0
+    total_present_all = 0
+
+    for subject in enrolled_subjects:
+        total = AttendanceRecord.objects.filter(student=request.user, subject=subject).count()
+        present = AttendanceRecord.objects.filter(student=request.user, subject=subject, status="Present").count()
+        percent = round((present / total) * 100, 2) if total else 0
+
+        total_classes_all += total
+        total_present_all += present
+
+        attendance_stats.append({
+            "subject": subject,
+            "total": total,
+            "present": present,
+            "percentage": percent
+        })
+
+    attendance_records = AttendanceRecord.objects.filter(
+        student=request.user
+    ).select_related("subject").order_by("-id")[:10]
+
+    # ======================
+    # FEES
+    # ======================
+    fee_total = 0
+    fee_paid = 0
+    fee_remaining = 0
+    fee_percent = 0
+    fee_due_date = None
+
+    fee = FeeStructure.objects.filter(student=profile).first()
+
+    if fee:
+        fee_total = float(fee.total_fee)
+        fee_due_date = fee.due_date
+
+        fee_paid = Payment.objects.filter(
+            student=profile,
+            status="COMPLETED"
+        ).aggregate(total=Sum("amount"))["total"] or 0
+
+        fee_paid = float(fee_paid)
+        fee_remaining = fee_total - fee_paid
+        fee_percent = int((fee_paid / fee_total) * 100) if fee_total else 0
+
+    return render(request, "attendance/student_dashboard.html", {
+        "attendance_stats": attendance_stats,
+        "attendance_records": attendance_records,
+        "total_classes_all": total_classes_all,
+        "total_present_all": total_present_all,
+        "fee_total": fee_total,
+        "fee_paid": fee_paid,
+        "fee_remaining": fee_remaining,
+        "fee_percent": fee_percent,
+        "fee_due_date": fee_due_date,
+    })
