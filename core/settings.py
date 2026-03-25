@@ -23,7 +23,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-s#l=#o3ios26a1)zf6we@v5z&flsc%h&+dr)oczri9#3f=5=re'
 KHALTI_SECRET_KEY = "your_test_secret_key"
-KHALTI_WEBSITE_URL =  "http://127.0.0.1:8000"
+KHALTI_PUBLIC_KEY = "your_public_key"
+# KHALTI_WEBSITE_URL =  "http://127.0.0.1:8000"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
