@@ -52,7 +52,28 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
+            # =========================
+# ROLE / GROUP BASED REDIRECT
+# =========================
 
+# Super Admin → main admin
+            if user.is_superuser:
+             return redirect("/admin/")
+
+# Fee Manager → custom fee dashboard
+            elif user.groups.filter(name="feesmanager").exists():
+             return redirect("attendance:fee_manager_dashboard")
+
+# Teacher
+            elif hasattr(user, "profile") and user.profile.role == "teacher":
+             return redirect("attendance:teacher_dashboard")
+
+# Student
+            elif hasattr(user, "profile") and user.profile.role == "student":
+             return redirect("attendance:student_dashboard")
+
+# fallback
+            return redirect("home")
             # 🔑 ALWAYS define profile safely
             profile = getattr(user, 'profile', None)
              # 🔁 Handle ?next= redirect (QR FLOW)

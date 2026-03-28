@@ -1278,7 +1278,11 @@ from datetime import timedelta
 from .models import StudentProfile, FeeStructure, Payment
 
 def fee_manager_only(user):
-    return user.is_authenticated and user.groups.filter(name="FeeManager").exists()
+    return (
+        user.is_authenticated and
+        user.is_staff and
+        user.groups.filter(name="feesmanager").exists()
+    )
 
 @login_required
 @user_passes_test(fee_manager_only)
@@ -1686,15 +1690,19 @@ def student_dashboard(request):
     ).select_related("subject").order_by("-id")[:10]
 
     # ======================
-    # FEES
+    # FEES + POPUP NOTIFICATION
     # ======================
+    today = timezone.localdate()
+    due_soon_date = today + timedelta(days=7)
+
     fee_total = 0
     fee_paid = 0
     fee_remaining = 0
     fee_percent = 0
     fee_due_date = None
+    popup_notification = None
 
-    fee = FeeStructure.objects.filter(student=profile).first()
+    fee = FeeStructure.objects.filter(student=profile).order_by("-semester").first()
 
     if fee:
         fee_total = float(fee.total_fee)
@@ -1702,14 +1710,37 @@ def student_dashboard(request):
 
         fee_paid = Payment.objects.filter(
             student=profile,
+            semester=fee.semester,
             status="COMPLETED"
         ).aggregate(total=Sum("amount"))["total"] or 0
 
         fee_paid = float(fee_paid)
-        fee_remaining = fee_total - fee_paid
+        fee_remaining = max(fee_total - fee_paid, 0)
         fee_percent = int((fee_paid / fee_total) * 100) if fee_total else 0
 
+        # create/update reminder only if due soon and fee remaining
+        if fee_due_date and fee_remaining > 0 and today <= fee_due_date <= due_soon_date:
+            title = "Fee Due Reminder"
+            msg = f"Your remaining fee is Rs. {fee_remaining} and due on {fee_due_date}. Please pay before deadline."
+
+            Notification.objects.update_or_create(
+                student=profile,
+                title=title,
+                is_read=False,
+                defaults={
+                    "message": msg,
+                    "amount": fee_remaining,
+                    "status": "PENDING",
+                }
+            )
+
+        popup_notification = Notification.objects.filter(
+            student=profile,
+            is_read=False
+        ).order_by("-created_at").first()
+
     return render(request, "attendance/student_dashboard.html", {
+        "profile": profile,
         "attendance_stats": attendance_stats,
         "attendance_records": attendance_records,
         "total_classes_all": total_classes_all,
@@ -1719,4 +1750,5 @@ def student_dashboard(request):
         "fee_remaining": fee_remaining,
         "fee_percent": fee_percent,
         "fee_due_date": fee_due_date,
+        "popup_notification": popup_notification,
     })
