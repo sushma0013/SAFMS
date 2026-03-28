@@ -48,6 +48,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.utils import timezone
+from django.db.models import Count, Q
+from .models import QRSession, AttendanceRecord, Subject
+
 
 
 from .models import AttendanceRecord 
@@ -751,7 +758,6 @@ def teacher_students(request):
 
 
 
-
 @login_required
 def my_classes(request):
     if request.user.profile.role != 'teacher':
@@ -760,9 +766,9 @@ def my_classes(request):
 
     today = timezone.localdate()
 
-    sessions_today = (
+    all_sessions = (
         QRSession.objects
-        .filter(created_by=request.user, session_date=today)
+        .filter(created_by=request.user)
         .select_related("subject")
         .annotate(
             present_count=Count(
@@ -775,13 +781,48 @@ def my_classes(request):
             ),
             total_marked=Count("attendance_records"),
         )
-        .order_by("-created_at")
+        .order_by("-session_date", "-created_at")
     )
+
+    sessions_today = all_sessions.filter(session_date=today)
+
+    total_present_all = sum(s.present_count for s in sessions_today)
+    total_absent_all = sum(s.absent_count for s in sessions_today)
 
     return render(request, "attendance/my_classes.html", {
         "sessions_today": sessions_today,
+        "all_sessions": all_sessions,
         "today": today,
+        "total_present_all": total_present_all,
+        "total_absent_all": total_absent_all,
     })
+
+@login_required
+def class_session_detail(request, session_id):
+    if request.user.profile.role != 'teacher':
+        messages.error(request, "Teachers only.")
+        return redirect('home')
+
+    session = get_object_or_404(
+        QRSession.objects.select_related("subject"),
+        id=session_id,
+        created_by=request.user
+    )
+
+    present_records = AttendanceRecord.objects.filter(
+        session=session, status="Present"
+    ).select_related("student")
+
+    absent_records = AttendanceRecord.objects.filter(
+        session=session, status="Absent"
+    ).select_related("student")
+
+    return render(request, "attendance/class_session_detail.html", {
+        "session": session,
+        "present_records": present_records,
+        "absent_records": absent_records,
+    })
+
 
 
 

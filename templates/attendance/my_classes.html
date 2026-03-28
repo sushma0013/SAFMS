@@ -32,39 +32,32 @@
 
         <div class="bg-white rounded-xl shadow-sm border p-5">
             <div class="flex items-center justify-between mb-3">
-                <p class="text-sm font-medium text-gray-500">Total Present</p>
+                <p class="text-sm font-medium text-gray-500">Present Today</p>
                 <span class="material-symbols-outlined text-green-600">check_circle</span>
             </div>
-            <h2 class="text-3xl font-bold text-gray-900">
-                {% with total_present=0 %}
-                    {% for s in sessions_today %}
-                        {% if forloop.first %}{% endif %}
-                    {% endfor %}
-                {% endwith %}
-                {{ sessions_today|length }}
-            </h2>
-            <p class="text-sm text-gray-500 mt-2">See session cards below for details</p>
+            <h2 class="text-3xl font-bold text-gray-900">{{ total_present_all }}</h2>
+            <p class="text-sm text-gray-500 mt-2">Total present records across today’s sessions</p>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border p-5">
             <div class="flex items-center justify-between mb-3">
-                <p class="text-sm font-medium text-gray-500">Manage Attendance</p>
-                <span class="material-symbols-outlined text-purple-600">qr_code_2</span>
+                <p class="text-sm font-medium text-gray-500">Absent Today</p>
+                <span class="material-symbols-outlined text-red-600">cancel</span>
             </div>
-            <h2 class="text-3xl font-bold text-gray-900">QR</h2>
-            <p class="text-sm text-gray-500 mt-2">Generate fresh QR for any subject</p>
+            <h2 class="text-3xl font-bold text-gray-900">{{ total_absent_all }}</h2>
+            <p class="text-sm text-gray-500 mt-2">Total absent records across today’s sessions</p>
         </div>
     </div>
 
-    <!-- Sessions List -->
+    <!-- Full Session History -->
     <div class="bg-white rounded-xl shadow-sm border p-6">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-gray-900">Today's QR Sessions</h2>
+            <h2 class="text-lg font-semibold text-gray-900">All Session History</h2>
         </div>
 
-        {% if sessions_today %}
+        {% if all_sessions %}
             <div class="space-y-4">
-                {% for s in sessions_today %}
+                {% for s in all_sessions %}
                 <div class="border rounded-xl p-5 bg-gray-50 hover:bg-gray-100 transition-colors">
                     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
@@ -74,6 +67,7 @@
                                 <h3 class="text-xl font-bold text-gray-900">
                                     {{ s.subject.name }}
                                 </h3>
+
                                 <span class="px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs font-semibold">
                                     {{ s.subject.code }}
                                 </span>
@@ -91,29 +85,27 @@
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
                                 <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-base">schedule</span>
-                                    <span>
-                                        {{ s.created_at|date:"h:i A" }} - {{ s.valid_until|date:"h:i A" }}
-                                    </span>
+                                    <span class="material-symbols-outlined text-base">event</span>
+                                    <span>Session Date: {{ s.session_date }}</span>
                                 </div>
 
                                 <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-base">event</span>
-                                    <span>{{ s.session_date }}</span>
+                                    <span class="material-symbols-outlined text-base">schedule</span>
+                                    <span>{{ s.created_at|date:"h:i A" }} - {{ s.valid_until|date:"h:i A" }}</span>
                                 </div>
 
                                 <div class="flex items-center gap-2">
                                     <span class="material-symbols-outlined text-base">groups</span>
-                                    <span>Marked: {{ s.total_marked }}</span>
+                                    <span>Total Marked: {{ s.total_marked }}</span>
                                 </div>
 
                                 <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-base">check_circle</span>
+                                    <span class="material-symbols-outlined text-base text-green-600">check_circle</span>
                                     <span class="text-green-600 font-medium">Present: {{ s.present_count }}</span>
                                 </div>
 
                                 <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-base">cancel</span>
+                                    <span class="material-symbols-outlined text-base text-red-600">cancel</span>
                                     <span class="text-red-600 font-medium">Absent: {{ s.absent_count }}</span>
                                 </div>
                             </div>
@@ -124,7 +116,13 @@
                             <a href="{% url 'attendance:generate_qr' s.subject.id %}"
                                class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
                                 <span class="material-symbols-outlined text-base">qr_code_2</span>
-                                Generate QR Again
+                                Generate QR
+                            </a>
+
+                            <a href="{% url 'attendance:class_session_detail' s.id %}"
+                               class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-black">
+                                <span class="material-symbols-outlined text-base">visibility</span>
+                                View Details
                             </a>
                         </div>
 
@@ -135,7 +133,7 @@
         {% else %}
             <div class="text-center py-10">
                 <span class="material-symbols-outlined text-5xl text-gray-300 mb-3">calendar_month</span>
-                <p class="text-gray-500">No sessions created today.</p>
+                <p class="text-gray-500">No sessions created yet.</p>
             </div>
         {% endif %}
     </div>

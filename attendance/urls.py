@@ -65,6 +65,7 @@ path('teacher/student/<int:student_id>/history/', views.teacher_attendance_histo
 path('teacher/student/<int:student_id>/', views.teacher_student_detail, name='teacher_student_detail'),
 path('teacher/student/<int:student_id>/edit-attendance/', views.teacher_edit_attendance, name='teacher_edit_attendance'),
 path('teacher/student/<int:student_id>/history/', views.teacher_attendance_history, name='teacher_attendance_history'),
+path("teacher/classes/session/<int:session_id>/", views.class_session_detail, name="class_session_detail"),
    
 
     
