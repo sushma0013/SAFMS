@@ -109,5 +109,14 @@ path("student/my-fees/khalti/initiate/", views.khalti_initiate_payment, name="kh
 path("student/my-fees/khalti/verify/", views.khalti_verify_payment, name="khalti_verify"),
 
 path("notification/read/<int:notif_id>/", views.mark_notification_read, name="mark_notification_read"),
+
+
+
+
+
+path("fee/structures/", views.fee_structures_page, name="fee_structures_page"),
+path("fee/structures/add/", views.add_fee_structure, name="add_fee_structure"),
+path("fee/structures/<int:pk>/edit/", views.edit_fee_structure, name="edit_fee_structure"),
+path("fee/structures/<int:pk>/delete/", views.delete_fee_structure, name="delete_fee_structure"),
 ]
 

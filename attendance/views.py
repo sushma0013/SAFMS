@@ -80,7 +80,7 @@ from .models import (
 )
 
 from .utils import close_session_and_mark_absent
-
+from .forms import FeeStructureForm
 
 
 
@@ -1275,6 +1275,7 @@ from django.db.models import Sum, Count
 from django.utils import timezone
 from datetime import timedelta
 
+
 from .models import StudentProfile, FeeStructure, Payment
 
 def fee_manager_only(user):
@@ -1751,4 +1752,85 @@ def student_dashboard(request):
         "fee_percent": fee_percent,
         "fee_due_date": fee_due_date,
         "popup_notification": popup_notification,
+    })
+@login_required
+@user_passes_test(fee_manager_only)
+def fee_structures_page(request):
+    query = request.GET.get("q", "")
+    semester = request.GET.get("semester", "")
+
+    fee_structures = FeeStructure.objects.select_related("student").all().order_by("student__full_name")
+
+    if query:
+        fee_structures = fee_structures.filter(
+            Q(student__full_name__icontains=query) |
+            Q(student__student_id__icontains=query)
+        )
+
+    if semester:
+        fee_structures = fee_structures.filter(semester=semester)
+
+    semesters = FeeStructure.objects.values_list("semester", flat=True).distinct().order_by("semester")
+
+    context = {
+        "fee_structures": fee_structures,
+        "query": query,
+        "semesters": semesters,
+        "selected_semester": semester,
+        "total_count": fee_structures.count(),
+    }
+    return render(request, "attendance/fee_structures.html", context)
+
+
+@login_required
+@user_passes_test(fee_manager_only)
+def add_fee_structure(request):
+    if request.method == "POST":
+        form = FeeStructureForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Fee structure added successfully.")
+            return redirect("attendance:fee_structures_page")
+    else:
+        form = FeeStructureForm()
+
+    return render(request, "attendance/fee_structure_form.html", {
+        "form": form,
+        "page_title": "Add Fee Structure"
+    })
+
+
+@login_required
+@user_passes_test(fee_manager_only)
+def edit_fee_structure(request, pk):
+    fee_structure = get_object_or_404(FeeStructure, pk=pk)
+
+    if request.method == "POST":
+        form = FeeStructureForm(request.POST, instance=fee_structure)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Fee structure updated successfully.")
+            return redirect("attendance:fee_structures_page")
+    else:
+        form = FeeStructureForm(instance=fee_structure)
+
+    return render(request, "attendance/fee_structure_form.html", {
+        "form": form,
+        "page_title": "Edit Fee Structure",
+        "fee_structure": fee_structure
+    })
+
+
+@login_required
+@user_passes_test(fee_manager_only)
+def delete_fee_structure(request, pk):
+    fee_structure = get_object_or_404(FeeStructure, pk=pk)
+
+    if request.method == "POST":
+        fee_structure.delete()
+        messages.success(request, "Fee structure deleted successfully.")
+        return redirect("attendance:fee_structures_page")
+
+    return render(request, "attendance/delete_fee_structure.html", {
+        "fee_structure": fee_structure
     })
