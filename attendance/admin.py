@@ -85,7 +85,8 @@
 # admin.site.register(QRSession)
 # admin.site.register(AttendanceRecord)
 
-
+from django.contrib.sites.models import Site
+from allauth.socialaccount.models import SocialApp
 
 from django.contrib.admin import AdminSite
 from django.contrib import admin
@@ -196,6 +197,8 @@ main_admin_site.register(StudentProfile, StudentProfileAdmin)
 main_admin_site.register(Subject)
 main_admin_site.register(QRSession)
 main_admin_site.register(AttendanceRecord)
+main_admin_site.register(Site)
+main_admin_site.register(SocialApp)
 
 
 # =========================

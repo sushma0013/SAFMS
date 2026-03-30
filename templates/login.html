@@ -1,3 +1,5 @@
+{% load socialaccount %}
+
 {% load static %}
 <!DOCTYPE html>
 <html lang="en" class="light">
@@ -55,7 +57,7 @@
       {% comment %} </div> {% endcomment %}
 
       <!-- Google button -->
-     <a href="{% url 'accounts:google_student' %}"
+     <a href="{% provider_login_url 'google' %}"
    class="w-full flex items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50">
   <img src="https://www.svgrepo.com/show/475656/google-color.svg"
        alt="Google"

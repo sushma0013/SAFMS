@@ -92,7 +92,18 @@ INSTALLED_APPS += [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
 ]
-SITE_ID =2
+SITE_ID = 2
+
+LOGIN_REDIRECT_URL = "/dashboard/"
+LOGOUT_REDIRECT_URL = "/login/"
+LOGIN_URL = "/login/"
+
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_UNIQUE_EMAIL = True
+
+SOCIALACCOUNT_AUTO_SIGNUP = True
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",

@@ -41,63 +41,63 @@ def register(request):
     return render(request, 'signup.html', {'form': form})
 
 
-def login_view(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+# def login_view(request):
+#     if request.method == 'POST':
+#         username = request.POST.get('username')
+#         password = request.POST.get('password')
 
-        print(f"🔍 Login attempt - Username: {username}")
+#         print(f"🔍 Login attempt - Username: {username}")
 
-        user = authenticate(request, username=username, password=password)
+#         user = authenticate(request, username=username, password=password)
 
-        if user is not None:
-            login(request, user)
-            # =========================
-# ROLE / GROUP BASED REDIRECT
-# =========================
+#         if user is not None:
+#             login(request, user)
+#             # =========================
+# # ROLE / GROUP BASED REDIRECT
+# # =========================
 
-# Super Admin → main admin
-            if user.is_superuser:
-             return redirect("/admin/")
+# # Super Admin → main admin
+#             if user.is_superuser:
+#              return redirect("/admin/")
 
-# Fee Manager → custom fee dashboard
-            elif user.groups.filter(name="feesmanager").exists():
-             return redirect("attendance:fee_manager_dashboard")
+# # Fee Manager → custom fee dashboard
+#             elif user.groups.filter(name="feesmanager").exists():
+#              return redirect("attendance:fee_manager_dashboard")
 
-# Teacher
-            elif hasattr(user, "profile") and user.profile.role == "teacher":
-             return redirect("attendance:teacher_dashboard")
+# # Teacher
+#             elif hasattr(user, "profile") and user.profile.role == "teacher":
+#              return redirect("attendance:teacher_dashboard")
 
-# Student
-            elif hasattr(user, "profile") and user.profile.role == "student":
-             return redirect("attendance:student_dashboard")
+# # Student
+#             elif hasattr(user, "profile") and user.profile.role == "student":
+#              return redirect("attendance:student_dashboard")
 
-# fallback
-            return redirect("home")
-            # 🔑 ALWAYS define profile safely
-            profile = getattr(user, 'profile', None)
-             # 🔁 Handle ?next= redirect (QR FLOW)
-            next_url = request.POST.get('next') or request.GET.get('next')
+# # fallback
+#             return redirect("home")
+#             # 🔑 ALWAYS define profile safely
+#             profile = getattr(user, 'profile', None)
+#              # 🔁 Handle ?next= redirect (QR FLOW)
+#             next_url = request.POST.get('next') or request.GET.get('next')
 
-            if next_url:
-                return redirect(next_url)
+#             if next_url:
+#                 return redirect(next_url)
 
-            # 🚨 Superuser/admin
-            if user.is_superuser or (profile and profile.role == 'admin'):
-                return redirect('admin:index')
+#             # 🚨 Superuser/admin
+#             if user.is_superuser or (profile and profile.role == 'admin'):
+#                 return redirect('admin:index')
 
-            # 👨‍🏫 Teacher
-            if profile and profile.role == 'teacher':
-                return redirect('attendance:teacher_dashboard')
+#             # 👨‍🏫 Teacher
+#             if profile and profile.role == 'teacher':
+#                 return redirect('attendance:teacher_dashboard')
 
-            # 👨‍🎓 Student
-            return redirect('attendance:student_dashboard')
+#             # 👨‍🎓 Student
+#             return redirect('attendance:student_dashboard')
 
-        else:
-            print(f"❌ Authentication failed for username: {username}")
-            messages.error(request, 'Invalid username or password')
+#         else:
+#             print(f"❌ Authentication failed for username: {username}")
+#             messages.error(request, 'Invalid username or password')
 
-    return render(request, 'login.html')
+#     return render(request, 'login.html')
 
             
     #         login(request, user)
@@ -190,32 +190,91 @@ def logout_view(request):
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from attendance.models import StudentProfile
 
 def signup_view(request):
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
-        role = request.POST.get("role")
+        password2 = request.POST.get("password2")
+        role = request.POST.get("role", "student")
 
-        # ✅ Only allow students to self-register
         if role != "student":
-            messages.error(request, "Only students can create accounts. Teachers/Admin are created by system administrator.")
+            messages.error(request, "Only students can create accounts.")
+            return redirect("signup")
+
+        if not username or not password or not password2:
+            messages.error(request, "All fields are required.")
+            return redirect("signup")
+
+        if password != password2:
+            messages.error(request, "Passwords do not match.")
             return redirect("signup")
 
         if User.objects.filter(username=username).exists():
-            messages.error(request, "Username already exists")
+            messages.error(request, "Username already exists.")
             return redirect("signup")
 
-        user = User.objects.create_user(username=username, password=password)
+        user = User.objects.create_user(
+            username=username,
+            password=password
+        )
 
-        # Profile auto-created by signal
-        user.profile.role = "student"
-        user.profile.save()
+        # Signal will create Profile automatically as student
+
+        StudentProfile.objects.get_or_create(
+            user=user,
+            defaults={
+                "full_name": username,
+                "student_id": f"STD-{user.id}",
+            }
+        )
 
         messages.success(request, "Student account created successfully. Please login.")
         return redirect("login")
 
     return render(request, "signup.html")
 
+
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        print(f"🔍 Login attempt - Username: {username}")
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+
+            next_url = request.POST.get('next') or request.GET.get('next')
+            if next_url:
+                return redirect(next_url)
+
+            if user.is_superuser:
+                return redirect('/admin/')
+
+            if user.groups.filter(name='feesmanager').exists():
+                return redirect('attendance:fee_manager_dashboard')
+
+            profile = getattr(user, 'profile', None)
+
+            if profile and profile.role == 'teacher':
+                return redirect('attendance:teacher_dashboard')
+
+            if profile and profile.role == 'student':
+                return redirect('attendance:student_dashboard')
+
+            if profile and profile.role == 'admin':
+                return redirect('/admin/')
+
+            return redirect('home')
+
+        else:
+            print(f"❌ Authentication failed for username: {username}")
+            messages.error(request, 'Invalid username or password')
+
+    return render(request, 'login.html')
 
 

@@ -1656,15 +1656,14 @@ def student_dashboard(request):
         messages.error(request, "Students only.")
         return redirect('home')
 
-    try:
-        profile = request.user.student_profile
-    except StudentProfile.DoesNotExist:
-        messages.error(request, "Student profile not found.")
-        return redirect("home")
+    profile, created = StudentProfile.objects.get_or_create(
+        user=request.user,
+        defaults={
+            "full_name": request.user.get_full_name() or request.user.username,
+            "student_id": f"STD-{request.user.id}",
+        }
+    )
 
-    # ======================
-    # ATTENDANCE
-    # ======================
     enrolled_subjects = Subject.objects.filter(students=request.user)
 
     attendance_stats = []
@@ -1690,9 +1689,6 @@ def student_dashboard(request):
         student=request.user
     ).select_related("subject").order_by("-id")[:10]
 
-    # ======================
-    # FEES + POPUP NOTIFICATION
-    # ======================
     today = timezone.localdate()
     due_soon_date = today + timedelta(days=7)
 
@@ -1719,7 +1715,6 @@ def student_dashboard(request):
         fee_remaining = max(fee_total - fee_paid, 0)
         fee_percent = int((fee_paid / fee_total) * 100) if fee_total else 0
 
-        # create/update reminder only if due soon and fee remaining
         if fee_due_date and fee_remaining > 0 and today <= fee_due_date <= due_soon_date:
             title = "Fee Due Reminder"
             msg = f"Your remaining fee is Rs. {fee_remaining} and due on {fee_due_date}. Please pay before deadline."

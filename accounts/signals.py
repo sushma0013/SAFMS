@@ -9,14 +9,33 @@ User = get_user_model()
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:
-        # ✅ if staff/superuser => admin else student
         role = "admin" if (instance.is_staff or instance.is_superuser) else "student"
-        Profile.objects.create(user=instance, role=role)
+        Profile.objects.get_or_create(
+            user=instance,
+            defaults={"role": role}
+        )
+
+@receiver(post_save, sender=User)
+def save_profile(sender, instance, **kwargs):
+    Profile.objects.get_or_create(
+        user=instance,
+        defaults={
+            "role": "admin" if (instance.is_staff or instance.is_superuser) else "student"
+        }
+    )
 
 @receiver(user_logged_in)
 def set_role_after_google_login(sender, request, user, **kwargs):
+    profile, _ = Profile.objects.get_or_create(
+        user=user,
+        defaults={"role": "student"}
+    )
+
     desired_role = request.session.pop("desired_role", None)
+
     if desired_role:
-        profile, _ = Profile.objects.get_or_create(user=user)
         profile.role = desired_role
+        profile.save()
+    elif not profile.role:
+        profile.role = "student"
         profile.save()
