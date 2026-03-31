@@ -104,7 +104,6 @@ def choose_role(request):
     return render(request, "accounts/choose_role.html")
 
 def google_student(request):
-    # Student-only Google login
     request.session["desired_role"] = "student"
-    return redirect("/accounts/google/login/?process=login&next=/dashboard/")
+    return redirect("/accounts/google/login/?process=login&next=/dashboard/&prompt=select_account")
 
