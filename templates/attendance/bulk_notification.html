@@ -1,0 +1,62 @@
+{% extends "attendance/base_fee_manager.html" %}
+{% block title %}Bulk Notification - SAFMS{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+  <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+    <div class="mb-6">
+      <p class="text-sm text-slate-500 font-medium">Fee Manager / Bulk Notifications</p>
+      <h1 class="text-3xl font-black text-slate-900 mt-1">Bulk Notifications</h1>
+      <p class="text-slate-500 mt-2">Send the same reminder to many students at once.</p>
+    </div>
+
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Title</label>
+        {{ form.title }}
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Message</label>
+        {{ form.message }}
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Amount (optional)</label>
+        {{ form.amount }}
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+          {{ form.only_students_with_fee }}
+          Send only to students who already have fee setup
+        </label>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-3">Select Students</label>
+        <div class="max-h-96 overflow-y-auto rounded-xl border border-slate-200 p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+          {% for checkbox in form.students %}
+            <label class="flex items-center gap-3 rounded-lg border border-slate-200 px-4 py-3 hover:bg-slate-50">
+              {{ checkbox.tag }}
+              <span>{{ checkbox.choice_label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 pt-4">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold">
+          Send Notifications
+        </button>
+        <a href="{% url 'attendance:fee_manager_dashboard' %}"
+           class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-6 py-3 rounded-xl font-semibold">
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

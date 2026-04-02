@@ -80,7 +80,7 @@ from .models import (
 )
 
 from .utils import close_session_and_mark_absent
-from .forms import FeeStructureForm
+from .forms import FeeStructureForm, BulkFeeStructureForm, BulkNotificationForm
 
 
 
@@ -1132,6 +1132,99 @@ def my_fees(request):
         "payments": payments,
     }
     return render(request, "attendance/my_fees.html", context)
+def fee_manager_only(user):
+    return user.is_authenticated and user.groups.filter(name="feesmanager").exists()
+@login_required
+@user_passes_test(fee_manager_only)
+def bulk_fee_structure(request):
+    if request.method == "POST":
+        form = BulkFeeStructureForm(request.POST)
+        if form.is_valid():
+            students = form.cleaned_data["students"]
+            semester = form.cleaned_data["semester"]
+            total_fee = form.cleaned_data["total_fee"]
+            due_date = form.cleaned_data["due_date"]
+            only_without_fee = form.cleaned_data["only_without_fee"]
+            overwrite_existing = form.cleaned_data["overwrite_existing"]
+
+            if only_without_fee:
+                students = StudentProfile.objects.exclude(
+                    id__in=FeeStructure.objects.filter(
+                        semester=semester
+                    ).values_list("student_id", flat=True)
+                ).order_by("full_name")
+
+            count = 0
+
+            for student in students:
+                existing = FeeStructure.objects.filter(
+                    student=student,
+                    semester=semester
+                ).first()
+
+                if existing:
+                    if overwrite_existing:
+                        existing.total_fee = total_fee
+                        existing.due_date = due_date
+                        existing.save()
+                        count += 1
+                else:
+                    FeeStructure.objects.create(
+                        student=student,
+                        semester=semester,
+                        total_fee=total_fee,
+                        due_date=due_date
+                    )
+                    count += 1
+
+            messages.success(request, f"{count} fee structure(s) processed successfully.")
+            return redirect("attendance:fee_structures_page")
+    else:
+        form = BulkFeeStructureForm()
+
+    return render(request, "attendance/bulk_fee_structure.html", {
+        "form": form
+    })
+
+
+@login_required
+@user_passes_test(fee_manager_only)
+def bulk_notification(request):
+    if request.method == "POST":
+        form = BulkNotificationForm(request.POST)
+        if form.is_valid():
+            students = form.cleaned_data["students"]
+            title = form.cleaned_data["title"]
+            message = form.cleaned_data["message"]
+            amount = form.cleaned_data["amount"]
+            only_students_with_fee = form.cleaned_data["only_students_with_fee"]
+
+            if only_students_with_fee:
+                students = StudentProfile.objects.filter(
+                    id__in=FeeStructure.objects.values_list("student_id", flat=True)
+                ).distinct().order_by("full_name")
+
+            count = 0
+
+            for student in students:
+                Notification.objects.create(
+                    student=student,
+                    title=title,
+                    message=message,
+                    amount=amount,
+                    status="PENDING",
+                    is_read=False
+                )
+                count += 1
+
+            messages.success(request, f"{count} notification(s) sent successfully.")
+            return redirect("attendance:fee_manager_dashboard")
+    else:
+        form = BulkNotificationForm()
+
+    return render(request, "attendance/bulk_notification.html", {
+        "form": form
+    })
 
 
 from django.contrib.auth.decorators import login_required

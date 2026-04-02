@@ -118,5 +118,7 @@ path("fee/structures/", views.fee_structures_page, name="fee_structures_page"),
 path("fee/structures/add/", views.add_fee_structure, name="add_fee_structure"),
 path("fee/structures/<int:pk>/edit/", views.edit_fee_structure, name="edit_fee_structure"),
 path("fee/structures/<int:pk>/delete/", views.delete_fee_structure, name="delete_fee_structure"),
+path("fee/structures/bulk/", views.bulk_fee_structure, name="bulk_fee_structure"),
+path("fee/notifications/bulk/", views.bulk_notification, name="bulk_notification"),
 ]
 

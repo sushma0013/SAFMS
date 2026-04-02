@@ -15,8 +15,21 @@
           Manage student fees, payments, and dues in one place.
         </p>
       </div>
-
       <div class="flex items-center gap-3">
+  <a href="{% url 'attendance:bulk_notification' %}"
+     class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#135bec] text-white font-bold text-sm hover:opacity-95 shadow-sm">
+    <span class="material-symbols-outlined text-lg">notifications</span>
+    Send Reminder
+  </a>
+
+  <a href="{% url 'attendance:bulk_fee_structure' %}"
+     class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-800 font-bold text-sm hover:bg-slate-50">
+    <span class="material-symbols-outlined text-lg">payments</span>
+    Set Total Fee
+  </a>
+</div>
+
+      {% comment %} <div class="flex items-center gap-3">
         <a href="/admin/attendance/payment/add/"
            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#135bec] text-white font-bold text-sm hover:opacity-95 shadow-sm">
           <span class="material-symbols-outlined text-lg">add</span>
@@ -28,7 +41,7 @@
           <span class="material-symbols-outlined text-lg">paid</span>
           Set Total Fee
         </a>
-      </div>
+      </div> {% endcomment %}
     </div>
   </div>
 
@@ -69,14 +82,23 @@
         Please check dues and ensure reminders are created.
       </p>
       <div class="mt-4 flex gap-3">
-        <a href="/admin/attendance/feestructure/"
+        <a href="{% url 'attendance:fee_structures_page' %}"
+   class="px-4 py-2 rounded-lg bg-white border border-slate-200 font-bold text-sm hover:bg-slate-50">
+  View Fee Structures
+</a>
+
+<a href="{% url 'attendance:bulk_notification' %}"
+   class="px-4 py-2 rounded-lg bg-[#135bec] text-white font-bold text-sm hover:opacity-95">
+  Send Reminder
+</a>
+        {% comment %} <a href="/admin/attendance/feestructure/"
            class="px-4 py-2 rounded-lg bg-white border border-slate-200 font-bold text-sm hover:bg-slate-50">
           View Fee Structures
         </a>
         <a href="/admin/attendance/payment/"
            class="px-4 py-2 rounded-lg bg-[#135bec] text-white font-bold text-sm hover:opacity-95">
           View Payments
-        </a>
+        </a> {% endcomment %}
       </div>
     </div>
   </div>
@@ -86,9 +108,12 @@
   <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
       <h3 class="text-lg font-black text-slate-900">Recent Payments</h3>
-      <a href="/admin/attendance/payment/" class="text-sm font-bold text-[#135bec] hover:underline">
+      <a href="/fee-admin/attendance/payment/" class="text-sm font-bold text-[#135bec] hover:underline">
+  View all
+</a>
+      {% comment %} <a href="/admin/attendance/payment/" class="text-sm font-bold text-[#135bec] hover:underline">
         View all
-      </a>
+      </a> {% endcomment %}
     </div>
 
     <div class="overflow-x-auto">

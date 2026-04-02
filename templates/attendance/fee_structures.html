@@ -17,6 +17,19 @@
             Add Fee Structure
         </a>
     </div>
+    <div class="flex items-center gap-3">
+    <a href="{% url 'attendance:bulk_fee_structure' %}"
+       class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-3 rounded-xl font-semibold">
+        <span class="material-symbols-outlined">group_add</span>
+        Bulk Fee Setup
+    </a>
+
+    <a href="{% url 'attendance:add_fee_structure' %}"
+       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-semibold">
+        <span class="material-symbols-outlined">add</span>
+        Add Fee Structure
+    </a>
+</div>
 
     <div class="bg-white rounded-2xl border border-slate-200 p-4">
         <form method="get" class="flex flex-col md:flex-row gap-4">
