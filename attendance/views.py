@@ -986,12 +986,25 @@ def teacher_add_student(request):
         if not subject:
             messages.error(request, "Invalid subject.")
             return redirect("attendance:teacher_add_student")
-
         subject.students.add(student)
-        messages.success(request, f"{student.username} enrolled in {subject.code}.")
-        return redirect("attendance:teacher_students")
 
-    return render(request, "attendance/teacher_add_student.html", {"subjects": subjects})
+    StudentProfile.objects.get_or_create(
+    user=student,
+    defaults={
+        "student_id": f"STD-{student.id}",
+        "full_name": student.get_full_name() or student.username,
+    }
+)
+
+    messages.success(request, f"{student.username} enrolled in {subject.code} and added to student records.")
+    return redirect("attendance:teacher_students")
+
+
+    #     subject.students.add(student)
+    #     messages.success(request, f"{student.username} enrolled in {subject.code}.")
+    #     return redirect("attendance:teacher_students")
+
+    # return render(request, "attendance/teacher_add_student.html", {"subjects": subjects})
 
 # @login_required
 # def student_profile(request):
@@ -1185,6 +1198,34 @@ def bulk_fee_structure(request):
     return render(request, "attendance/bulk_fee_structure.html", {
         "form": form
     })
+
+@login_required
+@user_passes_test(fee_manager_only)
+def notifications_page(request):
+    query = request.GET.get("q", "")
+    unread = request.GET.get("unread", "")
+
+    notifications = Notification.objects.select_related("student").order_by("-created_at")
+
+    if query:
+        notifications = notifications.filter(
+            Q(student__full_name__icontains=query) |
+            Q(student__student_id__icontains=query) |
+            Q(title__icontains=query)
+        )
+
+    if unread == "yes":
+        notifications = notifications.filter(is_read=False)
+    elif unread == "no":
+        notifications = notifications.filter(is_read=True)
+
+    context = {
+        "notifications": notifications,
+        "query": query,
+        "selected_unread": unread,
+        "total_count": notifications.count(),
+    }
+    return render(request, "attendance/notifications_page.html", context)
 
 
 @login_required

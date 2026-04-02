@@ -120,5 +120,6 @@ path("fee/structures/<int:pk>/edit/", views.edit_fee_structure, name="edit_fee_s
 path("fee/structures/<int:pk>/delete/", views.delete_fee_structure, name="delete_fee_structure"),
 path("fee/structures/bulk/", views.bulk_fee_structure, name="bulk_fee_structure"),
 path("fee/notifications/bulk/", views.bulk_notification, name="bulk_notification"),
+path("fee/notifications/", views.notifications_page, name="notifications_page"),
 ]
 
