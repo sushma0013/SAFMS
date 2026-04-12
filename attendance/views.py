@@ -120,11 +120,11 @@ def teacher_dashboard(request):
     expired_sessions = QRSession.objects.filter(
         created_by=request.user,
         is_closed=False,
-        valid_until__lte=now
+        valid_until__lte=timezone.now()
     )
 
-    for session in expired_sessions:
-        close_session_and_mark_absent(session)
+    for s in expired_sessions:
+        close_session_and_mark_absent(s)
 
     # Teacher subjects
     subjects = Subject.objects.filter(teacher=request.user)
@@ -905,11 +905,20 @@ def my_classes(request):
         messages.error(request, "Teachers only.")
         return redirect('home')
 
+    expired_sessions = QRSession.objects.filter(
+        created_by=request.user,
+        is_closed=False,
+        valid_until__lte=timezone.now()
+    )
+
+    for s in expired_sessions:
+        close_session_and_mark_absent(s)
+
     today = timezone.localdate()
 
-    all_sessions = (
+    sessions_today = (
         QRSession.objects
-        .filter(created_by=request.user)
+        .filter(created_by=request.user, session_date=today)
         .select_related("subject")
         .annotate(
             present_count=Count(
@@ -922,13 +931,56 @@ def my_classes(request):
             ),
             total_marked=Count("attendance_records"),
         )
-        .order_by("-session_date", "-created_at")
+        .order_by("-created_at")
     )
 
-    sessions_today = all_sessions.filter(session_date=today)
+    all_sessions = (
+        QRSession.objects
+        .filter(created_by=request.user)
+        .select_related("subject", "schedule")
+        .annotate(
+            present_count=Count(
+                "attendance_records",
+                filter=Q(attendance_records__status="Present")
+            ),
+            absent_count=Count(
+                "attendance_records",
+                filter=Q(attendance_records__status="Absent")
+            ),
+            total_marked=Count("attendance_records"),
+        )
+        .order_by("-created_at")
+    )
 
     total_present_all = sum(s.present_count for s in sessions_today)
     total_absent_all = sum(s.absent_count for s in sessions_today)
+
+    teacher_schedule = ClassSchedule.objects.filter(
+        teacher=request.user,
+        is_active=True
+    ).order_by("day_of_week", "start_time")
+
+    now_local = timezone.localtime()
+    today_name = now_local.strftime("%A")
+    current_time = now_local.time()
+
+    for sch in teacher_schedule:
+      if not sch.is_active:
+        sch.display_status = "Inactive"
+        sch.status_color = "gray"
+      elif sch.day_of_week == today_name:
+        if sch.start_time <= current_time <= sch.end_time:
+            sch.display_status = "Live Now"
+            sch.status_color = "green"
+        elif current_time < sch.start_time:
+            sch.display_status = "Upcoming Today"
+            sch.status_color = "blue"
+        else:
+            sch.display_status = "Finished Today"
+            sch.status_color = "gray"
+    else:
+        sch.display_status = "Scheduled"
+        sch.status_color = "indigo"
 
     return render(request, "attendance/my_classes.html", {
         "sessions_today": sessions_today,
@@ -936,6 +988,7 @@ def my_classes(request):
         "today": today,
         "total_present_all": total_present_all,
         "total_absent_all": total_absent_all,
+        "teacher_schedule": teacher_schedule,
     })
 
 @login_required
