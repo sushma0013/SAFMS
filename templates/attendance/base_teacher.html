@@ -7,6 +7,14 @@
     <title>{% block title %}Teacher Panel{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <style>
+        body { font-family: 'Lexend', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
@@ -20,37 +28,44 @@
         </div>
 
         <nav class="flex-1 p-4 space-y-2">
-            <a href="{% url 'attendance:teacher_dashboard' %}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
+            <a href="{% url 'attendance:teacher_dashboard' %}"
+               class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
                 <span class="material-symbols-outlined">dashboard</span>
                 <span>Dashboard</span>
             </a>
 
-            <a href="{% url 'attendance:teacher_profile' %}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
+            <a href="{% url 'attendance:teacher_profile' %}"
+               class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
                 <span class="material-symbols-outlined">person</span>
                 <span>My Profile</span>
             </a>
 
-            <a href="{% url 'attendance:my_classes' %}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
+            <a href="{% url 'attendance:my_classes' %}"
+               class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
                 <span class="material-symbols-outlined">school</span>
                 <span>My Classes</span>
             </a>
 
-            <a href="{% url 'attendance:teacher_students' %}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
+            <a href="{% url 'attendance:teacher_students' %}"
+               class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
                 <span class="material-symbols-outlined">groups</span>
                 <span>Students</span>
             </a>
 
-            <a href="{% url 'attendance:teacher_reports' %}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
+            <a href="{% url 'attendance:teacher_reports' %}"
+               class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
                 <span class="material-symbols-outlined">bar_chart</span>
                 <span>Reports</span>
             </a>
 
-            <a href="{% url 'attendance:teacher_settings' %}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
+            <a href="{% url 'attendance:teacher_settings' %}"
+               class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-50 text-gray-700">
                 <span class="material-symbols-outlined">settings</span>
                 <span>Settings</span>
             </a>
 
-            <a href="{% url 'logout' %}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-red-50 text-red-600">
+            <a href="{% url 'logout' %}"
+               class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-red-50 text-red-600">
                 <span class="material-symbols-outlined">logout</span>
                 <span>Logout</span>
             </a>
@@ -59,6 +74,23 @@
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 p-6">
+        {% if messages %}
+            <div class="space-y-2 mb-6">
+                {% for message in messages %}
+                    <div class="px-4 py-3 rounded-lg border
+                        {% if message.tags == 'error' %}
+                            bg-red-50 text-red-700 border-red-200
+                        {% elif message.tags == 'success' %}
+                            bg-green-50 text-green-700 border-green-200
+                        {% else %}
+                            bg-blue-50 text-blue-700 border-blue-200
+                        {% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         {% block content %}
         {% endblock %}
     </main>

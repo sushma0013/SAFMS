@@ -1,324 +1,167 @@
-{% load static %}
-<!DOCTYPE html>
-<html class="light" lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Teacher Dashboard</title>
+{% extends "attendance/base_teacher.html" %}
 
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+{% block title %}Teacher Dashboard{% endblock %}
 
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#135bec",
-                        "primary-dark": "#3b82f6",
-                        "background-light": "#f6f6f8",
-                        "background-dark": "#101622",
-                        "card-light": "#ffffff",
-                        "card-dark": "#1A2230",
-                    },
-                    fontFamily: {
-                        "display": ["Lexend", "sans-serif"]
-                    },
-                    borderRadius: {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                },
-            },
-        }
-    </script>
+{% block content %}
+<div class="space-y-6">
 
-    <style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        .icon-fill {
-            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
-        .dark ::-webkit-scrollbar-thumb { background-color: #475569; }
-    </style>
-</head>
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Teacher Dashboard</h1>
+        <p class="text-sm text-gray-500 mt-1">{{ today|date:"l, F j, Y" }}</p>
+    </div>
 
-<body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 font-display">
-    <div class="flex h-screen w-full overflow-hidden">
+    <!-- Stats Cards -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-        <!-- Sidebar -->
-        <aside class="hidden lg:flex flex-col w-72 bg-card-light dark:bg-card-dark border-r border-gray-200 dark:border-gray-800 h-full">
-            <div class="p-6">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white">
-                        <span class="material-symbols-outlined text-2xl">school</span>
+        <div class="bg-white p-6 rounded-xl border shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-gray-500 font-medium">Attendance Today</p>
+                <span class="material-symbols-outlined text-blue-600">checklist</span>
+            </div>
+            <h3 class="text-3xl font-bold text-gray-900">{{ attendance_today }}%</h3>
+            <p class="text-sm text-gray-500 mt-2">Present today: {{ attendance_today }}%</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-gray-500 font-medium">At Risk Students</p>
+                <span class="material-symbols-outlined text-red-500">person_alert</span>
+            </div>
+            <h3 class="text-3xl font-bold text-gray-900">{{ low_attendance_count }}</h3>
+            <p class="text-sm text-gray-500 mt-2">Students below 80% attendance</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-gray-500 font-medium">Total Students</p>
+                <span class="material-symbols-outlined text-purple-500">group</span>
+            </div>
+            <h3 class="text-3xl font-bold text-gray-900">{{ total_students_count }}</h3>
+            <p class="text-sm text-gray-500 mt-2">
+                Across {{ subjects|length }} subject{{ subjects|length|pluralize }}
+            </p>
+        </div>
+    </section>
+
+    <!-- At Risk Students -->
+    <div class="bg-white rounded-xl border shadow-sm p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-bold text-gray-900">At Risk Students</h3>
+        </div>
+
+        {% if low_attendance_students %}
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-gray-200">
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Student</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Attendance %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in low_attendance_students %}
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td class="py-4 px-4 text-sm font-medium text-gray-900">{{ s.student.username }}</td>
+                        <td class="py-4 px-4 text-sm text-red-600 font-semibold">{{ s.percentage }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <p class="text-gray-500">No students below 80% 🎉</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Subjects -->
+    <div class="bg-white rounded-xl border shadow-sm p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-bold text-gray-900">Your Subjects</h3>
+        </div>
+
+        {% if subject_stats %}
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-gray-200">
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Code</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Name</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Students</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Present Today</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Absent Today</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in subject_stats %}
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td class="py-4 px-4 text-sm font-medium text-gray-900">{{ item.subject.code }}</td>
+                        <td class="py-4 px-4 text-sm text-gray-700">{{ item.subject.name }}</td>
+                        <td class="py-4 px-4 text-sm text-gray-700">{{ item.total }}</td>
+                        <td class="py-4 px-4 text-sm text-green-600 font-semibold">{{ item.present }}</td>
+                        <td class="py-4 px-4 text-sm text-red-600 font-semibold">{{ item.absent }}</td>
+                        <td class="py-4 px-4">
+                            <a href="{% url 'attendance:generate_qr' item.subject.id %}"
+                               class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm">
+                                <span class="material-symbols-outlined text-[18px]">qr_code_2</span>
+                                Generate QR
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">folder_open</span>
+            <p class="text-gray-500">No subjects assigned yet.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Sessions -->
+    <div class="bg-white rounded-xl border shadow-sm p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-bold text-gray-900">Recent QR Sessions</h3>
+        </div>
+
+        {% if recent_sessions %}
+        <div class="space-y-3">
+            {% for session in recent_sessions %}
+            <div class="flex items-center gap-4 p-4 rounded-lg bg-gray-50 border border-gray-100">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-blue-600">qr_code</span>
                     </div>
-                    <span class="text-lg font-bold tracking-tight text-gray-900 dark:text-white">
-                        Smart Attendance & Fee Management System
-                    </span>
                 </div>
-            </div>
 
-            <div class="flex flex-col flex-1 px-4 gap-2 overflow-y-auto">
-                <a href="{% url 'attendance:teacher_profile' %}">
-                    <div class="flex items-center gap-3 p-3 mb-4 rounded-xl bg-background-light dark:bg-background-dark/50">
-                        <div class="bg-center bg-no-repeat bg-cover rounded-full h-10 w-10 border-2 border-white dark:border-gray-700 shadow-sm"
-                             style='background-image: url("https://ui-avatars.com/api/?name={{ request.user.username }}&background=135bec&color=fff");'></div>
-                        <div class="flex flex-col overflow-hidden">
-                            <h2 class="text-sm font-semibold truncate text-gray-900 dark:text-white">{{ request.user.username }}</h2>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">Teacher</p>
-                        </div>
-                    </div>
-                </a>
-
-                <nav class="flex flex-col gap-1">
-                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary dark:text-primary-dark font-medium transition-colors"
-                       href="{% url 'attendance:teacher_dashboard' %}">
-                        <span class="material-symbols-outlined icon-fill">dashboard</span>
-                        <span>Dashboard</span>
-                    </a>
-
-                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
-                       href="{% url 'attendance:my_classes' %}">
-                        <span class="material-symbols-outlined">class</span>
-                        <span>My Classes</span>
-                    </a>
-
-                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
-                       href="{% url 'attendance:teacher_students' %}">
-                        <span class="material-symbols-outlined">groups</span>
-                        <span>Students</span>
-                    </a>
-
-                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
-                       href="{% url 'attendance:teacher_reports' %}">
-                        <span class="material-symbols-outlined">analytics</span>
-                        <span>Reports</span>
-                    </a>
-
-                    <div class="my-2 border-t border-gray-100 dark:border-gray-800"></div>
-
-                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
-                       href="{% url 'attendance:teacher_settings' %}">
-                        <span class="material-symbols-outlined">settings</span>
-                        <span>Settings</span>
-                    </a>
-                </nav>
-            </div>
-
-            <div class="p-4 border-t border-gray-200 dark:border-gray-800">
-                <a href="{% url 'logout' %}"
-                   class="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors">
-                    <span class="material-symbols-outlined">logout</span>
-                    <span class="text-sm font-medium">Log Out</span>
-                </a>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col h-full overflow-hidden">
-            <!-- Header -->
-            <header class="h-20 flex items-center justify-between px-6 lg:px-8 border-b border-gray-200 dark:border-gray-800 bg-card-light/80 dark:bg-card-dark/80 backdrop-blur-sm z-10">
-                <div class="flex flex-col justify-center">
-                    <h1 class="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Teacher Dashboard</h1>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                        {{ today|date:"l, F j, Y" }}
+                <div class="flex-1 min-w-0">
+                    <h4 class="text-sm font-semibold text-gray-900">{{ session.subject.name }}</h4>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Session Date: {{ session.session_date }}
+                    </p>
+                    <p class="text-xs text-gray-400 mt-0.5">
+                        Valid until: {{ session.valid_until|date:"M d, Y h:i A" }}
                     </p>
                 </div>
 
-                <div class="flex items-center gap-4">
-                    <button class="relative p-2 text-gray-400 hover:text-primary dark:hover:text-white transition-colors">
-                        <span class="material-symbols-outlined">notifications</span>
-                        <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-card-dark rounded-full"></span>
-                    </button>
-                    <button class="lg:hidden p-2 text-gray-600 dark:text-gray-300">
-                        <span class="material-symbols-outlined">menu</span>
-                    </button>
-                </div>
-            </header>
-
-            <!-- Dashboard Content -->
-            <div class="flex-1 overflow-y-auto p-4 lg:p-8 space-y-6">
-
-                {% if messages %}
-                <div class="space-y-2">
-                    {% for message in messages %}
-                    <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-4 py-3 rounded-lg">
-                        {{ message }}
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
-
-                <!-- Stats Cards -->
-                <section class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
-
-                    <!-- Attendance Today -->
-                    <div class="bg-card-light dark:bg-card-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
-                        <div class="flex items-center justify-between mb-3">
-                            <p class="text-gray-500 dark:text-gray-400 font-medium">Attendance Today</p>
-                            <span class="material-symbols-outlined text-primary bg-primary/10 p-1.5 rounded-lg">checklist</span>
-                        </div>
-                        <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ attendance_today }}%</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                            Present today: {{ attendance_today }}%
-                        </p>
-                    </div>
-
-                    <!-- At Risk Students -->
-                    <div class="bg-card-light dark:bg-card-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
-                        <div class="flex items-center justify-between mb-3">
-                            <p class="text-gray-500 dark:text-gray-400 font-medium">At Risk Students</p>
-                            <span class="material-symbols-outlined text-red-500 bg-red-500/10 p-1.5 rounded-lg">person_alert</span>
-                        </div>
-                        <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ low_attendance_count }}</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                            Students below 80% attendance
-                        </p>
-                    </div>
-
-                    <!-- Total Students -->
-                    <div class="bg-card-light dark:bg-card-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
-                        <div class="flex items-center justify-between mb-3">
-                            <p class="text-gray-500 dark:text-gray-400 font-medium">Total Students</p>
-                            <span class="material-symbols-outlined text-purple-500 bg-purple-500/10 p-1.5 rounded-lg">group</span>
-                        </div>
-                        <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ total_students_count }}</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                            Across {{ subjects|length }} subject{{ subjects|length|pluralize }}
-                        </p>
-                    </div>
-                </section>
-
-                <!-- At Risk Students Table -->
-                <div class="bg-card-light dark:bg-card-dark rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">At Risk Students</h3>
-                    </div>
-
-                    {% if low_attendance_students %}
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead>
-                                <tr class="border-b border-gray-200 dark:border-gray-700">
-                                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Student</th>
-                                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Attendance %</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for s in low_attendance_students %}
-                                <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-background-light dark:hover:bg-background-dark/50 transition-colors">
-                                    <td class="py-4 px-4 text-sm font-medium text-gray-900 dark:text-white">{{ s.student.username }}</td>
-                                    <td class="py-4 px-4 text-sm text-red-600 font-semibold">{{ s.percentage }}%</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-8">
-                        <p class="text-gray-500 dark:text-gray-400">No students below 80% 🎉</p>
-                    </div>
-                    {% endif %}
-                </div>
-
-                <!-- Your Subjects Table -->
-                <div class="bg-card-light dark:bg-card-dark rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Your Subjects</h3>
-                    </div>
-
-                    {% if subject_stats %}
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead>
-                                <tr class="border-b border-gray-200 dark:border-gray-700">
-                                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Code</th>
-                                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Name</th>
-                                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Students</th>
-                                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Present Today</th>
-                                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Absent Today</th>
-                                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in subject_stats %}
-                                <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-background-light dark:hover:bg-background-dark/50 transition-colors">
-                                    <td class="py-4 px-4 text-sm font-medium text-gray-900 dark:text-white">{{ item.subject.code }}</td>
-                                    <td class="py-4 px-4 text-sm text-gray-700 dark:text-gray-300">{{ item.subject.name }}</td>
-                                    <td class="py-4 px-4 text-sm text-gray-700 dark:text-gray-300">{{ item.total }}</td>
-                                    <td class="py-4 px-4 text-sm text-green-600 font-semibold">{{ item.present }}</td>
-                                    <td class="py-4 px-4 text-sm text-red-600 font-semibold">{{ item.absent }}</td>
-                                    <td class="py-4 px-4">
-                                        <a href="{% url 'attendance:generate_qr' item.subject.id %}"
-                                           class="inline-flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm">
-                                            <span class="material-symbols-outlined text-[18px]">qr_code_2</span>
-                                            Generate QR
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-12">
-                        <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">folder_open</span>
-                        <p class="text-gray-500 dark:text-gray-400">No subjects assigned yet.</p>
-                    </div>
-                    {% endif %}
-                </div>
-
-                <!-- Recent Sessions -->
-                <div class="bg-card-light dark:bg-card-dark rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Recent QR Sessions</h3>
-                    </div>
-
-                    {% if recent_sessions %}
-                    <div class="space-y-3">
-                        {% for session in recent_sessions %}
-                        <div class="flex items-center gap-4 p-4 rounded-lg bg-background-light dark:bg-background-dark/50 border border-gray-100 dark:border-gray-800">
-                            <div class="flex-shrink-0">
-                                <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                    <span class="material-symbols-outlined text-primary">qr_code</span>
-                                </div>
-                            </div>
-
-                            <div class="flex-1 min-w-0">
-                                <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ session.subject.name }}</h4>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    Session Date: {{ session.session_date }}
-                                </p>
-                                <p class="text-xs text-gray-400 mt-0.5">
-                                    Valid until: {{ session.valid_until|date:"M d, Y h:i A" }}
-                                </p>
-                            </div>
-
-                            <span class="flex-shrink-0 px-3 py-1 text-xs font-medium rounded-full {% if session.is_closed %}bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300{% else %}bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300{% endif %}">
-                                {% if session.is_closed %}Closed{% else %}Active{% endif %}
-                            </span>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="text-center py-12">
-                        <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">history</span>
-                        <p class="text-gray-500 dark:text-gray-400">No recent sessions found.</p>
-                    </div>
-                    {% endif %}
-                </div>
-
+                <span class="flex-shrink-0 px-3 py-1 text-xs font-medium rounded-full {% if session.is_closed %}bg-gray-100 text-gray-700{% else %}bg-green-100 text-green-700{% endif %}">
+                    {% if session.is_closed %}Closed{% else %}Active{% endif %}
+                </span>
             </div>
-        </main>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">history</span>
+            <p class="text-gray-500">No recent sessions found.</p>
+        </div>
+        {% endif %}
     </div>
-</body>
-</html>
+
+</div>
+{% endblock %}
