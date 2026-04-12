@@ -36,9 +36,7 @@
     <div class="bg-white p-6 rounded-xl border border-red-200 shadow-sm">
       <p class="text-xs font-bold text-red-600 uppercase tracking-wider">Remaining</p>
       <h3 class="text-3xl font-bold mt-2 text-red-600">
-         <a href="{% url 'attendance:khalti_initiate' %}" class="inline-flex items-center px-4 py-2 rounded-lg bg-purple-600 text-white">
-    Pay with Khalti
-</a>
+       
   Rs. {{ remaining }}
 </h3>
       {% if due_date %}

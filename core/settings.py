@@ -12,22 +12,31 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')
+
+
+def env_bool(name, default=False):
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {'1', 'true', 'yes', 'on'}
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-s#l=#o3ios26a1)zf6we@v5z&flsc%h&+dr)oczri9#3f=5=re'
-KHALTI_SECRET_KEY = "your_test_secret_key"
-KHALTI_PUBLIC_KEY = "your_public_key"
-# KHALTI_WEBSITE_URL =  "http://127.0.0.1:8000"
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-s#l=#o3ios26a1)zf6we@v5z&flsc%h&+dr)oczri9#3f=5=re')
+KHALTI_SECRET_KEY = os.getenv('KHALTI_SECRET_KEY', 'your_test_secret_key')
+KHALTI_PUBLIC_KEY = os.getenv('KHALTI_PUBLIC_KEY', 'your_public_key')
+KHALTI_WEBSITE_URL = os.getenv('KHALTI_WEBSITE_URL', 'http://127.0.0.1:8000')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env_bool('DJANGO_DEBUG', True)
 
 # ALLOWED_HOSTS = [ "127.0.0.1", "localhost","0.0.0.0","https://sericultural-undefiable-davina.ngrok-free.dev"]
 # ALLOWED_HOSTS = [
@@ -35,7 +44,11 @@ DEBUG = True
 #     "localhost",
 #     ".ngrok-free.dev",
 # ]
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',')
+    if host.strip()
+]
 # ALLOWED_HOSTS = ["127.0.0.1", "localhost", ".ngrok-free.app"]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -93,6 +106,22 @@ INSTALLED_APPS += [
     "allauth.socialaccount.providers.google",
 ]
 SITE_ID = 2
+
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '')
+
+if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
+    SOCIALACCOUNT_PROVIDERS = {
+        'google': {
+            'APP': {
+                'client_id': GOOGLE_CLIENT_ID,
+                'secret': GOOGLE_CLIENT_SECRET,
+                'key': '',
+            },
+            'SCOPE': ['profile', 'email'],
+            'AUTH_PARAMS': {'access_type': 'online'},
+        }
+    }
 
 LOGIN_REDIRECT_URL = "/dashboard/"
 LOGOUT_REDIRECT_URL = "/login/"
@@ -154,8 +183,12 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'smart_attendance'),
+        'USER': os.getenv('POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'postgres'),
+        'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
 
@@ -210,20 +243,6 @@ MEDIA_URL = '/media/'
 
 MEDIA_ROOT = BASE_DIR / 'media'
 #folder where image are saved  
-
-# LOGIN_REDIRECT_URL = '/attendance/generate_qr/'
-
-# LOGOUT_REDIRECT_URL = '/login/'
-# LOGIN_URL = '/login/'
-# LOGIN_REDIRECT_URL = '/dashboard/'
-
-LOGIN_REDIRECT_URL = "/dashboard/"
-LOGOUT_REDIRECT_URL = "/login/"
-LOGIN_URL = "/login/"
-SOCIALACCOUNT_LOGIN_ON_GET = True
-
-
-
 
 
 

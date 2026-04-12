@@ -64,8 +64,8 @@ class Profile(models.Model):
     full_name = models.CharField(max_length=100, blank=True)
 
     phone = models.CharField(max_length=15, blank=True, null=True)
-
-    def __str__(self):
+# controls how object shows in admin/shell
+    def __str__(self):      
         return f"{self.user.username} - {self.role}"
 
 @receiver(post_save, sender=User)

@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
 import os
-import sys
+# Used for environment settings.
+import sys 
+# Used to read command-line arguments.
+
 
 
 def main():
