@@ -111,15 +111,26 @@ from accounts.models import Profile
 # =========================
 # MAIN ADMIN SITE
 # =========================
+# class MainAdminSite(AdminSite):
+#     site_header = "SAFMS Main Admin"
+#     site_title = "Main Admin Portal"
+#     index_title = "Attendance and System Management"
+
+#     def has_permission(self, request):
+#         return request.user.is_active and request.user.is_superuser
+    
 class MainAdminSite(AdminSite):
     site_header = "SAFMS Main Admin"
     site_title = "Main Admin Portal"
     index_title = "Attendance and System Management"
 
     def has_permission(self, request):
-        return request.user.is_active and request.user.is_superuser
-    
-    
+        return (
+            request.user.is_active and (
+                request.user.is_superuser or
+                request.user.groups.filter(name="attendanceadmin").exists()
+            )
+        )   
 
 
 # =========================
