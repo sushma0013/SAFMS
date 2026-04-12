@@ -22,6 +22,8 @@ from .models import (
 )
 
 from accounts.models import Profile
+from django import forms
+from django.forms import TimeInput
 
 
 # =========================
@@ -100,8 +102,23 @@ class ProfileAdmin(admin.ModelAdmin):
     list_display = ["user", "role", "phone"]
     list_filter = ["role"]
     search_fields = ["user__username"]
+    
+class ClassScheduleForm(forms.ModelForm):
+    class Meta:
+        model = ClassSchedule
+        fields = "__all__"
+        widgets = {
+            "start_time": TimeInput(format="%H:%M", attrs={"type": "time", "step": 60}),
+            "end_time": TimeInput(format="%H:%M", attrs={"type": "time", "step": 60}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["start_time"].input_formats = ["%H:%M"]
+        self.fields["end_time"].input_formats = ["%H:%M"]   
 
 class ClassScheduleAdmin(admin.ModelAdmin):
+    form = ClassScheduleForm
     list_display = ("subject", "teacher", "day_of_week", "start_time", "end_time", "room_name", "semester", "is_active")
     list_filter = ("day_of_week", "is_active", "semester")
     search_fields = ("subject__code", "subject__name", "teacher__username", "room_name")
@@ -129,6 +146,7 @@ main_admin_site.register(StudentProfile, StudentProfileAdmin)
 main_admin_site.register(Subject)
 main_admin_site.register(QRSession)
 main_admin_site.register(AttendanceRecord)
+main_admin_site.register(ClassSchedule, ClassScheduleAdmin)
 main_admin_site.register(Site)
 main_admin_site.register(SocialApp)
 

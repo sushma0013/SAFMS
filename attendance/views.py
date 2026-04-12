@@ -76,10 +76,11 @@ from .models import (
     Notification,
     PaymentRequest,
     KhaltiPayment, 
+    ClassSchedule,
 
 )
 
-from .utils import close_session_and_mark_absent
+from .utils import close_session_and_mark_absent,get_client_ip
 from .forms import FeeStructureForm, BulkFeeStructureForm, BulkNotificationForm
 
 
@@ -213,6 +214,57 @@ def teacher_dashboard(request):
 
 
 
+# @login_required
+# def generate_qr(request, subject_id):
+#     if request.user.profile.role != 'teacher':
+#         messages.error(request, "Teachers only.")
+#         return redirect('home')
+
+#     subject = get_object_or_404(Subject, id=subject_id, teacher=request.user)
+#     now = timezone.now()
+#     today = now.date()
+
+#     # 1) Find active session for this subject today
+#     active_session = QRSession.objects.filter(
+#         subject=subject,
+#         created_by=request.user,
+#         session_date=today,
+#         is_closed=False,
+#         valid_until__gt=now
+#     ).order_by('-created_at').first()
+
+#     if active_session:
+#         session = active_session
+#         messages.info(request, "Using existing active QR session.")
+#     else:
+#         # 2) If there is an old session expired but not closed -> close it & mark absent
+#         old_open_sessions = QRSession.objects.filter(
+#             subject=subject,
+#             created_by=request.user,
+#             session_date=today,
+#             is_closed=False,
+#             valid_until__lte=now
+#         )
+#         for s in old_open_sessions:
+#             close_session_and_mark_absent(s)
+
+#         # 3) Create new session
+#         session = QRSession.objects.create(
+#             subject=subject,
+#             created_by=request.user,
+#             session_date=today,
+#             valid_until=now + timedelta(minutes=15),
+#             is_closed=False
+#         )
+#         session.generate_qr(request_domain=NGROK_BASE_URL)
+#         messages.success(request, "New QR generated (valid 15 minutes).")
+
+#     return render(request, 'attendance/generate_qr.html', {
+#         'session': session,
+#         'subject': subject,
+#         'expires_in': int((session.valid_until - now).total_seconds())
+#     })
+
 @login_required
 def generate_qr(request, subject_id):
     if request.user.profile.role != 'teacher':
@@ -220,10 +272,33 @@ def generate_qr(request, subject_id):
         return redirect('home')
 
     subject = get_object_or_404(Subject, id=subject_id, teacher=request.user)
-    now = timezone.now()
-    today = now.date()
 
-    # 1) Find active session for this subject today
+    now = timezone.localtime()
+    today = now.date()
+    today_name = today.strftime("%A")
+    current_time = now.time()
+
+    # Check teacher has this class scheduled right now
+    schedule = ClassSchedule.objects.filter(
+        subject=subject,
+        teacher=request.user,
+        day_of_week=today_name,
+        is_active=True,
+        start_time__lte=current_time,
+        end_time__gte=current_time,
+    ).first()
+
+    if not schedule:
+        messages.error(request, "You can only generate QR during your scheduled class time.")
+        return redirect('attendance:teacher_dashboard')
+
+    teacher_ip = get_client_ip(request)
+
+    # Optional for now because you are using ngrok
+    # if schedule.allowed_ip_prefix and not teacher_ip.startswith(schedule.allowed_ip_prefix):
+    #     messages.error(request, "QR can only be generated from the campus network.")
+    #     return redirect('attendance:teacher_dashboard')
+
     active_session = QRSession.objects.filter(
         subject=subject,
         created_by=request.user,
@@ -236,7 +311,6 @@ def generate_qr(request, subject_id):
         session = active_session
         messages.info(request, "Using existing active QR session.")
     else:
-        # 2) If there is an old session expired but not closed -> close it & mark absent
         old_open_sessions = QRSession.objects.filter(
             subject=subject,
             created_by=request.user,
@@ -247,13 +321,15 @@ def generate_qr(request, subject_id):
         for s in old_open_sessions:
             close_session_and_mark_absent(s)
 
-        # 3) Create new session
         session = QRSession.objects.create(
             subject=subject,
             created_by=request.user,
             session_date=today,
             valid_until=now + timedelta(minutes=15),
-            is_closed=False
+            is_closed=False,
+            schedule=schedule,
+            created_ip=teacher_ip,
+            room_name=schedule.room_name,
         )
         session.generate_qr(request_domain=NGROK_BASE_URL)
         messages.success(request, "New QR generated (valid 15 minutes).")
@@ -261,7 +337,9 @@ def generate_qr(request, subject_id):
     return render(request, 'attendance/generate_qr.html', {
         'session': session,
         'subject': subject,
-        'expires_in': int((session.valid_until - now).total_seconds())
+        'expires_in': int((session.valid_until - now).total_seconds()),
+        'schedule': schedule,
+        'teacher_ip': teacher_ip,
     })
 
 
@@ -524,6 +602,38 @@ def scan_qr_page(request):
 
 
 
+# @login_required
+# def mark_attendance(request, uuid):
+#     if request.user.profile.role != 'student':
+#         return HttpResponse("Access denied")
+
+#     session = get_object_or_404(QRSession, uuid=uuid)
+
+#     # expired or closed session
+#     if session.valid_until < timezone.now() or session.is_closed:
+#         if not session.is_closed:
+#             close_session_and_mark_absent(session)
+#         return render(request, 'attendance/qr_expired.html')
+
+#     # enrolled check
+#     if not session.subject.students.filter(id=request.user.id).exists():
+#         return HttpResponse("Not enrolled in this subject")
+
+#     # if record exists already
+#     record = AttendanceRecord.objects.filter(student=request.user, session=session).first()
+#     if record:
+#         return render(request, 'attendance/already_marked.html')
+
+#     # mark present
+#     AttendanceRecord.objects.create(
+#         student=request.user,
+#         session=session,
+#         subject=session.subject,
+#         status='Present'
+#     )
+
+#     return render(request, 'attendance/success.html', {'subject': session.subject})
+
 @login_required
 def mark_attendance(request, uuid):
     if request.user.profile.role != 'student':
@@ -531,22 +641,49 @@ def mark_attendance(request, uuid):
 
     session = get_object_or_404(QRSession, uuid=uuid)
 
-    # expired or closed session
     if session.valid_until < timezone.now() or session.is_closed:
         if not session.is_closed:
             close_session_and_mark_absent(session)
         return render(request, 'attendance/qr_expired.html')
 
-    # enrolled check
     if not session.subject.students.filter(id=request.user.id).exists():
         return HttpResponse("Not enrolled in this subject")
 
-    # if record exists already
+    now = timezone.localtime()
+    today_name = now.date().strftime("%A")
+    current_time = now.time()
+
+    schedule = session.schedule
+    if not schedule:
+        schedule = ClassSchedule.objects.filter(
+            subject=session.subject,
+            teacher=session.created_by,
+            day_of_week=today_name,
+            is_active=True,
+            start_time__lte=current_time,
+            end_time__gte=current_time,
+        ).first()
+
+    if not schedule:
+        return HttpResponse("No scheduled class right now for this subject.")
+
+    try:
+        student_profile = request.user.student_profile
+        if schedule.semester and student_profile.semester and str(student_profile.semester) != str(schedule.semester):
+            return HttpResponse("This class is not scheduled for your semester.")
+    except StudentProfile.DoesNotExist:
+        return HttpResponse("Student profile not found.")
+
+    student_ip = get_client_ip(request)
+
+    # Optional for now because you are using ngrok
+    # if schedule.allowed_ip_prefix and not student_ip.startswith(schedule.allowed_ip_prefix):
+    #     return HttpResponse("Attendance can only be marked from the campus network.")
+
     record = AttendanceRecord.objects.filter(student=request.user, session=session).first()
     if record:
         return render(request, 'attendance/already_marked.html')
 
-    # mark present
     AttendanceRecord.objects.create(
         student=request.user,
         session=session,
@@ -554,7 +691,11 @@ def mark_attendance(request, uuid):
         status='Present'
     )
 
-    return render(request, 'attendance/success.html', {'subject': session.subject})
+    return render(request, 'attendance/success.html', {
+        'subject': session.subject,
+        'schedule': schedule,
+        'student_ip': student_ip,
+    })
 
 
 @login_required

@@ -17,3 +17,9 @@ def close_session_and_mark_absent(session):
     session.is_closed = True
     session.closed_at = timezone.now()
     session.save()
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if x_forwarded_for:
+        return x_forwarded_for.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR", "")
