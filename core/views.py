@@ -1,7 +1,10 @@
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import update_session_auth_hash
+from django.urls import reverse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -134,6 +137,26 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'Logged out successfully')
     return redirect('login')
+
+
+@login_required
+def password_change_view(request):
+    profile = getattr(request.user, 'profile', None)
+
+    if not profile or getattr(profile, 'role', None) != 'teacher':
+        messages.error(request, 'Teachers only.')
+        return redirect('home')
+
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            return redirect(f"{reverse('attendance:teacher_settings')}?password_updated=1")
+        else:
+            messages.error(request, 'Please correct the password fields and try again.')
+
+    return redirect('attendance:teacher_settings')
 
 
 # @login_required

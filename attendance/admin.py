@@ -62,8 +62,13 @@ class FeeAdminSite(AdminSite):
     def has_permission(self, request):
         return (
             request.user.is_active and
-            request.user.is_staff and
-            request.user.groups.filter(name="feesmanager").exists()
+            (
+                request.user.is_superuser or
+                (
+                    request.user.is_staff and
+                    request.user.groups.filter(name="feesmanager").exists()
+                )
+            )
         )
 
 

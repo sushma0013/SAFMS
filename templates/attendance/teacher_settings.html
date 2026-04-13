@@ -5,6 +5,18 @@
 {% block content %}
 <div class="space-y-6">
 
+    {% if request.GET.password_updated == "1" %}
+    <div class="rounded-2xl border border-green-200 bg-green-50 px-5 py-4 text-green-800 shadow-sm">
+        <div class="flex items-start gap-3">
+            <div class="mt-0.5 h-2.5 w-2.5 rounded-full bg-green-500"></div>
+            <div>
+                <p class="font-semibold">Password updated successfully</p>
+                <p class="text-sm text-green-700">Your new password is active right away.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Header -->
     <div>
         <h1 class="text-2xl font-bold text-gray-900">Settings</h1>
