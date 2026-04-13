@@ -3,6 +3,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from . import views
 from accounts import views as accounts_views
+from django.contrib.auth import views as auth_views
 
 from attendance.admin import main_admin_site, fee_admin_site
 

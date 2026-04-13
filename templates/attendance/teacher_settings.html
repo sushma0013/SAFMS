@@ -1,7 +1,124 @@
 {% extends "attendance/base_teacher.html" %}
+
+{% block title %}Teacher Settings{% endblock %}
+
 {% block content %}
-<div class="p-6">
-  <h1 class="text-2xl font-bold">Teacher Settings</h1>
-  <p class="mt-2 text-gray-600">This page is under development.</p>
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Settings</h1>
+        <p class="text-sm text-gray-500 mt-1">Manage your account and preferences</p>
+    </div>
+
+    <!-- Profile Info -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border">
+        <h3 class="text-lg font-semibold mb-4">Profile Information</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+                <label class="text-gray-500">Username</label>
+                <p class="font-medium text-gray-900">{{ request.user.username }}</p>
+            </div>
+
+            <div>
+                <label class="text-gray-500">Email</label>
+                <p class="font-medium text-gray-900">{{ request.user.email|default:"Not provided" }}</p>
+            </div>
+
+            <div>
+                <label class="text-gray-500">Role</label>
+                <p class="font-medium text-blue-600">Teacher</p>
+            </div>
+
+            <div>
+                <label class="text-gray-500">Joined</label>
+                <p class="font-medium text-gray-900">{{ request.user.date_joined|date:"F j, Y" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border">
+        <h3 class="text-lg font-semibold mb-4">Change Password</h3>
+
+        <form method="POST" action="{% url 'password_change' %}" class="space-y-4">
+            {% csrf_token %}
+
+            <div>
+                <label class="text-sm text-gray-600">Current Password</label>
+                <input type="password" name="old_password"
+                       class="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                       required>
+            </div>
+
+            <div>
+                <label class="text-sm text-gray-600">New Password</label>
+                <input type="password" name="new_password1"
+                       class="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                       required>
+            </div>
+
+            <div>
+                <label class="text-sm text-gray-600">Confirm New Password</label>
+                <input type="password" name="new_password2"
+                       class="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                       required>
+            </div>
+
+            <button type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg">
+                Update Password
+            </button>
+        </form>
+    </div>
+
+    <!-- Preferences -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border">
+        <h3 class="text-lg font-semibold mb-4">Preferences</h3>
+
+        <div class="space-y-4">
+
+            <!-- Notifications -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="font-medium text-gray-900">Email Notifications</p>
+                    <p class="text-sm text-gray-500">Receive alerts for attendance updates</p>
+                </div>
+
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="checkbox" class="sr-only peer" checked>
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 relative">
+                        <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5"></div>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Dark Mode -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="font-medium text-gray-900">Dark Mode</p>
+                    <p class="text-sm text-gray-500">Switch between light and dark theme</p>
+                </div>
+
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="checkbox" class="sr-only peer" id="darkToggle">
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 relative">
+                        <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5"></div>
+                    </div>
+                </label>
+            </div>
+
+        </div>
+    </div>
+
 </div>
+
+<!-- Dark Mode Script -->
+<script>
+document.getElementById("darkToggle").addEventListener("change", function () {
+    document.documentElement.classList.toggle("dark");
+});
+</script>
+
 {% endblock %}
