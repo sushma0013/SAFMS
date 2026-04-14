@@ -2,7 +2,7 @@
 {% block title %}Student Profile - SAFMS{% endblock %}
 
 {% block nav_student_profile %}
-<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary font-semibold"
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-primary/10 text-primary font-semibold"
    href="{% url 'attendance:student_profile' %}">
   <span class="material-symbols-outlined">person</span>
   <span class="text-sm">Student Profile</span>
@@ -11,126 +11,296 @@
 
 {% block content %}
 
-<header class="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-8 py-4 flex items-center justify-between">
-  <div>
-    <h2 class="text-xl font-bold">Student Profile</h2>
-    <p class="text-sm text-slate-500">Your information from database</p>
-  </div>
-
-  <div class="flex items-center gap-4">
-    <div class="h-10 w-10 rounded-full border border-slate-200 overflow-hidden">
-      <img
-        alt="Student Avatar"
-        class="h-full w-full object-cover"
-        src="https://ui-avatars.com/api/?name={{ profile.full_name|default:request.user.username }}&background=135bec&color=fff"
-      />
+<header class="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 md:px-8 py-4">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h2 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+        Student Profile
+      </h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        View your personal, academic, and attendance information
+      </p>
     </div>
-  </div>
-</header>
 
-<div class="p-8 max-w-5xl mx-auto space-y-8">
-
-  <!-- Profile Summary -->
-  <section class="bg-white dark:bg-slate-900 rounded-xl p-8 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center gap-8 shadow-sm">
-    <div class="relative">
-      <div class="size-32 rounded-full overflow-hidden border-4 border-primary/10">
+    <div class="flex items-center gap-3">
+      <div class="size-12 rounded-full overflow-hidden border-2 border-primary/20 shadow-sm">
         <img
-          alt="Profile Photo"
+          alt="Student Avatar"
           class="h-full w-full object-cover"
           src="https://ui-avatars.com/api/?name={{ profile.full_name|default:request.user.username }}&background=135bec&color=fff"
         />
       </div>
-      <span class="absolute bottom-1 right-1 bg-green-500 border-4 border-white dark:border-slate-900 size-6 rounded-full"></span>
-    </div>
-
-    <div class="flex-1 text-center md:text-left">
-      <div class="flex flex-col md:flex-row md:items-center gap-3 mb-2">
-        <h3 class="text-3xl font-bold">{{ profile.full_name|default:request.user.username }}</h3>
-        <span class="inline-flex px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
-          Student
-        </span>
-      </div>
-
-      <div class="flex flex-wrap justify-center md:justify-start gap-y-2 gap-x-6 text-slate-500 dark:text-slate-400">
-        <div class="flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-lg text-primary">badge</span>
-          <span class="text-sm font-medium">{{ profile.student_id }}</span>
-        </div>
+      <div class="hidden sm:block">
+        <p class="text-sm font-semibold text-slate-900 dark:text-white">
+          {{ profile.full_name|default:request.user.username }}
+        </p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          {{ profile.student_id|default:"Student" }}
+        </p>
       </div>
     </div>
-  </section>
+  </div>
+</header>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<div class="p-4 md:p-6">
+  <div class="max-w-7xl mx-auto space-y-6">
 
-    <!-- Personal Details (DB) -->
-    <section class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 bg-slate-50/50 dark:bg-slate-800/50">
-        <span class="material-symbols-outlined text-primary">contact_mail</span>
-        <h4 class="font-bold">Personal Details</h4>
-      </div>
+    <!-- Hero Profile Card -->
+    <section class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+      <div class="bg-gradient-to-r from-primary/10 via-blue-50 to-transparent dark:from-primary/10 dark:via-slate-800 dark:to-slate-900 px-6 md:px-8 py-8">
+        <div class="flex flex-col lg:flex-row lg:items-center gap-8">
+          <div class="relative mx-auto lg:mx-0">
+            <div class="size-32 md:size-36 rounded-full overflow-hidden border-4 border-white dark:border-slate-800 shadow-lg">
+              <img
+                alt="Profile Photo"
+                class="h-full w-full object-cover"
+                src="https://ui-avatars.com/api/?name={{ profile.full_name|default:request.user.username }}&background=135bec&color=fff&size=256"
+              />
+            </div>
+            <span class="absolute bottom-2 right-2 size-6 rounded-full bg-green-500 border-4 border-white dark:border-slate-900"></span>
+          </div>
 
-      <div class="p-6 space-y-4">
-        <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
-          <span class="text-sm text-slate-500 font-medium">Email</span>
-          <span class="text-sm font-semibold">{{ request.user.email|default:"-" }}</span>
-        </div>
+          <div class="flex-1 text-center lg:text-left">
+            <div class="flex flex-col lg:flex-row lg:items-center gap-3 mb-3">
+              <h3 class="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+                {{ profile.full_name|default:request.user.username }}
+              </h3>
+              <span class="inline-flex w-fit mx-auto lg:mx-0 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
+                Student
+              </span>
+            </div>
 
-        <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
-          <span class="text-sm text-slate-500 font-medium">Phone</span>
-          <span class="text-sm font-semibold">{{ profile.phone|default:"-" }}</span>
-        </div>
+            <div class="flex flex-wrap justify-center lg:justify-start gap-4 text-sm text-slate-600 dark:text-slate-300">
+              <div class="inline-flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-lg">badge</span>
+                <span class="font-medium">{{ profile.student_id|default:"-" }}</span>
+              </div>
 
-        <div class="flex items-start justify-between py-2">
-          <span class="text-sm text-slate-500 font-medium shrink-0">Address</span>
-          <span class="text-sm font-semibold text-right max-w-[240px]">{{ profile.address|default:"-" }}</span>
+              <div class="inline-flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-lg">mail</span>
+                <span class="font-medium">{{ request.user.email|default:"No email provided" }}</span>
+              </div>
+
+              <div class="inline-flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-lg">calendar_today</span>
+                <span class="font-medium">Joined {{ request.user.date_joined|date:"M d, Y" }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Attendance Mini Card -->
+          <div class="w-full lg:w-72">
+            <div class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <p class="text-xs uppercase tracking-widest font-bold text-slate-500">Attendance Status</p>
+                  <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Overall percentage</p>
+                </div>
+                <div class="size-11 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-primary">task_alt</span>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <p class="text-3xl font-black text-slate-900 dark:text-white">{{ attendance_percent }}%</p>
+              </div>
+
+              <div class="w-full h-3 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+                <div class="h-full rounded-full
+                  {% if attendance_percent >= 75 %}bg-green-500
+                  {% elif attendance_percent >= 60 %}bg-orange-500
+                  {% else %}bg-red-500{% endif %}"
+                  style="width: {{ attendance_percent }}%;">
+                </div>
+              </div>
+
+              <p class="mt-3 text-xs font-medium
+                {% if attendance_percent >= 75 %}text-green-600
+                {% elif attendance_percent >= 60 %}text-orange-500
+                {% else %}text-red-500{% endif %}">
+                {% if attendance_percent >= 75 %}
+                  Good standing
+                {% elif attendance_percent >= 60 %}
+                  Needs improvement
+                {% else %}
+                  Immediate attention required
+                {% endif %}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Academic Details (DB) -->
-    <section class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 bg-slate-50/50 dark:bg-slate-800/50">
-        <span class="material-symbols-outlined text-primary">school</span>
-        <h4 class="font-bold">Academic Details</h4>
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="text-xs uppercase tracking-widest font-bold text-slate-500">Student ID</p>
+            <p class="text-2xl font-black mt-2 text-slate-900 dark:text-white">{{ profile.student_id|default:"-" }}</p>
+          </div>
+          <div class="size-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary text-3xl">badge</span>
+          </div>
+        </div>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Unique ID assigned to your student profile.</p>
       </div>
 
-      <div class="p-6 space-y-4">
-        <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
-          <span class="text-sm text-slate-500 font-medium">Major</span>
-          <span class="text-sm font-semibold">{{ profile.major|default:"-" }}</span>
+      <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="text-xs uppercase tracking-widest font-bold text-slate-500">Semester</p>
+            <p class="text-2xl font-black mt-2 text-slate-900 dark:text-white">{{ profile.semester|default:"-" }}</p>
+          </div>
+          <div class="size-12 rounded-2xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
+            <span class="material-symbols-outlined text-green-600 text-3xl">school</span>
+          </div>
+        </div>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Current academic semester assigned by admin.</p>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="text-xs uppercase tracking-widest font-bold text-slate-500">Major</p>
+            <p class="text-2xl font-black mt-2 text-slate-900 dark:text-white">{{ profile.major|default:"-" }}</p>
+          </div>
+          <div class="size-12 rounded-2xl bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center">
+            <span class="material-symbols-outlined text-orange-500 text-3xl">menu_book</span>
+          </div>
+        </div>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Program or specialization from your academic record.</p>
+      </div>
+    </div>
+
+    <!-- Details Grid -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- Personal Details -->
+      <section class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
+          <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary">contact_mail</span>
+          </div>
+          <div>
+            <h4 class="text-lg font-black text-slate-900 dark:text-white">Personal Details</h4>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Information saved in your profile</p>
+          </div>
         </div>
 
-        <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
-          <span class="text-sm text-slate-500 font-medium">Semester</span>
-          <span class="text-sm font-semibold">{{ profile.semester|default:"-" }}</span>
+        <div class="p-6 space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Full Name</span>
+            <span class="text-sm font-semibold text-slate-900 dark:text-white">{{ profile.full_name|default:request.user.username }}</span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Email</span>
+            <span class="text-sm font-semibold text-slate-900 dark:text-white">{{ request.user.email|default:"-" }}</span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Phone</span>
+            <span class="text-sm font-semibold text-slate-900 dark:text-white">{{ profile.phone|default:"-" }}</span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+            <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Address</span>
+            <span class="text-sm font-semibold text-slate-900 dark:text-white sm:text-right max-w-sm">
+              {{ profile.address|default:"-" }}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Academic Details -->
+      <section class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
+          <div class="size-10 rounded-xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
+            <span class="material-symbols-outlined text-green-600">school</span>
+          </div>
+          <div>
+            <h4 class="text-lg font-black text-slate-900 dark:text-white">Academic Details</h4>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Semester, major, and advisor information</p>
+          </div>
         </div>
 
-        <div class="flex items-center justify-between py-2">
-          <span class="text-sm text-slate-500 font-medium">Advisor</span>
-          <span class="text-sm font-semibold">
-            {% if profile.academic_advisor %}
-              {{ profile.academic_advisor.get_full_name|default:profile.academic_advisor.username }}
+        <div class="p-6 space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Major</span>
+            <span class="text-sm font-semibold text-slate-900 dark:text-white">{{ profile.major|default:"-" }}</span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Semester</span>
+            <span class="text-sm font-semibold text-slate-900 dark:text-white">{{ profile.semester|default:"-" }}</span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Role</span>
+            <span class="inline-flex px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
+              Student
+            </span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+            <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Academic Advisor</span>
+            <span class="text-sm font-semibold text-slate-900 dark:text-white sm:text-right max-w-sm">
+              {% if profile.academic_advisor %}
+                {{ profile.academic_advisor.get_full_name|default:profile.academic_advisor.username }}
+              {% else %}
+                -
+              {% endif %}
+            </span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Attendance Insight -->
+    <section class="rounded-2xl border border-primary/20 bg-primary/5 dark:bg-primary/10 dark:border-primary/20 p-6 shadow-sm">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="size-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-sm">
+            <span class="material-symbols-outlined text-3xl">task_alt</span>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-widest font-bold text-slate-500 dark:text-slate-400">Attendance Overview</p>
+            <p class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ attendance_percent }}%</p>
+            <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
+              This percentage is calculated from your attendance records in the database.
+            </p>
+          </div>
+        </div>
+
+        <div class="w-full md:w-72">
+          <div class="w-full h-4 rounded-full bg-white dark:bg-slate-800 overflow-hidden border border-primary/10">
+            <div class="h-full rounded-full
+              {% if attendance_percent >= 75 %}bg-green-500
+              {% elif attendance_percent >= 60 %}bg-orange-500
+              {% else %}bg-red-500{% endif %}"
+              style="width: {{ attendance_percent }}%;">
+            </div>
+          </div>
+          <p class="mt-2 text-xs font-semibold
+            {% if attendance_percent >= 75 %}text-green-600
+            {% elif attendance_percent >= 60 %}text-orange-500
+            {% else %}text-red-500{% endif %}">
+            {% if attendance_percent >= 75 %}
+              You are currently above the required threshold.
+            {% elif attendance_percent >= 60 %}
+              Your attendance is moderate. Improve it soon.
             {% else %}
-              -
+              Your attendance is low. Immediate improvement is needed.
             {% endif %}
-          </span>
+          </p>
         </div>
       </div>
     </section>
 
   </div>
-
-  <!-- Attendance (calculated from AttendanceRecord) -->
-  <div class="bg-primary/5 dark:bg-primary/10 p-5 rounded-xl border border-primary/20 flex items-center gap-4">
-    <div class="bg-primary text-white p-3 rounded-lg">
-      <span class="material-symbols-outlined">task_alt</span>
-    </div>
-    <div>
-      <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Attendance</p>
-      <p class="text-xl font-bold">{{ attendance_percent }}%</p>
-    </div>
-  </div>
-
 </div>
 
 {% endblock %}
