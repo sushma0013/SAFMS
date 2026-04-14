@@ -36,7 +36,7 @@ import uuid
 import requests
 
 from decimal import Decimal
-from datetime import timedelta
+
 
 from django.conf import settings
 from django.contrib import messages
@@ -44,21 +44,28 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.db.models import Count, Q, Sum, Max
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render, redirect, get_object_or_404
+
 from django.urls import reverse
 from django.utils import timezone
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.utils import timezone
+
 from django.db.models import Count, Q
 from .models import QRSession, AttendanceRecord, Subject
 
 
 
 from .models import AttendanceRecord 
-from django.shortcuts import render, redirect
+
+
+
+from datetime import timedelta
+
+
+
+from .models import StudentProfile, Subject, AttendanceRecord, FeeStructure, Payment, Notification
 
 
 
@@ -1961,9 +1968,9 @@ from .models import Subject, AttendanceRecord, FeeStructure, Payment, Notificati
 def student_dashboard(request):
     print("LOGGED IN USER:", request.user.username)
 
-    if not hasattr(request.user, 'profile') or request.user.profile.role != 'student':
+    if not hasattr(request.user, "profile") or request.user.profile.role != "student":
         messages.error(request, "Students only.")
-        return redirect('home')
+        return redirect("home")
 
     profile, created = StudentProfile.objects.get_or_create(
         user=request.user,
@@ -1980,8 +1987,17 @@ def student_dashboard(request):
     total_present_all = 0
 
     for subject in enrolled_subjects:
-        total = AttendanceRecord.objects.filter(student=request.user, subject=subject).count()
-        present = AttendanceRecord.objects.filter(student=request.user, subject=subject, status="Present").count()
+        total = AttendanceRecord.objects.filter(
+            student=request.user,
+            subject=subject
+        ).count()
+
+        present = AttendanceRecord.objects.filter(
+            student=request.user,
+            subject=subject,
+            status="Present"
+        ).count()
+
         percent = round((present / total) * 100, 2) if total else 0
 
         total_classes_all += total
@@ -1991,7 +2007,7 @@ def student_dashboard(request):
             "subject": subject,
             "total": total,
             "present": present,
-            "percentage": percent
+            "percentage": percent,
         })
 
     attendance_records = AttendanceRecord.objects.filter(
@@ -2044,6 +2060,50 @@ def student_dashboard(request):
             is_read=False
         ).order_by("-created_at").first()
 
+    # =========================
+    # Activity Timeline
+    # =========================
+    timeline = []
+
+    payment_items = Payment.objects.filter(
+        student=profile,
+        status="COMPLETED"
+    ).order_by("-paid_at")
+
+    for p in payment_items:
+        timeline.append({
+            "title": "Fee Payment",
+            "desc": f"Paid Rs. {p.amount} via {p.payment_method or 'payment'}",
+            "date": p.paid_at,
+            "type": "payment",
+        })
+
+    attendance_items = AttendanceRecord.objects.filter(
+        student=request.user
+    ).select_related("subject").order_by("-date", "-recorded_at")
+
+    for a in attendance_items:
+        timeline.append({
+            "title": "Attendance",
+            "desc": f"{a.status} in {a.subject.name}",
+            "date": a.recorded_at or a.date,
+            "type": "attendance",
+        })
+
+    notification_items = Notification.objects.filter(
+        student=profile
+    ).order_by("-created_at")
+
+    for n in notification_items:
+        timeline.append({
+            "title": n.title,
+            "desc": n.message,
+            "date": n.created_at,
+            "type": "notification",
+        })
+
+    timeline = sorted(timeline, key=lambda x: x["date"], reverse=True)[:12]
+
     return render(request, "attendance/student_dashboard.html", {
         "profile": profile,
         "attendance_stats": attendance_stats,
@@ -2056,6 +2116,7 @@ def student_dashboard(request):
         "fee_percent": fee_percent,
         "fee_due_date": fee_due_date,
         "popup_notification": popup_notification,
+        "timeline": timeline,
     })
 @login_required
 @user_passes_test(fee_manager_only)

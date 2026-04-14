@@ -379,6 +379,37 @@
                 {% endfor %}
               </div>
             </div>
+            <div class="bg-white p-6 rounded-xl border mt-6">
+  <h3 class="text-xl font-bold mb-4">Activity Timeline</h3>
+
+  <div class="space-y-4">
+
+    {% for item in timeline %}
+    <div class="flex items-start gap-3">
+
+      <!-- Color dot -->
+      <div class="w-3 h-3 rounded-full mt-2
+        {% if item.type == 'payment' %} bg-green-500
+        {% elif item.type == 'attendance' %} bg-blue-500
+        {% else %} bg-yellow-500
+        {% endif %}
+      "></div>
+
+      <div>
+        <p class="font-semibold">{{ item.title }}</p>
+        <p class="text-sm text-gray-500">{{ item.desc }}</p>
+        <p class="text-xs text-gray-400">
+          {{ item.date|date:"Y-m-d H:i" }}
+        </p>
+      </div>
+
+    </div>
+    {% empty %}
+    <p class="text-gray-500">No activity yet</p>
+    {% endfor %}
+
+  </div>
+</div>
 
           </div>
 
