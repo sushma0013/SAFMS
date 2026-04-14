@@ -31,8 +31,8 @@ def env_bool(name, default=False):
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-s#l=#o3ios26a1)zf6we@v5z&flsc%h&+dr)oczri9#3f=5=re')
-KHALTI_SECRET_KEY = os.getenv('KHALTI_SECRET_KEY', 'your_test_secret_key')
-KHALTI_PUBLIC_KEY = os.getenv('KHALTI_PUBLIC_KEY', 'your_public_key')
+KHALTI_SECRET_KEY = os.getenv('KHALTI_SECRET_KEY')
+KHALTI_PUBLIC_KEY = os.getenv('KHALTI_PUBLIC_KEY')
 KHALTI_WEBSITE_URL = os.getenv('KHALTI_WEBSITE_URL', 'http://127.0.0.1:8000')
 
 # SECURITY WARNING: don't run with debug turned on in production!

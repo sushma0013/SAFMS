@@ -32,17 +32,19 @@
                 Dashboard
             </a>
 
-            <a href="{% url 'attendance:fee_manager_requests' %}" class="block px-4 py-3 rounded-xl hover:bg-slate-800">
+            {% comment %} <a href="{% url 'attendance:fee_manager_requests' %}" class="block px-4 py-3 rounded-xl hover:bg-slate-800">
                 Payment Requests
-            </a>
-
+            </a> {% endcomment %}
+{% comment %} <a href="{% url 'attendance:fee_payments_page' %}">
+    Payments
+</a> {% endcomment %}
            <a href="{% url 'attendance:fee_structures_page' %}" class="block px-4 py-3 rounded-xl hover:bg-slate-800">
     Fee Structures
 </a>
 
-            <a href="/fee-admin/attendance/payment/" class="block px-4 py-3 rounded-xl hover:bg-slate-800">
-                Payments
-            </a>
+            <a href="{% url 'attendance:fee_payments_page' %}" class="block px-4 py-3 rounded-xl hover:bg-slate-800">
+    Payments
+</a>
 
            <a href="{% url 'attendance:notifications_page' %}" class="block px-4 py-3 rounded-xl hover:bg-slate-800">
     Notifications

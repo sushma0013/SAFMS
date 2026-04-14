@@ -19,7 +19,8 @@ class Subject(models.Model):
     code = models.CharField(max_length=20, unique=True)
     teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subjects')
     students = models.ManyToManyField(User, related_name='enrolled_subjects', blank=True)
-    semester = models.IntegerField(default=1)
+    # semester = models.IntegerField(default=1)
+    semester = models.IntegerField(null=True, blank=True)
     department = models.CharField(max_length=100, default='General')
 
     def __str__(self):

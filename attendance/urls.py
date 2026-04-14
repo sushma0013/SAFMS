@@ -99,16 +99,18 @@ path("student/my-fees/", views.my_fees, name="my_fees"),
 path("student/report/", views.student_report, name="student_report"),
 path("student/settings/", views.student_settings, name="student_settings"),
 path("fee/dashboard/", views.fee_manager_dashboard, name="fee_manager_dashboard"),
-path("student/pay-request/", views.create_payment_request, name="create_payment_request"),
-path("fee-manager/requests/", views.fee_manager_requests, name="fee_manager_requests"),
-path("fee-manager/requests/<int:pk>/approve/", views.approve_payment_request, name="approve_payment_request"),
-path("fee-manager/requests/<int:pk>/reject/", views.reject_payment_request, name="reject_payment_request"),
+# path("student/pay-request/", views.create_payment_request, name="create_payment_request"),
+# path("fee-manager/requests/", views.fee_manager_requests, name="fee_manager_requests"),
+# path("fee-manager/requests/<int:pk>/approve/", views.approve_payment_request, name="approve_payment_request"),
+# path("fee-manager/requests/<int:pk>/reject/", views.reject_payment_request, name="reject_payment_request"),
 path("student/notification/read/<int:notif_id>/", views.mark_notification_read, name="mark_notification_read"),
 
 path("student/my-fees/khalti/initiate/", views.khalti_initiate_payment, name="khalti_initiate"),
 path("student/my-fees/khalti/verify/", views.khalti_verify_payment, name="khalti_verify"),
 
 path("notification/read/<int:notif_id>/", views.mark_notification_read, name="mark_notification_read"),
+path("student/my-fees/khalti/initiate/", views.khalti_initiate_payment, name="khalti_initiate_payment"),
+
 
 
 
@@ -121,5 +123,9 @@ path("fee/structures/<int:pk>/delete/", views.delete_fee_structure, name="delete
 path("fee/structures/bulk/", views.bulk_fee_structure, name="bulk_fee_structure"),
 path("fee/notifications/bulk/", views.bulk_notification, name="bulk_notification"),
 path("fee/notifications/", views.notifications_page, name="notifications_page"),
+path("fee/payments/", views.fee_payments_page, name="fee_payments_page"),
+path("student/my-fees/khalti/initiate/", views.khalti_initiate, name="khalti_initiate"),
+path("student/my-fees/khalti/verify/", views.khalti_verify, name="khalti_verify"),
+# path("student/payment-request/", views.create_payment_request, name="create_payment_request"),
 ]
 

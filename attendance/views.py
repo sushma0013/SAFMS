@@ -1199,33 +1199,7 @@ def teacher_add_student(request):
     return redirect("attendance:teacher_students")
 
 
-    #     subject.students.add(student)
-    #     messages.success(request, f"{student.username} enrolled in {subject.code}.")
-    #     return redirect("attendance:teacher_students")
-
-    # return render(request, "attendance/teacher_add_student.html", {"subjects": subjects})
-
-# @login_required
-# def student_profile(request):
-#     if request.user.profile.role != "student":
-#         messages.error(request, "Students only.")
-#         return redirect("home")
-
-#     try:
-#         profile = StudentProfile.objects.get(user=request.user)
-#     except StudentProfile.DoesNotExist:
-#         messages.error(request, "Student profile not found. Ask admin to create/link it.")
-#         return redirect("attendance:student_dashboard")
-
-#     total = AttendanceRecord.objects.filter(student=request.user).count()
-#     present = AttendanceRecord.objects.filter(student=request.user, status="Present").count()
-#     attendance_percent = round((present / total) * 100, 2) if total else 0
-
-#     return render(request, "attendance/student_profile.html", {
-#         "profile": profile,
-#         "attendance_percent": attendance_percent,
-#     })
-
+   
 
 
 @login_required
@@ -1344,6 +1318,8 @@ def my_fees(request):
         "payments": payments,
     }
     return render(request, "attendance/my_fees.html", context)
+
+
 def fee_manager_only(user):
     return user.is_authenticated and user.groups.filter(name="feesmanager").exists()
 @login_required
@@ -1611,12 +1587,12 @@ from datetime import timedelta
 
 from .models import StudentProfile, FeeStructure, Payment
 
-def fee_manager_only(user):
-    return (
-        user.is_authenticated and
-        user.is_staff and
-        user.groups.filter(name="feesmanager").exists()
-    )
+# def fee_manager_only(user):
+#     return (
+#         user.is_authenticated and
+#         user.is_staff and
+#         user.groups.filter(name="feesmanager").exists()
+#     )
 
 @login_required
 @user_passes_test(fee_manager_only)
@@ -1673,104 +1649,104 @@ from django.db.models import Sum
 from django.utils import timezone
 from .models import PaymentRequest, Payment, Notification
 
-@login_required
-def create_payment_request(request):
+# @login_required
+# def create_payment_request(request):
 
-    if request.user.profile.role != "student":
-        messages.error(request, "Students only.")
-        return redirect("home")
+#     if request.user.profile.role != "student":
+#         messages.error(request, "Students only.")
+#         return redirect("home")
 
-    student = get_object_or_404(StudentProfile, user=request.user)
+#     student = get_object_or_404(StudentProfile, user=request.user)
 
-    if request.method == "POST":
-        semester = int(request.POST.get("semester", 1))
-        amount = request.POST.get("amount")
-        note = request.POST.get("note", "")
-        proof = request.FILES.get("proof")
+#     if request.method == "POST":
+#         semester = int(request.POST.get("semester", 1))
+#         amount = request.POST.get("amount")
+#         note = request.POST.get("note", "")
+#         proof = request.FILES.get("proof")
 
-        PaymentRequest.objects.create(
-            student=student,
-            semester=semester,
-            amount=amount,
-            note=note,
-            proof=proof,
-            status="PENDING",
-        )
+#         PaymentRequest.objects.create(
+#             student=student,
+#             semester=semester,
+#             amount=amount,
+#             note=note,
+#             proof=proof,
+#             status="PENDING",
+#         )
 
-        messages.success(request, "Payment request submitted. Waiting for approval.")
-        return redirect("attendance:my_fees")
+#         messages.success(request, "Payment request submitted. Waiting for approval.")
+#         return redirect("attendance:my_fees")
 
-    return render(request, "attendance/payment_request_form.html")
-
-
+#     return render(request, "attendance/payment_request_form.html")
 
 
-@login_required
-@user_passes_test(fee_manager_only)
-def fee_manager_requests(request):
-    requests = PaymentRequest.objects.select_related("student").order_by("-created_at")
-    return render(request, "attendance/fee_manager_requests.html", {"requests": requests})
 
-@login_required
-@user_passes_test(fee_manager_only)
-def approve_payment_request(request, pk):
 
-    pr = get_object_or_404(PaymentRequest, pk=pk)
+# @login_required
+# @user_passes_test(fee_manager_only)
+# def fee_manager_requests(request):
+#     requests = PaymentRequest.objects.select_related("student").order_by("-created_at")
+#     return render(request, "attendance/fee_manager_requests.html", {"requests": requests})
 
-    if pr.status != "PENDING":
-        messages.info(request, "Already reviewed.")
-        return redirect("attendance:fee_manager_requests")
+# @login_required
+# @user_passes_test(fee_manager_only)
+# def approve_payment_request(request, pk):
 
-    # Create final Payment record
-    Payment.objects.create(
-        student=pr.student,
-        semester=pr.semester,
-        amount=pr.amount,
-        note=f"Approved: {pr.note}",
-        payment_method="MANUAL",   # manual payment
-        status="COMPLETED",        # approved = completed
-    )
+#     pr = get_object_or_404(PaymentRequest, pk=pk)
 
-    pr.status = "APPROVED"
-    pr.reviewed_by = request.user
-    pr.reviewed_at = timezone.now()
-    pr.save()
+#     if pr.status != "PENDING":
+#         messages.info(request, "Already reviewed.")
+#         return redirect("attendance:fee_manager_requests")
 
-    Notification.objects.create(
-        student=pr.student,
-        title="Payment Approved",
-        message=f"Your payment of Rs {pr.amount} has been approved.",
-        amount=pr.amount,
-        status="SENT",
-    )
+#     # Create final Payment record
+#     Payment.objects.create(
+#         student=pr.student,
+#         semester=pr.semester,
+#         amount=pr.amount,
+#         note=f"Approved: {pr.note}",
+#         payment_method="MANUAL",   # manual payment
+#         status="COMPLETED",        # approved = completed
+#     )
 
-    messages.success(request, "Approved and added to Payments.")
-    return redirect("attendance:fee_manager_requests")
+#     pr.status = "APPROVED"
+#     pr.reviewed_by = request.user
+#     pr.reviewed_at = timezone.now()
+#     pr.save()
 
-@login_required
-@user_passes_test(fee_manager_only)
-def reject_payment_request(request, pk):
+#     Notification.objects.create(
+#         student=pr.student,
+#         title="Payment Approved",
+#         message=f"Your payment of Rs {pr.amount} has been approved.",
+#         amount=pr.amount,
+#         status="SENT",
+#     )
 
-    pr = get_object_or_404(PaymentRequest, pk=pk)
+#     messages.success(request, "Approved and added to Payments.")
+#     return redirect("attendance:fee_manager_requests")
 
-    if pr.status != "PENDING":
-        messages.info(request, "Already reviewed.")
-        return redirect("attendance:fee_manager_requests")
+# @login_required
+# @user_passes_test(fee_manager_only)
+# def reject_payment_request(request, pk):
 
-    pr.status = "REJECTED"
-    pr.reviewed_by = request.user
-    pr.reviewed_at = timezone.now()
-    pr.save()
+#     pr = get_object_or_404(PaymentRequest, pk=pk)
 
-    Notification.objects.create(
-        student=pr.student,
-        title="Payment Rejected",
-        message="Your payment proof was rejected. Please submit again with correct details.",
-        status="SENT",
-    )
+#     if pr.status != "PENDING":
+#         messages.info(request, "Already reviewed.")
+#         return redirect("attendance:fee_manager_requests")
 
-    messages.error(request, "Payment request rejected.")
-    return redirect("attendance:fee_manager_requests")
+#     pr.status = "REJECTED"
+#     pr.reviewed_by = request.user
+#     pr.reviewed_at = timezone.now()
+#     pr.save()
+
+#     Notification.objects.create(
+#         student=pr.student,
+#         title="Payment Rejected",
+#         message="Your payment proof was rejected. Please submit again with correct details.",
+#         status="SENT",
+#     )
+
+#     messages.error(request, "Payment request rejected.")
+#     return redirect("attendance:fee_manager_requests")
 
 
 
@@ -2162,3 +2138,140 @@ def delete_fee_structure(request, pk):
     return render(request, "attendance/delete_fee_structure.html", {
         "fee_structure": fee_structure
     })
+
+@login_required
+def fee_payments_page(request):
+    if not request.user.groups.filter(name="feesmanager").exists() and not request.user.is_superuser:
+        messages.error(request, "Fee managers only.")
+        return redirect("home")
+
+    payments = Payment.objects.select_related("student").order_by("-paid_at")
+
+    return render(request, "attendance/fee_payments.html", {
+        "payments": payments,
+    })
+import requests
+from django.conf import settings
+from django.urls import reverse
+
+@login_required
+def khalti_initiate(request):
+    profile = StudentProfile.objects.filter(user=request.user).first()
+    if not profile:
+        messages.error(request, "Student profile not found.")
+        return redirect("attendance:student_my_fees")
+
+    fee_structure = FeeStructure.objects.filter(student=profile).order_by("-semester").first()
+    if not fee_structure:
+        messages.error(request, "Fee structure not found.")
+        return redirect("attendance:student_my_fees")
+
+    paid_amount = Payment.objects.filter(student=profile, semester=fee_structure.semester).aggregate(
+        total=Sum("amount")
+    )["total"] or 0
+
+    remaining = fee_structure.total_fee - paid_amount
+
+    if remaining <= 0:
+        messages.info(request, "No remaining fee to pay.")
+        return redirect("attendance:student_my_fees")
+
+    purchase_order_id = f"FEE-{request.user.id}-{timezone.now().timestamp()}"
+    return_url = request.build_absolute_uri(reverse("attendance:khalti_verify"))
+
+    payload = {
+        "return_url": return_url,
+        "website_url": settings.KHALTI_WEBSITE_URL,
+        "amount": int(remaining * 100),  # paisa
+        "purchase_order_id": purchase_order_id,
+        "purchase_order_name": f"Semester {fee_structure.semester} Fee",
+        "customer_info": {
+            "name": profile.full_name or request.user.username,
+            "email": request.user.email or "student@example.com",
+            "phone": "9800000001",
+        },
+    }
+
+    headers = {
+        "Authorization": f"Key {settings.KHALTI_SECRET_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    response = requests.post(
+        "https://dev.khalti.com/api/v2/epayment/initiate/",
+        json=payload,
+        headers=headers,
+    )
+
+    data = response.json()
+
+    if response.status_code != 200:
+        messages.error(request, f"Khalti initiate failed: {data}")
+        return redirect("attendance:student_my_fees")
+
+    KhaltiPayment.objects.create(
+        student=profile,
+        semester=fee_structure.semester,
+        amount=remaining,
+        purchase_order_id=purchase_order_id,
+        pidx=data.get("pidx"),
+        status="INITIATED",
+    )
+
+    return redirect(data["payment_url"])
+
+
+@login_required
+def khalti_verify(request):
+    pidx = request.GET.get("pidx")
+    if not pidx:
+        messages.error(request, "Missing Khalti payment reference.")
+        return redirect("attendance:student_my_fees")
+
+    headers = {
+        "Authorization": f"Key {settings.KHALTI_SECRET_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    response = requests.post(
+        "https://dev.khalti.com/api/v2/epayment/lookup/",
+        json={"pidx": pidx},
+        headers=headers,
+    )
+
+    data = response.json()
+
+    if response.status_code != 200:
+        messages.error(request, "Payment verification failed.")
+        return redirect("attendance:student_my_fees")
+
+    khalti_payment = KhaltiPayment.objects.filter(pidx=pidx).first()
+    if not khalti_payment:
+        messages.error(request, "Khalti payment record not found.")
+        return redirect("attendance:student_my_fees")
+
+    if data.get("status") == "Completed":
+        khalti_payment.status = "COMPLETED"
+        khalti_payment.save()
+
+        already_exists = Payment.objects.filter(
+            student=khalti_payment.student,
+            semester=khalti_payment.semester,
+            note__icontains=khalti_payment.purchase_order_id,
+        ).exists()
+
+        if not already_exists:
+            Payment.objects.create(
+                student=khalti_payment.student,
+                semester=khalti_payment.semester,
+                amount=khalti_payment.amount,
+                note=f"Khalti payment ({khalti_payment.purchase_order_id})",
+            )
+
+        messages.success(request, "Fee payment completed successfully.")
+    else:
+        khalti_payment.status = data.get("status", "FAILED")
+        khalti_payment.save()
+        messages.error(request, f"Payment not completed. Status: {data.get('status')}")
+
+    return redirect("attendance:student_my_fees")

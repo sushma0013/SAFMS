@@ -62,6 +62,29 @@
   </div>
   {% endif %}
 
+  {% if remaining > 0 %}
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+  <h3 class="text-xl font-bold mb-3">Pay Fee Online</h3>
+  <p class="text-slate-600 mb-4">
+    You can pay your remaining fee securely through Khalti.
+  </p>
+
+  <div class="flex flex-wrap gap-3">
+    <a href="{% url 'attendance:khalti_initiate' %}"
+       class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-3 rounded-xl font-semibold">
+      <span class="material-symbols-outlined">account_balance_wallet</span>
+      Pay with Khalti
+    </a>
+
+    {% comment %} <a href="{% url 'attendance:create_payment_request' %}"
+       class="inline-flex items-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-800 px-5 py-3 rounded-xl font-semibold">
+      <span class="material-symbols-outlined">upload_file</span>
+      Submit Payment Proof
+    </a> {% endcomment %}
+  </div>
+</div>
+{% endif %}
+
   <!-- HISTORY -->
   <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b">

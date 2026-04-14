@@ -25,11 +25,18 @@ class FeeStructureForm(forms.ModelForm):
 
 
 class BulkFeeStructureForm(forms.Form):
+    from .models import StudentProfile
+
     students = forms.ModelMultipleChoiceField(
-        queryset=StudentProfile.objects.all().order_by("full_name"),
-        required=False,
-        widget=forms.CheckboxSelectMultiple
-    )
+    queryset=StudentProfile.objects.filter(
+        user__profile__role="student"
+    ).exclude(
+        semester__isnull=True
+    ),
+    required=False,
+    widget=forms.CheckboxSelectMultiple,
+)
+    
     semester = forms.IntegerField(
         min_value=1,
         initial=1,
