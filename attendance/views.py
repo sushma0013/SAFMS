@@ -87,8 +87,10 @@ from .models import (
 
 )
 
-from .utils import close_session_and_mark_absent,get_client_ip
+from .utils import close_session_and_mark_absent,get_client_ip,ip_in_allowed_network
 from .forms import FeeStructureForm, BulkFeeStructureForm, BulkNotificationForm
+from .utils import close_session_and_mark_absent, get_client_ip, ip_in_allowed_network, same_network
+
 
 
 
@@ -221,56 +223,6 @@ def teacher_dashboard(request):
 
 
 
-# @login_required
-# def generate_qr(request, subject_id):
-#     if request.user.profile.role != 'teacher':
-#         messages.error(request, "Teachers only.")
-#         return redirect('home')
-
-#     subject = get_object_or_404(Subject, id=subject_id, teacher=request.user)
-#     now = timezone.now()
-#     today = now.date()
-
-#     # 1) Find active session for this subject today
-#     active_session = QRSession.objects.filter(
-#         subject=subject,
-#         created_by=request.user,
-#         session_date=today,
-#         is_closed=False,
-#         valid_until__gt=now
-#     ).order_by('-created_at').first()
-
-#     if active_session:
-#         session = active_session
-#         messages.info(request, "Using existing active QR session.")
-#     else:
-#         # 2) If there is an old session expired but not closed -> close it & mark absent
-#         old_open_sessions = QRSession.objects.filter(
-#             subject=subject,
-#             created_by=request.user,
-#             session_date=today,
-#             is_closed=False,
-#             valid_until__lte=now
-#         )
-#         for s in old_open_sessions:
-#             close_session_and_mark_absent(s)
-
-#         # 3) Create new session
-#         session = QRSession.objects.create(
-#             subject=subject,
-#             created_by=request.user,
-#             session_date=today,
-#             valid_until=now + timedelta(minutes=15),
-#             is_closed=False
-#         )
-#         session.generate_qr(request_domain=NGROK_BASE_URL)
-#         messages.success(request, "New QR generated (valid 15 minutes).")
-
-#     return render(request, 'attendance/generate_qr.html', {
-#         'session': session,
-#         'subject': subject,
-#         'expires_in': int((session.valid_until - now).total_seconds())
-#     })
 
 @login_required
 def generate_qr(request, subject_id):
@@ -301,11 +253,11 @@ def generate_qr(request, subject_id):
 
     teacher_ip = get_client_ip(request)
 
-    # Optional for now because you are using ngrok
-    if schedule.allowed_ip_prefix and not teacher_ip.startswith(schedule.allowed_ip_prefix):
+    if schedule.allowed_ip_prefix:
+     if not ip_in_allowed_network(teacher_ip, schedule.allowed_ip_prefix):
         messages.error(request, "QR can only be generated from the campus network.")
-        return redirect('attendance:teacher_dashboard')
-
+        return redirect("attendance:teacher_dashboard")
+     
     active_session = QRSession.objects.filter(
         subject=subject,
         created_by=request.user,
@@ -338,64 +290,41 @@ def generate_qr(request, subject_id):
         created_ip=teacher_ip,
         room_name=schedule.room_name,
 )
-
-        request_domain = f"{request.scheme}://{request.get_host()}"
+            # ✅ Use your ngrok URL here for phone access
+        request_domain = "https://sericultural-undefiable-davina.ngrok-free.dev/login/"
         session.generate_qr(request_domain=request_domain)
 
         messages.success(request, "New QR generated (valid 15 minutes).")
-    qr_url = f"{request.scheme}://{request.get_host()}/attendance/mark/{session.uuid}/"
+
+    # ✅ Same ngrok URL shown below QR
+    qr_url = f"https://sericultural-undefiable-davina.ngrok-free.dev/attendance/mark/{session.uuid}/"
+
     return render(request, 'attendance/generate_qr.html', {
         'session': session,
         'subject': subject,
         'expires_in': int((session.valid_until - now).total_seconds()),
         'schedule': schedule,
         'teacher_ip': teacher_ip,
-        'qr_url': qr_url, 
-        
+        'qr_url': qr_url,
     })
 
+    #     request_domain = f"{request.scheme}://{request.get_host()}"
+    #     session.generate_qr(request_domain=request_domain)
 
-# ============= STUDENT VIEWS =============
+    #     messages.success(request, "New QR generated (valid 15 minutes).")
+    # qr_url = f"{request.scheme}://{request.get_host()}/attendance/mark/{session.uuid}/"
+    # return render(request, 'attendance/generate_qr.html', {
+    #     'session': session,
+    #     'subject': subject,
+    #     'expires_in': int((session.valid_until - now).total_seconds()),
+    #     'schedule': schedule,
+    #     'teacher_ip': teacher_ip,
+    #     'qr_url': qr_url, 
+        
+    # })
 
 
-# @login_required
-# def student_dashboard(request):
-#     if request.user.profile.role != 'student':
-#         messages.error(request, "Students only.")
-#         return redirect('home')
 
-#     enrolled_subjects = Subject.objects.filter(students=request.user)
-
-#     attendance_stats = []
-#     total_classes_all = 0
-#     total_present_all = 0
-
-#     for subject in enrolled_subjects:
-#         totsession.generate_qr(request_domain=NGROK_BASE_URL)al = AttendanceRecord.objects.filter(student=request.user, subject=subject).count()
-#         present = AttendanceRecord.objects.filter(student=request.user, subject=subject, status='Present').count()
-#         percent = round((present / total) * 100, 2) if total else 0
-
-#         total_classes_all += total
-#         total_present_all += present
-
-#         attendance_stats.append({
-#             'subject': subject,
-#             'total': total,
-#             'present': present,
-#             'percentage': percent
-#         })
-
-#     attendance_records = AttendanceRecord.objects.filter(
-#         student=request.user
-#     ).select_related('subject').order_by('-id')[:10]
-
-#     return render(request, 'attendance/student_dashboard.html', {
-#         'enrolled_subjects': enrolled_subjects,
-#         'attendance_stats': attendance_stats,
-#         'attendance_records': attendance_records,
-#         'total_classes_all': total_classes_all,
-#         'total_present_all': total_present_all,
-#     })
 from django.db.models import Sum
 from django.utils import timezone
 from datetime import timedelta
@@ -688,9 +617,15 @@ def mark_attendance(request, uuid):
 
     student_ip = get_client_ip(request)
 
-    # Optional for now because you are using ngrok
-    if schedule.allowed_ip_prefix and not student_ip.startswith(schedule.allowed_ip_prefix):
-        return HttpResponse(f"Attendance can only be marked from the campus network:{student_ip}")
+    if schedule.allowed_ip_prefix:
+        if not ip_in_allowed_network(student_ip, schedule.allowed_ip_prefix):
+            return HttpResponse(f"Attendance can only be marked from the campus network: {student_ip}")
+
+        if session.created_ip and not same_network(session.created_ip, student_ip, schedule.allowed_ip_prefix):
+            return HttpResponse(
+                f"Teacher and student are not on the same campus network. "
+                f"Teacher IP: {session.created_ip}, Student IP: {student_ip}"
+            )
 
     record = AttendanceRecord.objects.filter(student=request.user, session=session).first()
     if record:
@@ -708,7 +643,6 @@ def mark_attendance(request, uuid):
         'schedule': schedule,
         'student_ip': student_ip,
     })
-
 
 @login_required
 def teacher_profile(request):
