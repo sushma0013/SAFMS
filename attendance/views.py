@@ -252,11 +252,12 @@ def generate_qr(request, subject_id):
         return redirect('attendance:teacher_dashboard')
 
     teacher_ip = get_client_ip(request)
+    request_domain = request.build_absolute_uri("/").rstrip("/")
 
     if schedule.allowed_ip_prefix:
-     if not ip_in_allowed_network(teacher_ip, schedule.allowed_ip_prefix):
-        messages.error(request, "QR can only be generated from the campus network.")
-        return redirect("attendance:teacher_dashboard")
+        if not ip_in_allowed_network(teacher_ip, schedule.allowed_ip_prefix):
+            messages.error(request, "QR can only be generated from the campus network.")
+            return redirect("attendance:teacher_dashboard")
      
     active_session = QRSession.objects.filter(
         subject=subject,
@@ -290,14 +291,11 @@ def generate_qr(request, subject_id):
         created_ip=teacher_ip,
         room_name=schedule.room_name,
 )
-            # ✅ Use your ngrok URL here for phone access
-        request_domain = "https://sericultural-undefiable-davina.ngrok-free.dev/login/"
         session.generate_qr(request_domain=request_domain)
 
         messages.success(request, "New QR generated (valid 15 minutes).")
 
-    # ✅ Same ngrok URL shown below QR
-    qr_url = f"https://sericultural-undefiable-davina.ngrok-free.dev/attendance/mark/{session.uuid}/"
+    qr_url = f"{request_domain}/attendance/mark/{session.uuid}/"
 
     return render(request, 'attendance/generate_qr.html', {
         'session': session,
