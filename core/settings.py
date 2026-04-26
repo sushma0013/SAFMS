@@ -49,21 +49,39 @@ ALLOWED_HOSTS = [
     for host in os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',')
     if host.strip()
 ]
-# ALLOWED_HOSTS = ["127.0.0.1", "localhost", ".ngrok-free.app"]
-
+# Ngrok + proxy support
 CSRF_TRUSTED_ORIGINS = [
     "https://*.ngrok-free.dev",
+    "https://*.ngrok-free.app",
 ]
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+USE_X_FORWARDED_HOST = True
+
+# Optional fixed base URL used in QR generation.
+# Examples:
+# - LAN test: http://192.168.1.50:8000
+# - Ngrok test: https://xxxx.ngrok-free.app
+ATTENDANCE_PUBLIC_BASE_URL = os.getenv('ATTENDANCE_PUBLIC_BASE_URL', '').strip()
+ATTENDANCE_STRICT_NETWORK = env_bool('ATTENDANCE_STRICT_NETWORK', True)
+ATTENDANCE_REQUIRE_ALLOWED_IP_PREFIX = env_bool('ATTENDANCE_REQUIRE_ALLOWED_IP_PREFIX', True)
+ATTENDANCE_ALLOW_LOCALHOST_BYPASS = env_bool('ATTENDANCE_ALLOW_LOCALHOST_BYPASS', False)
+# ALLOWED_HOSTS = ["127.0.0.1", "localhost", ".ngrok-free.app"]
+
+# CSRF_TRUSTED_ORIGINS = [
+#     "https://*.ngrok-free.dev",
+# ]
+
+# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://sericultural-undefiable-davina.ngrok-free.dev",
-]
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# CSRF_TRUSTED_ORIGINS = [
+#     "https://sericultural-undefiable-davina.ngrok-free.dev",
+# ]
+# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 

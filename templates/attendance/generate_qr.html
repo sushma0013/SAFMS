@@ -41,6 +41,29 @@
             color: #dc2626;
             margin-top: 10px;
         }
+
+        .mode-badge {
+            display: inline-block;
+            margin-top: 10px;
+            margin-bottom: 6px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+        }
+
+        .mode-ngrok {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .mode-lan {
+            background: #dbeafe;
+            color: #1e3a8a;
+            border: 1px solid #93c5fd;
+        }
     </style>
 </head>
 
@@ -57,6 +80,10 @@
 
     <div class="countdown">
         ⏳ Time left: <span id="timer"></span>
+    </div>
+
+    <div class="mode-badge {% if qr_mode == 'NGROK' %}mode-ngrok{% else %}mode-lan{% endif %}">
+        Active Mode: {{ qr_mode }}
     </div>
 
     {% if session.qr_code %}

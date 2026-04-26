@@ -252,11 +252,35 @@ def generate_qr(request, subject_id):
         return redirect('attendance:teacher_dashboard')
 
     teacher_ip = get_client_ip(request)
-    request_domain = request.build_absolute_uri("/").rstrip("/")
+    request_domain = (
+        settings.ATTENDANCE_PUBLIC_BASE_URL.rstrip("/")
+        if getattr(settings, "ATTENDANCE_PUBLIC_BASE_URL", "")
+        else request.build_absolute_uri("/").rstrip("/")
+    )
 
-    if schedule.allowed_ip_prefix:
-        if not ip_in_allowed_network(teacher_ip, schedule.allowed_ip_prefix):
-            messages.error(request, "QR can only be generated from the campus network.")
+    allowed_network = (schedule.allowed_ip_prefix or "").strip()
+
+    if settings.ATTENDANCE_REQUIRE_ALLOWED_IP_PREFIX and not allowed_network:
+        messages.error(
+            request,
+            "QR generation blocked: set Allowed ip prefix in class schedule (example: 10.24.0.0/19)."
+        )
+        return redirect("attendance:teacher_dashboard")
+
+    if allowed_network:
+        is_loopback = teacher_ip in {"127.0.0.1", "::1"}
+        in_allowed_network = ip_in_allowed_network(teacher_ip, allowed_network)
+        allow_localhost_bypass = (
+            settings.DEBUG
+            and settings.ATTENDANCE_ALLOW_LOCALHOST_BYPASS
+            and is_loopback
+        )
+
+        if settings.ATTENDANCE_STRICT_NETWORK and not in_allowed_network and not allow_localhost_bypass:
+            messages.error(
+                request,
+                f"QR generation blocked: current IP {teacher_ip} is outside allowed network {allowed_network}."
+            )
             return redirect("attendance:teacher_dashboard")
      
     active_session = QRSession.objects.filter(
@@ -269,6 +293,7 @@ def generate_qr(request, subject_id):
 
     if active_session:
         session = active_session
+        session.generate_qr(request_domain=request_domain)
         messages.info(request, "Using existing active QR session.")
     else:
         old_open_sessions = QRSession.objects.filter(
@@ -296,6 +321,7 @@ def generate_qr(request, subject_id):
         messages.success(request, "New QR generated (valid 15 minutes).")
 
     qr_url = f"{request_domain}/attendance/mark/{session.uuid}/"
+    qr_mode = "NGROK" if "ngrok" in request_domain.lower() else "LAN"
 
     return render(request, 'attendance/generate_qr.html', {
         'session': session,
@@ -304,6 +330,7 @@ def generate_qr(request, subject_id):
         'schedule': schedule,
         'teacher_ip': teacher_ip,
         'qr_url': qr_url,
+        'qr_mode': qr_mode,
     })
 
     #     request_domain = f"{request.scheme}://{request.get_host()}"
@@ -612,18 +639,38 @@ def mark_attendance(request, uuid):
             return HttpResponse("This class is not scheduled for your semester.")
     except StudentProfile.DoesNotExist:
         return HttpResponse("Student profile not found.")
-
     student_ip = get_client_ip(request)
+    allowed_network = (schedule.allowed_ip_prefix or "").strip()
 
-    if schedule.allowed_ip_prefix:
-        if not ip_in_allowed_network(student_ip, schedule.allowed_ip_prefix):
-            return HttpResponse(f"Attendance can only be marked from the campus network: {student_ip}")
+    if settings.ATTENDANCE_REQUIRE_ALLOWED_IP_PREFIX and not allowed_network:
+        messages.error(
+            request,
+            "Attendance blocked: class schedule has no Allowed ip prefix configured."
+        )
+        return redirect("attendance:student_dashboard")
 
-        if session.created_ip and not same_network(session.created_ip, student_ip, schedule.allowed_ip_prefix):
-            return HttpResponse(
-                f"Teacher and student are not on the same campus network. "
-                f"Teacher IP: {session.created_ip}, Student IP: {student_ip}"
-            )
+    print("=" * 50)
+    print("STUDENT IP:", student_ip)
+    print("ALLOWED NETWORK:", allowed_network or "<none>")
+    print("=" * 50)
+
+    if settings.ATTENDANCE_STRICT_NETWORK and allowed_network and not ip_in_allowed_network(student_ip, allowed_network):
+        messages.error(
+            request,
+            f"Attendance can only be marked from allowed network ({allowed_network})."
+        )
+        return redirect("attendance:student_dashboard")
+    # student_ip = get_client_ip(request)
+
+    # print("TEACHER IP:", session.created_ip)
+    # print("STUDENT IP:", student_ip)
+
+    # if not same_network(student_ip, session.created_ip):
+    #    messages.error(
+    #     request,
+    #     "Attendance can only be marked from same campus network."
+    # )
+    # return redirect("attendance:student_dashboard") 
 
     record = AttendanceRecord.objects.filter(student=request.user, session=session).first()
     if record:
