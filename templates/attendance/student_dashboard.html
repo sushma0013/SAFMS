@@ -83,6 +83,10 @@
           <span class="material-symbols-outlined">calendar_month</span>
           <span>My Attendance</span>
         </a>
+        <a href="{% url 'attendance:student_class_schedule' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <span class="material-symbols-outlined">event_note</span>
+          <span>My Class Schedule</span>
+        </a>
 
         <a href="{% url 'attendance:my_fees' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
           <span class="material-symbols-outlined">payments</span>

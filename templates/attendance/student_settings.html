@@ -1,7 +1,246 @@
 {% extends "attendance/base.html" %}
+{% block title %}Settings - SAFMS{% endblock %}
+
 {% block content %}
-<div class="p-6">
-  <h1 class="text-2xl font-bold">Settings</h1>
-  <p class="mt-2 text-gray-600">This page is for student settings.</p>
+<div class="p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
+
+  <!-- HEADER -->
+  <div>
+    <h1 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Settings</h1>
+    <p class="text-slate-500 dark:text-slate-400 mt-1 font-medium">
+      Manage your account, preferences and security.
+    </p>
+  </div>
+
+  <!-- ACCOUNT INFORMATION -->
+  <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
+      <span class="material-symbols-outlined text-primary">account_circle</span>
+      <div>
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Account Information</h2>
+        <p class="text-sm text-slate-500">Read-only details — contact admin to update.</p>
+      </div>
+    </div>
+    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div>
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Full Name</label>
+        <p class="mt-1 text-base font-semibold text-slate-900 dark:text-white">
+          {{ profile.full_name|default:request.user.username }}
+        </p>
+      </div>
+      <div>
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Student ID</label>
+        <p class="mt-1 text-base font-semibold text-slate-900 dark:text-white">
+          {{ profile.student_id|default:"—" }}
+        </p>
+      </div>
+      <div>
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Email</label>
+        <p class="mt-1 text-base font-semibold text-slate-900 dark:text-white break-all">
+          {{ request.user.email|default:"—" }}
+        </p>
+      </div>
+      <div>
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Username</label>
+        <p class="mt-1 text-base font-semibold text-slate-900 dark:text-white">
+          {{ request.user.username }}
+        </p>
+      </div>
+      <div>
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Major</label>
+        <p class="mt-1 text-base font-semibold text-slate-900 dark:text-white">
+          {{ profile.major|default:"—" }}
+        </p>
+      </div>
+      <div>
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Semester</label>
+        <p class="mt-1 text-base font-semibold text-slate-900 dark:text-white">
+          {{ profile.semester|default:"—" }}
+        </p>
+      </div>
+      <div>
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Phone</label>
+        <p class="mt-1 text-base font-semibold text-slate-900 dark:text-white">
+          {{ profile.phone|default:"—" }}
+        </p>
+      </div>
+      <div>
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Login Method</label>
+        <p class="mt-1 text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+          {% if is_google_user %}
+            <span class="material-symbols-outlined text-base text-red-500">mail</span>
+            Google
+          {% else %}
+            <span class="material-symbols-outlined text-base text-slate-500">key</span>
+            Username & Password
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECURITY -->
+  <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
+      <span class="material-symbols-outlined text-primary">lock</span>
+      <div>
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Security</h2>
+        <p class="text-sm text-slate-500">Manage how you sign in.</p>
+      </div>
+    </div>
+    <div class="p-6 space-y-4">
+      {% if has_password %}
+        <div class="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div>
+            <p class="font-bold text-slate-900 dark:text-white">Password</p>
+            <p class="text-sm text-slate-500">Update your account password.</p>
+          </div>
+          <a href="{% url 'password_change' %}"
+             class="px-4 py-2 rounded-lg bg-primary hover:bg-blue-700 text-white text-sm font-semibold">
+            Change
+          </a>
+        </div>
+      {% else %}
+        <div class="flex items-center gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+          <span class="material-symbols-outlined text-slate-500">info</span>
+          <p class="text-sm text-slate-600 dark:text-slate-300">
+            You signed in with Google — password management is handled by your Google account.
+          </p>
+        </div>
+      {% endif %}
+
+      <div class="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+        <div>
+          <p class="font-bold text-slate-900 dark:text-white">Active Session</p>
+          <p class="text-sm text-slate-500">You are currently signed in on this device.</p>
+        </div>
+        <a href="{% url 'logout' %}"
+           class="px-4 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-sm font-semibold">
+          Sign out
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PREFERENCES -->
+  <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
+      <span class="material-symbols-outlined text-primary">tune</span>
+      <div>
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Preferences</h2>
+        <p class="text-sm text-slate-500">Customise your experience. Saved on this device.</p>
+      </div>
+    </div>
+    <div class="p-6 space-y-4">
+
+      <!-- Theme -->
+      <div class="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+        <div>
+          <p class="font-bold text-slate-900 dark:text-white">Dark Mode</p>
+          <p class="text-sm text-slate-500">Switch between light and dark theme.</p>
+        </div>
+        <label class="inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="darkModeToggle" class="sr-only peer">
+          <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer
+                      peer-checked:bg-primary
+                      after:content-[''] after:absolute after:top-0.5 after:left-[2px]
+                      after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
+                      peer-checked:after:translate-x-full relative"></div>
+        </label>
+      </div>
+
+      <!-- Attendance email -->
+      <div class="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+        <div>
+          <p class="font-bold text-slate-900 dark:text-white">Attendance Alerts</p>
+          <p class="text-sm text-slate-500">Get notified if your attendance falls below 75%.</p>
+        </div>
+        <label class="inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="prefAttendance" class="sr-only peer" checked>
+          <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer
+                      peer-checked:bg-primary
+                      after:content-[''] after:absolute after:top-0.5 after:left-[2px]
+                      after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
+                      peer-checked:after:translate-x-full relative"></div>
+        </label>
+      </div>
+
+      <!-- Fee reminders -->
+      <div class="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+        <div>
+          <p class="font-bold text-slate-900 dark:text-white">Fee Due Reminders</p>
+          <p class="text-sm text-slate-500">Show reminder popup when a fee due date is near.</p>
+        </div>
+        <label class="inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="prefFee" class="sr-only peer" checked>
+          <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer
+                      peer-checked:bg-primary
+                      after:content-[''] after:absolute after:top-0.5 after:left-[2px]
+                      after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
+                      peer-checked:after:translate-x-full relative"></div>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  {% comment %} <!-- HELP / ABOUT -->
+  <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
+      <span class="material-symbols-outlined text-primary">help</span>
+      <div>
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Help & About</h2>
+      </div>
+    </div>
+    <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+      <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+        <p class="font-bold text-slate-900 dark:text-white mb-1">App Version</p>
+        <p class="text-slate-500">SAFMS v1.0.0</p>
+      </div>
+      <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+        <p class="font-bold text-slate-900 dark:text-white mb-1">Need help?</p>
+        <p class="text-slate-500">Contact your academic advisor or admin office.</p>
+      </div>
+      <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+        <p class="font-bold text-slate-900 dark:text-white mb-1">Privacy</p>
+        <p class="text-slate-500">Your data is used only for academic management.</p>
+      </div>
+    </div>
+  </section>
+
 </div>
+
+<!-- Preferences persistence -->
+<script>
+  (function() {
+    const KEYS = {
+      dark: "safms_pref_dark",
+      attendance: "safms_pref_attendance",
+      fee: "safms_pref_fee",
+    };
+
+    const darkToggle = document.getElementById("darkModeToggle");
+    const attToggle = document.getElementById("prefAttendance");
+    const feeToggle = document.getElementById("prefFee");
+
+    // Load saved values
+    if (localStorage.getItem(KEYS.dark) === "1") {
+      document.documentElement.classList.add("dark");
+      darkToggle.checked = true;
+    }
+    attToggle.checked = localStorage.getItem(KEYS.attendance) !== "0";
+    feeToggle.checked = localStorage.getItem(KEYS.fee) !== "0";
+
+    // Save on change
+    darkToggle.addEventListener("change", () => {
+      document.documentElement.classList.toggle("dark", darkToggle.checked);
+      localStorage.setItem(KEYS.dark, darkToggle.checked ? "1" : "0");
+    });
+    attToggle.addEventListener("change", () => {
+      localStorage.setItem(KEYS.attendance, attToggle.checked ? "1" : "0");
+    });
+    feeToggle.addEventListener("change", () => {
+      localStorage.setItem(KEYS.fee, feeToggle.checked ? "1" : "0");
+    });
+  })();
+</script> {% endcomment %}
 {% endblock %}

@@ -990,23 +990,38 @@ def my_classes(request):
     today_name = now_local.strftime("%A")
     current_time = now_local.time()
 
+   
     for sch in teacher_schedule:
-      if not sch.is_active:
-        sch.display_status = "Inactive"
-        sch.status_color = "gray"
-      elif sch.day_of_week == today_name:
-        if sch.start_time <= current_time <= sch.end_time:
-            sch.display_status = "Live Now"
-            sch.status_color = "green"
-        elif current_time < sch.start_time:
-            sch.display_status = "Upcoming Today"
-            sch.status_color = "blue"
-        else:
-            sch.display_status = "Finished Today"
+        if not sch.is_active:
+            sch.display_status = "Inactive"
             sch.status_color = "gray"
-    else:
-        sch.display_status = "Scheduled"
-        sch.status_color = "indigo"
+        elif sch.day_of_week == today_name:
+            if sch.start_time <= current_time <= sch.end_time:
+                sch.display_status = "Live Now"
+                sch.status_color = "green"
+            elif current_time < sch.start_time:
+                sch.display_status = "Upcoming Today"
+                sch.status_color = "blue"
+            else:
+                sch.display_status = "Finished Today"
+                sch.status_color = "gray"
+        else:
+            sch.display_status = "Scheduled"
+            sch.status_color = "indigo"
+
+        # duration like "2:00"
+        start_dt = datetime.combine(now_local.date(), sch.start_time)
+        end_dt = datetime.combine(now_local.date(), sch.end_time)
+        total_minutes = int((end_dt - start_dt).total_seconds() / 60)
+        h, m = divmod(total_minutes, 60)
+        sch.duration_str = f"{h}:{m:02d}"
+
+        # is this row eligible to generate QR right now?
+        sch.can_generate_qr = (
+            sch.is_active
+            and sch.day_of_week == today_name
+            and sch.start_time <= current_time <= sch.end_time
+        )
 
     return render(request, "attendance/my_classes.html", {
         "sessions_today": sessions_today,
@@ -1284,7 +1299,82 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from .models import StudentProfile, FeeStructure, Payment
+from datetime import datetime
 
+@login_required
+def student_class_schedule(request):
+    """Show enrolled student's weekly class routine."""
+    if request.user.profile.role != "student":
+        messages.error(request, "Students only.")
+        return redirect("home")
+
+    # Subjects student is enrolled in
+    enrolled_subjects = Subject.objects.filter(students=request.user)
+
+    # All schedules for those subjects
+    schedules = (
+        ClassSchedule.objects
+        .filter(subject__in=enrolled_subjects, is_active=True)
+        .select_related("subject", "teacher")
+    )
+
+    # Sort by day-of-week order, then start_time
+    day_order = {
+        "Sunday": 0, "Monday": 1, "Tuesday": 2, "Wednesday": 3,
+        "Thursday": 4, "Friday": 5, "Saturday": 6,
+    }
+    schedules = sorted(
+        schedules,
+        key=lambda s: (day_order.get(s.day_of_week, 7), s.start_time),
+    )
+
+    # Decorate each row with status + duration
+    now_local = timezone.localtime()
+    today_name = now_local.strftime("%A")
+    current_time = now_local.time()
+
+    for sch in schedules:
+        # status badge
+        if sch.day_of_week == today_name:
+            if sch.start_time <= current_time <= sch.end_time:
+                sch.display_status = "Live Now"
+                sch.status_color = "green"
+            elif current_time < sch.start_time:
+                sch.display_status = "Upcoming Today"
+                sch.status_color = "blue"
+            else:
+                sch.display_status = "Finished"
+                sch.status_color = "gray"
+        else:
+            sch.display_status = "Scheduled"
+            sch.status_color = "indigo"
+
+        # duration in hours (e.g. "2:00")
+        start_dt = datetime.combine(now_local.date(), sch.start_time)
+        end_dt = datetime.combine(now_local.date(), sch.end_time)
+        total_minutes = int((end_dt - start_dt).total_seconds() / 60)
+        h, m = divmod(total_minutes, 60)
+        sch.duration_str = f"{h}:{m:02d}"
+
+    # Group by day for display
+    grouped = {}
+    for sch in schedules:
+        grouped.setdefault(sch.day_of_week, []).append(sch)
+
+    # Try to get student's semester for header
+    try:
+        student_semester = request.user.student_profile.semester
+    except StudentProfile.DoesNotExist:
+        student_semester = ""
+
+    return render(request, "attendance/student_class_schedule.html", {
+        "schedules": schedules,
+        "grouped_schedules": grouped,
+        "total_classes": len(schedules),
+        "today_name": today_name,
+        "today": now_local.date(),
+        "student_semester": student_semester,
+    })
 
 @login_required
 def my_fees(request):
@@ -1594,10 +1684,26 @@ def student_report(request):
 
 @login_required
 def student_settings(request):
-    if request.user.profile.role != 'student':
+    if request.user.profile.role != "student":
         messages.error(request, "Students only.")
-        return redirect('home')
-    return render(request, "attendance/student_settings.html")
+        return redirect("home")
+
+    try:
+        profile = request.user.student_profile
+    except StudentProfile.DoesNotExist:
+        profile = None
+
+    # Detect login method
+    is_google_user = request.user.socialaccount_set.filter(provider="google").exists() \
+        if hasattr(request.user, "socialaccount_set") else False
+
+    has_password = request.user.has_usable_password()
+
+    return render(request, "attendance/student_settings.html", {
+        "profile": profile,
+        "is_google_user": is_google_user,
+        "has_password": has_password,
+    })
 
 
 from django.contrib.auth.decorators import login_required, user_passes_test

@@ -31,6 +31,7 @@ urlpatterns = [
     path("student/notification/read/<int:notif_id>/", views.mark_notification_read, name="mark_notification_read"),
     path("student/my-fees/khalti/initiate/", views.khalti_initiate_payment, name="khalti_initiate"),
     path("student/my-fees/khalti/verify/", views.khalti_verify_payment, name="khalti_verify"),
+    path("student/class-schedule/", views.student_class_schedule, name="student_class_schedule"),
     # path("student/payment-request/", views.create_payment_request, name="create_payment_request"),
 
     # Fee Manager

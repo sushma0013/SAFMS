@@ -11,6 +11,9 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.models import User
 
+
+
+
 def home(request):
       return render(request, 'home.html')
     
@@ -141,22 +144,44 @@ def logout_view(request):
 
 @login_required
 def password_change_view(request):
+    """Password change for both teachers and students.
+    Google-only users (no usable password) are redirected with a clear message."""
     profile = getattr(request.user, 'profile', None)
+    role = getattr(profile, 'role', None) if profile else None
 
-    if not profile or getattr(profile, 'role', None) != 'teacher':
-        messages.error(request, 'Teachers only.')
+    # Only teachers and students may use this page
+    if role not in ('teacher', 'student'):
+        messages.error(request, 'Not allowed.')
         return redirect('home')
+
+    # Decide where to send them back to after success / on block
+    settings_url_name = 'attendance:teacher_settings' if role == 'teacher' \
+                        else 'attendance:student_settings'
+
+    # Google-only users have no usable password
+    if not request.user.has_usable_password():
+        messages.info(
+            request,
+            "You signed in with Google — your password is managed by your Google account."
+        )
+        return redirect(settings_url_name)
 
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)
-            return redirect(f"{reverse('attendance:teacher_settings')}?password_updated=1")
+            messages.success(request, 'Password updated successfully.')
+            return redirect(f"{reverse(settings_url_name)}?password_updated=1")
         else:
             messages.error(request, 'Please correct the password fields and try again.')
+    else:
+        form = PasswordChangeForm(request.user)
 
-    return redirect('attendance:teacher_settings')
+    return render(request, 'password_change.html', {
+        'form': form,
+        'role': role,
+    })
 
 
 # @login_required

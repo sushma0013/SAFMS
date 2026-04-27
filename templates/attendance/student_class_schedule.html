@@ -1,0 +1,125 @@
+{% extends "attendance/base.html" %}
+{% block title %}My Class Schedule - SAFMS{% endblock %}
+
+{% block content %}
+<div class="p-6 lg:p-8 space-y-6">
+
+  <!-- HEADER -->
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+        My Class Schedule
+      </h1>
+      <p class="text-slate-500 dark:text-slate-400 mt-1 font-medium flex items-center gap-2">
+        <span class="material-symbols-outlined text-base">calendar_month</span>
+        Weekly routine — {{ today|date:"l, F j, Y" }}
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-sm font-semibold">
+        <span class="material-symbols-outlined text-base">school</span>
+        {{ total_classes }} Class{{ total_classes|pluralize }}
+      </span>
+      {% if student_semester %}
+      <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-sm font-semibold">
+        <span class="material-symbols-outlined text-base">layers</span>
+        Semester {{ student_semester }}
+      </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ROUTINE TABLE -->
+  <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800">
+      <h2 class="text-xl font-bold text-slate-900 dark:text-white">Weekly Routine</h2>
+      <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
+        Day, time, subject, room, teacher, and semester for all your enrolled classes.
+      </p>
+    </div>
+
+    {% if schedules %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead class="bg-slate-50 dark:bg-slate-800 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold">
+          <tr>
+            <th class="px-5 py-3">Day</th>
+            <th class="px-5 py-3">Time</th>
+            <th class="px-5 py-3">Hours</th>
+            <th class="px-5 py-3">Subject Code</th>
+            <th class="px-5 py-3">Subject</th>
+            <th class="px-5 py-3">Room</th>
+            <th class="px-5 py-3">Teacher</th>
+            <th class="px-5 py-3">Semester</th>
+            <th class="px-5 py-3">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          {% for sch in schedules %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors
+                     {% if sch.day_of_week == today_name %}bg-blue-50/40 dark:bg-blue-900/10{% endif %}">
+            <td class="px-5 py-4 font-semibold text-slate-900 dark:text-white">
+              {{ sch.day_of_week }}
+            </td>
+            <td class="px-5 py-4 text-slate-700 dark:text-slate-300 whitespace-nowrap">
+              {{ sch.start_time|time:"h:i A" }} – {{ sch.end_time|time:"h:i A" }}
+            </td>
+            <td class="px-5 py-4 text-slate-600 dark:text-slate-400">
+              {{ sch.duration_str }}
+            </td>
+            <td class="px-5 py-4 font-mono text-xs font-bold text-blue-700 dark:text-blue-400">
+              {{ sch.subject.code }}
+            </td>
+            <td class="px-5 py-4 font-semibold text-slate-900 dark:text-white">
+              {{ sch.subject.name }}
+            </td>
+            <td class="px-5 py-4 text-slate-700 dark:text-slate-300">
+              {{ sch.room_name|default:"—" }}
+            </td>
+            <td class="px-5 py-4 text-slate-700 dark:text-slate-300">
+              {{ sch.teacher.get_full_name|default:sch.teacher.username }}
+            </td>
+            <td class="px-5 py-4 text-slate-700 dark:text-slate-300">
+              {{ sch.semester|default:sch.subject.semester|default:"—" }}
+            </td>
+            <td class="px-5 py-4">
+              {% if sch.status_color == "green" %}
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                  <span class="size-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                  {{ sch.display_status }}
+                </span>
+              {% elif sch.status_color == "blue" %}
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
+                  {{ sch.display_status }}
+                </span>
+              {% elif sch.status_color == "indigo" %}
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
+                  {{ sch.display_status }}
+                </span>
+              {% else %}
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+                  {{ sch.display_status }}
+                </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-16 px-6">
+      <div class="mx-auto w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+        <span class="material-symbols-outlined text-3xl text-slate-400">calendar_month</span>
+      </div>
+      <h3 class="text-lg font-bold text-slate-800 dark:text-slate-200">No schedule available</h3>
+      <p class="text-sm text-slate-500 mt-2 max-w-md mx-auto">
+        You have no classes assigned yet. Once you are enrolled in subjects and your routine is set up by admin, it will appear here.
+      </p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
