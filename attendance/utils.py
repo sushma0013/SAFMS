@@ -27,14 +27,38 @@ def get_client_ip(request):
     Get real client IP.
     Works with localhost, WiFi and ngrok.
     """
-    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    candidate_headers = [
+        "HTTP_CF_CONNECTING_IP",
+        "HTTP_TRUE_CLIENT_IP",
+        "HTTP_X_REAL_IP",
+        "HTTP_X_FORWARDED_FOR",
+        "REMOTE_ADDR",
+    ]
 
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(",")[0].strip()
-    else:
-        ip = request.META.get("REMOTE_ADDR")
+    for header in candidate_headers:
+        raw_value = request.META.get(header)
+        if not raw_value:
+            continue
 
-    return ip
+        # X-Forwarded-For may contain comma-separated IP chain.
+        first_candidate = raw_value.split(",")[0].strip()
+
+        try:
+            return str(ip_address(first_candidate))
+        except ValueError:
+            continue
+
+    return ""
+
+
+def is_public_ip(ip_str):
+    """
+    Return True only for globally routable IPs.
+    """
+    try:
+        return ip_address(ip_str).is_global
+    except ValueError:
+        return False
 
 
 def same_network(ip1, ip2):
