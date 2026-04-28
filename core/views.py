@@ -301,7 +301,9 @@ def login_view(request):
                 return redirect(next_url)
 
             if user.is_superuser:
-                return redirect('/admin/')
+                return redirect("attendance:admin_dashboard")
+            if user.groups.filter(name="attendanceadmin").exists():
+                return redirect("attendance:admin_dashboard")
 
             if user.groups.filter(name='feesmanager').exists():
                 return redirect('attendance:fee_manager_dashboard')

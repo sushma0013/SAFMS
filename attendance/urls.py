@@ -46,4 +46,39 @@ urlpatterns = [
     # path("fee/requests/", views.fee_manager_requests, name="fee_manager_requests"),
     # path("fee/requests/<int:pk>/approve/", views.approve_payment_request, name="approve_payment_request"),
     # path("fee/requests/<int:pk>/reject/", views.reject_payment_request, name="reject_payment_request"),
+
+
+    # ============= ADMIN PANEL (Custom) =============
+    path("manage/", views.admin_dashboard, name="admin_dashboard"),
+
+    # Users
+    path("manage/users/", views.admin_users, name="admin_users"),
+    path("manage/users/add/", views.admin_user_add, name="admin_user_add"),
+    path("manage/users/<int:user_id>/edit/", views.admin_user_edit, name="admin_user_edit"),
+    path("manage/users/<int:user_id>/delete/", views.admin_user_delete, name="admin_user_delete"),
+    path("manage/users/<int:user_id>/reset-password/", views.admin_user_reset_password, name="admin_user_reset_password"),
+
+    # Subjects
+    path("manage/subjects/", views.admin_subjects, name="admin_subjects"),
+    path("manage/subjects/add/", views.admin_subject_add, name="admin_subject_add"),
+    path("manage/subjects/<int:subject_id>/edit/", views.admin_subject_edit, name="admin_subject_edit"),
+    path("manage/subjects/<int:subject_id>/delete/", views.admin_subject_delete, name="admin_subject_delete"),
+
+    # Class Schedules
+    path("manage/schedules/", views.admin_schedules, name="admin_schedules"),
+    path("manage/schedules/add/", views.admin_schedule_add, name="admin_schedule_add"),
+    path("manage/schedules/<int:schedule_id>/edit/", views.admin_schedule_edit, name="admin_schedule_edit"),
+    path("manage/schedules/<int:schedule_id>/delete/", views.admin_schedule_delete, name="admin_schedule_delete"),
+
+    # Student Profiles
+    path("manage/students/", views.admin_students, name="admin_students"),
+    path("manage/students/<int:profile_id>/edit/", views.admin_student_edit, name="admin_student_edit"),
+    path("manage/students/<int:profile_id>/promote/", views.admin_student_promote, name="admin_student_promote"),
+
+    # Attendance
+    path("manage/attendance/", views.admin_attendance, name="admin_attendance"),
+    path("manage/attendance/<int:record_id>/edit/", views.admin_attendance_edit, name="admin_attendance_edit"),
+
+    # QR Sessions
+    path("manage/sessions/", views.admin_sessions, name="admin_sessions"),
 ]

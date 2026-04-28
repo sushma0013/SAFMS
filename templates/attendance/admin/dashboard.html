@@ -1,0 +1,152 @@
+{% extends "attendance/admin/base_admin.html" %}
+{% block title %}Admin Dashboard - SAFMS{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-3xl font-black text-slate-900">Admin Dashboard</h1>
+  <p class="text-slate-500 mt-1">Manage users, classes, and attendance from one place.</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
+  <a href="{% url 'attendance:admin_users' %}" class="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition">
+    <div class="flex items-center gap-3 mb-2">
+      <div class="size-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+        <span class="material-symbols-outlined">group</span>
+      </div>
+      <p class="text-xs font-bold text-slate-500 uppercase">Total Users</p>
+    </div>
+    <p class="text-3xl font-black text-slate-900">{{ stats.total_users }}</p>
+  </a>
+
+  <a href="{% url 'attendance:admin_students' %}" class="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition">
+    <div class="flex items-center gap-3 mb-2">
+      <div class="size-10 rounded-lg bg-green-100 text-green-600 flex items-center justify-center">
+        <span class="material-symbols-outlined">school</span>
+      </div>
+      <p class="text-xs font-bold text-slate-500 uppercase">Students</p>
+    </div>
+    <p class="text-3xl font-black text-slate-900">{{ stats.total_students }}</p>
+  </a>
+
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <div class="flex items-center gap-3 mb-2">
+      <div class="size-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
+        <span class="material-symbols-outlined">person_apron</span>
+      </div>
+      <p class="text-xs font-bold text-slate-500 uppercase">Teachers</p>
+    </div>
+    <p class="text-3xl font-black text-slate-900">{{ stats.total_teachers }}</p>
+  </div>
+
+  <a href="{% url 'attendance:admin_subjects' %}" class="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition">
+    <div class="flex items-center gap-3 mb-2">
+      <div class="size-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center">
+        <span class="material-symbols-outlined">menu_book</span>
+      </div>
+      <p class="text-xs font-bold text-slate-500 uppercase">Subjects</p>
+    </div>
+    <p class="text-3xl font-black text-slate-900">{{ stats.total_subjects }}</p>
+  </a>
+
+  <a href="{% url 'attendance:admin_schedules' %}" class="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition">
+    <div class="flex items-center gap-3 mb-2">
+      <div class="size-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+        <span class="material-symbols-outlined">calendar_month</span>
+      </div>
+      <p class="text-xs font-bold text-slate-500 uppercase">Schedules</p>
+    </div>
+    <p class="text-3xl font-black text-slate-900">{{ stats.total_schedules }}</p>
+  </a>
+
+  <a href="{% url 'attendance:admin_sessions' %}" class="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition">
+    <div class="flex items-center gap-3 mb-2">
+      <div class="size-10 rounded-lg bg-pink-100 text-pink-600 flex items-center justify-center">
+        <span class="material-symbols-outlined">qr_code_2</span>
+      </div>
+      <p class="text-xs font-bold text-slate-500 uppercase">QR Sessions</p>
+    </div>
+    <p class="text-3xl font-black text-slate-900">{{ stats.total_sessions }}</p>
+  </a>
+
+  <a href="{% url 'attendance:admin_attendance' %}" class="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition">
+    <div class="flex items-center gap-3 mb-2">
+      <div class="size-10 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center">
+        <span class="material-symbols-outlined">checklist</span>
+      </div>
+      <p class="text-xs font-bold text-slate-500 uppercase">Attendance</p>
+    </div>
+    <p class="text-3xl font-black text-slate-900">{{ stats.total_attendance }}</p>
+  </a>
+
+  <div class="bg-white rounded-xl border border-emerald-200 p-5">
+    <div class="flex items-center gap-3 mb-2">
+      <div class="size-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+        <span class="material-symbols-outlined">radio_button_checked</span>
+      </div>
+      <p class="text-xs font-bold text-emerald-600 uppercase">Live Sessions</p>
+    </div>
+    <p class="text-3xl font-black text-emerald-600">{{ stats.active_sessions }}</p>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+  <h2 class="text-lg font-bold text-slate-900 mb-4">Quick Actions</h2>
+  <div class="flex flex-wrap gap-3">
+    <a href="{% url 'attendance:admin_user_add' %}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold">
+      <span class="material-symbols-outlined text-base">person_add</span> Add User
+    </a>
+    <a href="{% url 'attendance:admin_subject_add' %}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-semibold">
+      <span class="material-symbols-outlined text-base">add</span> Add Subject
+    </a>
+    <a href="{% url 'attendance:admin_schedule_add' %}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold">
+      <span class="material-symbols-outlined text-base">add</span> Add Schedule
+    </a>
+  </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-200">
+      <h3 class="font-bold text-slate-900">Recent QR Sessions</h3>
+    </div>
+    <div class="divide-y">
+      {% for s in recent_sessions %}
+      <div class="px-6 py-3 flex items-center justify-between">
+        <div>
+          <p class="font-semibold text-slate-900">{{ s.subject.name }}</p>
+          <p class="text-xs text-slate-500">By {{ s.created_by.username }} · {{ s.created_at|date:"M d, h:i A" }}</p>
+        </div>
+        {% if s.is_closed %}<span class="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600">Closed</span>
+        {% else %}<span class="text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">Active</span>{% endif %}
+      </div>
+      {% empty %}
+      <p class="px-6 py-6 text-slate-500 text-sm">No sessions yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-200">
+      <h3 class="font-bold text-slate-900">Recent Users</h3>
+    </div>
+    <div class="divide-y">
+      {% for u in recent_users %}
+      <div class="px-6 py-3 flex items-center justify-between">
+        <div>
+          <p class="font-semibold text-slate-900">{{ u.username }}</p>
+          <p class="text-xs text-slate-500">{{ u.email|default:"No email" }} · Joined {{ u.date_joined|date:"M d, Y" }}</p>
+        </div>
+        <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 capitalize">
+          {{ u.profile.role|default:"-" }}
+        </span>
+      </div>
+      {% empty %}
+      <p class="px-6 py-6 text-slate-500 text-sm">No users yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -2688,3 +2688,382 @@ def khalti_verify(request):
         messages.error(request, f"Payment not completed. Status: {data.get('status')}")
 
     return redirect("attendance:student_my_fees")
+
+# ============================================================
+# CUSTOM ADMIN PANEL
+# ============================================================
+from django.contrib.auth.models import User, Group
+from accounts.models import Profile
+
+def admin_only(user):
+    """Allow superuser OR users in attendanceadmin group."""
+    return user.is_authenticated and (
+        user.is_superuser or user.groups.filter(name="attendanceadmin").exists()
+    )
+
+
+@login_required
+@user_passes_test(admin_only)
+def admin_dashboard(request):
+    stats = {
+        "total_users": User.objects.count(),
+        "total_students": Profile.objects.filter(role="student").count(),
+        "total_teachers": Profile.objects.filter(role="teacher").count(),
+        "total_subjects": Subject.objects.count(),
+        "total_schedules": ClassSchedule.objects.count(),
+        "total_sessions": QRSession.objects.count(),
+        "total_attendance": AttendanceRecord.objects.count(),
+        "active_sessions": QRSession.objects.filter(is_closed=False).count(),
+    }
+    recent_sessions = QRSession.objects.select_related("subject", "created_by").order_by("-created_at")[:5]
+    recent_users = User.objects.order_by("-date_joined")[:5]
+    return render(request, "attendance/admin/dashboard.html", {
+        "stats": stats,
+        "recent_sessions": recent_sessions,
+        "recent_users": recent_users,
+    })
+
+
+# ----- USERS -----
+@login_required
+@user_passes_test(admin_only)
+def admin_users(request):
+    q = request.GET.get("q", "").strip()
+    role_filter = request.GET.get("role", "").strip()
+    users = User.objects.select_related("profile").order_by("-date_joined")
+    if q:
+        users = users.filter(Q(username__icontains=q) | Q(email__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q))
+    if role_filter:
+        users = users.filter(profile__role=role_filter)
+    return render(request, "attendance/admin/users.html", {
+        "users": users, "q": q, "role_filter": role_filter,
+    })
+
+
+@login_required
+@user_passes_test(admin_only)
+def admin_user_add(request):
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        email = request.POST.get("email", "").strip()
+        password = request.POST.get("password", "").strip()
+        first_name = request.POST.get("first_name", "").strip()
+        last_name = request.POST.get("last_name", "").strip()
+        role = request.POST.get("role", "student")
+
+        if not username or not password:
+            messages.error(request, "Username and password are required.")
+            return redirect("attendance:admin_user_add")
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already taken.")
+            return redirect("attendance:admin_user_add")
+
+        user = User.objects.create_user(
+            username=username, email=email, password=password,
+            first_name=first_name, last_name=last_name,
+        )
+        # Profile auto-created by signal — set the role
+        if hasattr(user, "profile"):
+            user.profile.role = role
+            user.profile.save()
+
+        messages.success(request, f"User '{username}' created as {role}.")
+        return redirect("attendance:admin_users")
+    return render(request, "attendance/admin/user_form.html", {"mode": "add"})
+
+
+@login_required
+@user_passes_test(admin_only)
+def admin_user_edit(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == "POST":
+        user.username = request.POST.get("username", user.username).strip()
+        user.email = request.POST.get("email", user.email).strip()
+        user.first_name = request.POST.get("first_name", "").strip()
+        user.last_name = request.POST.get("last_name", "").strip()
+        user.is_active = request.POST.get("is_active") == "on"
+        user.is_staff = request.POST.get("is_staff") == "on"
+        user.save()
+
+        role = request.POST.get("role")
+        if role and hasattr(user, "profile"):
+            user.profile.role = role
+            user.profile.save()
+
+        messages.success(request, f"User '{user.username}' updated.")
+        return redirect("attendance:admin_users")
+    return render(request, "attendance/admin/user_form.html", {"mode": "edit", "user_obj": user})
+
+
+@login_required
+@user_passes_test(admin_only)
+def admin_user_delete(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if user == request.user:
+        messages.error(request, "You cannot delete yourself.")
+        return redirect("attendance:admin_users")
+    if request.method == "POST":
+        username = user.username
+        user.delete()
+        messages.success(request, f"User '{username}' deleted.")
+        return redirect("attendance:admin_users")
+    return render(request, "attendance/admin/confirm_delete.html", {
+        "object_name": f"User: {user.username}",
+        "back_url": reverse("attendance:admin_users"),
+    })
+
+
+@login_required
+@user_passes_test(admin_only)
+def admin_user_reset_password(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == "POST":
+        new_password = request.POST.get("password", "").strip()
+        if len(new_password) < 4:
+            messages.error(request, "Password must be at least 4 characters.")
+            return redirect("attendance:admin_user_reset_password", user_id=user_id)
+        user.set_password(new_password)
+        user.save()
+        messages.success(request, f"Password reset for '{user.username}'.")
+        return redirect("attendance:admin_users")
+    return render(request, "attendance/admin/reset_password.html", {"user_obj": user})
+
+
+# ----- SUBJECTS -----
+@login_required
+@user_passes_test(admin_only)
+def admin_subjects(request):
+    q = request.GET.get("q", "").strip()
+    subjects = Subject.objects.select_related("teacher").prefetch_related("students").order_by("code")
+    if q:
+        subjects = subjects.filter(Q(name__icontains=q) | Q(code__icontains=q))
+    return render(request, "attendance/admin/subjects.html", {"subjects": subjects, "q": q})
+
+
+@login_required
+@user_passes_test(admin_only)
+def admin_subject_add(request):
+    teachers = User.objects.filter(profile__role="teacher").order_by("username")
+    students = User.objects.filter(profile__role="student").order_by("username")
+    if request.method == "POST":
+        subject = Subject.objects.create(
+            name=request.POST.get("name", "").strip(),
+            code=request.POST.get("code", "").strip(),
+            teacher_id=request.POST.get("teacher") or None,
+            semester=request.POST.get("semester", "1"),
+            department=request.POST.get("department", "").strip(),
+        )
+        student_ids = request.POST.getlist("students")
+        if student_ids:
+            subject.students.set(student_ids)
+        messages.success(request, f"Subject '{subject.code}' created.")
+        return redirect("attendance:admin_subjects")
+    return render(request, "attendance/admin/subject_form.html", {
+        "mode": "add", "teachers": teachers, "students": students,
+    })
+
+
+@login_required
+@user_passes_test(admin_only)
+def admin_subject_edit(request, subject_id):
+    subject = get_object_or_404(Subject, id=subject_id)
+    teachers = User.objects.filter(profile__role="teacher").order_by("username")
+    students = User.objects.filter(profile__role="student").order_by("username")
+    if request.method == "POST":
+        subject.name = request.POST.get("name", "").strip()
+        subject.code = request.POST.get("code", "").strip()
+        subject.teacher_id = request.POST.get("teacher") or None
+        subject.semester = request.POST.get("semester", "1")
+        subject.department = request.POST.get("department", "").strip()
+        subject.save()
+        subject.students.set(request.POST.getlist("students"))
+        messages.success(request, f"Subject '{subject.code}' updated.")
+        return redirect("attendance:admin_subjects")
+    return render(request, "attendance/admin/subject_form.html", {
+        "mode": "edit", "subject": subject, "teachers": teachers, "students": students,
+        "enrolled_ids": list(subject.students.values_list("id", flat=True)),
+    })
+
+
+@login_required
+@user_passes_test(admin_only)
+def admin_subject_delete(request, subject_id):
+    subject = get_object_or_404(Subject, id=subject_id)
+    if request.method == "POST":
+        name = subject.code
+        subject.delete()
+        messages.success(request, f"Subject '{name}' deleted.")
+        return redirect("attendance:admin_subjects")
+    return render(request, "attendance/admin/confirm_delete.html", {
+        "object_name": f"Subject: {subject.code} - {subject.name}",
+        "back_url": reverse("attendance:admin_subjects"),
+    })
+
+
+# ----- SCHEDULES -----
+@login_required
+@user_passes_test(admin_only)
+def admin_schedules(request):
+    q = request.GET.get("q", "").strip()
+    sem_filter = request.GET.get("semester", "").strip()
+    schedules = ClassSchedule.objects.select_related("subject", "teacher").order_by("day_of_week", "start_time")
+    if q:
+        schedules = schedules.filter(Q(subject__code__icontains=q) | Q(subject__name__icontains=q) | Q(room_name__icontains=q))
+    if sem_filter:
+        schedules = schedules.filter(semester=sem_filter)
+    return render(request, "attendance/admin/schedules.html", {
+        "schedules": schedules, "q": q, "sem_filter": sem_filter,
+    })
+
+
+@login_required
+@user_passes_test(admin_only)
+def admin_schedule_add(request):
+    subjects = Subject.objects.select_related("teacher").order_by("code")
+    teachers = User.objects.filter(profile__role="teacher").order_by("username")
+    if request.method == "POST":
+        ClassSchedule.objects.create(
+            subject_id=request.POST.get("subject"),
+            teacher_id=request.POST.get("teacher"),
+            day_of_week=request.POST.get("day_of_week"),
+            start_time=request.POST.get("start_time"),
+            end_time=request.POST.get("end_time"),
+            room_name=request.POST.get("room_name", "").strip(),
+            semester=request.POST.get("semester", "1"),
+            allowed_ip_prefix=request.POST.get("allowed_ip_prefix", "").strip(),
+            is_active=request.POST.get("is_active") == "on",
+        )
+        messages.success(request, "Class schedule created.")
+        return redirect("attendance:admin_schedules")
+    return render(request, "attendance/admin/schedule_form.html", {
+        "mode": "add", "subjects": subjects, "teachers": teachers,
+        "days": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    })
+
+
+@login_required
+@user_passes_test(admin_only)
+def admin_schedule_edit(request, schedule_id):
+    schedule = get_object_or_404(ClassSchedule, id=schedule_id)
+    subjects = Subject.objects.select_related("teacher").order_by("code")
+    teachers = User.objects.filter(profile__role="teacher").order_by("username")
+    if request.method == "POST":
+        schedule.subject_id = request.POST.get("subject")
+        schedule.teacher_id = request.POST.get("teacher")
+        schedule.day_of_week = request.POST.get("day_of_week")
+        schedule.start_time = request.POST.get("start_time")
+        schedule.end_time = request.POST.get("end_time")
+        schedule.room_name = request.POST.get("room_name", "").strip()
+        schedule.semester = request.POST.get("semester", "1")
+        schedule.allowed_ip_prefix = request.POST.get("allowed_ip_prefix", "").strip()
+        schedule.is_active = request.POST.get("is_active") == "on"
+        schedule.save()
+        messages.success(request, "Class schedule updated.")
+        return redirect("attendance:admin_schedules")
+    return render(request, "attendance/admin/schedule_form.html", {
+        "mode": "edit", "schedule": schedule, "subjects": subjects, "teachers": teachers,
+        "days": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    })
+
+
+@login_required
+@user_passes_test(admin_only)
+def admin_schedule_delete(request, schedule_id):
+    schedule = get_object_or_404(ClassSchedule, id=schedule_id)
+    if request.method == "POST":
+        schedule.delete()
+        messages.success(request, "Schedule deleted.")
+        return redirect("attendance:admin_schedules")
+    return render(request, "attendance/admin/confirm_delete.html", {
+        "object_name": f"Schedule: {schedule.subject.code} on {schedule.day_of_week}",
+        "back_url": reverse("attendance:admin_schedules"),
+    })
+
+
+# ----- STUDENT PROFILES -----
+@login_required
+@user_passes_test(admin_only)
+def admin_students(request):
+    q = request.GET.get("q", "").strip()
+    sem_filter = request.GET.get("semester", "").strip()
+    profiles = StudentProfile.objects.select_related("user", "academic_advisor").order_by("full_name")
+    if q:
+        profiles = profiles.filter(Q(full_name__icontains=q) | Q(student_id__icontains=q) | Q(user__username__icontains=q))
+    if sem_filter:
+        profiles = profiles.filter(semester=sem_filter)
+    return render(request, "attendance/admin/students.html", {
+        "profiles": profiles, "q": q, "sem_filter": sem_filter,
+    })
+
+
+@login_required
+@user_passes_test(admin_only)
+def admin_student_edit(request, profile_id):
+    profile = get_object_or_404(StudentProfile, id=profile_id)
+    teachers = User.objects.filter(profile__role="teacher").order_by("username")
+    if request.method == "POST":
+        profile.student_id = request.POST.get("student_id", "").strip()
+        profile.full_name = request.POST.get("full_name", "").strip()
+        profile.phone = request.POST.get("phone", "").strip()
+        profile.address = request.POST.get("address", "").strip()
+        profile.major = request.POST.get("major", "").strip()
+        profile.semester = request.POST.get("semester", "").strip()
+        profile.academic_advisor_id = request.POST.get("academic_advisor") or None
+        profile.save()
+        messages.success(request, f"Student '{profile.full_name}' updated.")
+        return redirect("attendance:admin_students")
+    return render(request, "attendance/admin/student_form.html", {
+        "profile": profile, "teachers": teachers,
+    })
+
+
+@login_required
+@user_passes_test(admin_only)
+def admin_student_promote(request, profile_id):
+    profile = get_object_or_404(StudentProfile, id=profile_id)
+    raw = (profile.semester or "").strip()
+    current = int(raw) if raw.isdigit() else 1
+    profile.semester = str(current + 1)
+    profile.save()
+    messages.success(request, f"{profile.full_name} promoted to Semester {profile.semester}.")
+    return redirect("attendance:admin_students")
+
+
+# ----- ATTENDANCE RECORDS -----
+@login_required
+@user_passes_test(admin_only)
+def admin_attendance(request):
+    q = request.GET.get("q", "").strip()
+    status_filter = request.GET.get("status", "").strip()
+    records = AttendanceRecord.objects.select_related("student", "subject", "session").order_by("-recorded_at")
+    if q:
+        records = records.filter(Q(student__username__icontains=q) | Q(subject__code__icontains=q))
+    if status_filter:
+        records = records.filter(status=status_filter)
+    records = records[:200]  # keep page light
+    return render(request, "attendance/admin/attendance.html", {
+        "records": records, "q": q, "status_filter": status_filter,
+    })
+
+
+@login_required
+@user_passes_test(admin_only)
+def admin_attendance_edit(request, record_id):
+    record = get_object_or_404(AttendanceRecord, id=record_id)
+    if request.method == "POST":
+        record.status = request.POST.get("status", record.status)
+        record.save()
+        messages.success(request, f"Attendance updated for {record.student.username}.")
+        return redirect("attendance:admin_attendance")
+    return render(request, "attendance/admin/attendance_form.html", {"record": record})
+
+
+# ----- QR SESSIONS -----
+@login_required
+@user_passes_test(admin_only)
+def admin_sessions(request):
+    sessions = QRSession.objects.select_related("subject", "created_by").annotate(
+        present_count=Count("attendance_records", filter=Q(attendance_records__status="Present")),
+        absent_count=Count("attendance_records", filter=Q(attendance_records__status="Absent")),
+    ).order_by("-created_at")[:100]
+    return render(request, "attendance/admin/sessions.html", {"sessions": sessions})

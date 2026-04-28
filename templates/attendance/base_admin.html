@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Admin Panel - SAFMS{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+  <style>body{font-family:'Lexend',sans-serif;}</style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+<div class="flex h-screen overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-slate-900 text-white flex flex-col shrink-0">
+    <div class="px-6 py-6 border-b border-slate-700">
+      <div class="flex items-center gap-3">
+        <div class="size-12 rounded-xl bg-blue-600 flex items-center justify-center">
+          <span class="material-symbols-outlined text-2xl">shield_person</span>
+        </div>
+        <div>
+          <h1 class="text-xl font-black">SAFMS</h1>
+          <p class="text-xs text-slate-400 font-medium">Admin Panel</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-6 py-4 border-b border-slate-700">
+      <p class="text-xs text-slate-400">Logged in as</p>
+      <p class="font-bold">{{ request.user.username }}</p>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+      <a href="{% url 'attendance:admin_dashboard' %}"
+         class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-blue-600{% endif %}">
+        <span class="material-symbols-outlined text-base">dashboard</span>
+        <span class="text-sm font-medium">Dashboard</span>
+      </a>
+
+      <p class="text-xs text-slate-500 uppercase tracking-wider px-4 pt-4 pb-1">User Management</p>
+      <a href="{% url 'attendance:admin_users' %}"
+         class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-slate-800 transition {% if 'admin_user' in request.resolver_match.url_name %}bg-blue-600{% endif %}">
+        <span class="material-symbols-outlined text-base">group</span>
+        <span class="text-sm font-medium">Users</span>
+      </a>
+      <a href="{% url 'attendance:admin_students' %}"
+         class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-slate-800 transition {% if 'admin_student' in request.resolver_match.url_name %}bg-blue-600{% endif %}">
+        <span class="material-symbols-outlined text-base">school</span>
+        <span class="text-sm font-medium">Students</span>
+      </a>
+
+      <p class="text-xs text-slate-500 uppercase tracking-wider px-4 pt-4 pb-1">Academic</p>
+      <a href="{% url 'attendance:admin_subjects' %}"
+         class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-slate-800 transition {% if 'admin_subject' in request.resolver_match.url_name %}bg-blue-600{% endif %}">
+        <span class="material-symbols-outlined text-base">menu_book</span>
+        <span class="text-sm font-medium">Subjects</span>
+      </a>
+      <a href="{% url 'attendance:admin_schedules' %}"
+         class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-slate-800 transition {% if 'admin_schedule' in request.resolver_match.url_name %}bg-blue-600{% endif %}">
+        <span class="material-symbols-outlined text-base">calendar_month</span>
+        <span class="text-sm font-medium">Class Schedules</span>
+      </a>
+
+      <p class="text-xs text-slate-500 uppercase tracking-wider px-4 pt-4 pb-1">Attendance</p>
+      <a href="{% url 'attendance:admin_attendance' %}"
+         class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-slate-800 transition {% if 'admin_attendance' in request.resolver_match.url_name %}bg-blue-600{% endif %}">
+        <span class="material-symbols-outlined text-base">checklist</span>
+        <span class="text-sm font-medium">Attendance Records</span>
+      </a>
+      <a href="{% url 'attendance:admin_sessions' %}"
+         class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-slate-800 transition {% if 'admin_sessions' in request.resolver_match.url_name %}bg-blue-600{% endif %}">
+        <span class="material-symbols-outlined text-base">qr_code_2</span>
+        <span class="text-sm font-medium">QR Sessions</span>
+      </a>
+
+      <p class="text-xs text-slate-500 uppercase tracking-wider px-4 pt-4 pb-1">System</p>
+      <a href="/admin/" target="_blank"
+         class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-slate-800 transition">
+        <span class="material-symbols-outlined text-base">build</span>
+        <span class="text-sm font-medium">Django Admin</span>
+      </a>
+    </nav>
+
+    <div class="p-4 border-t border-slate-700">
+      <a href="{% url 'logout' %}"
+         class="flex items-center justify-center gap-2 w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-lg font-semibold text-sm">
+        <span class="material-symbols-outlined text-base">logout</span>
+        Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 overflow-y-auto">
+    <div class="p-6 lg:p-8">
+      {% if messages %}
+        <div class="mb-6 space-y-2">
+          {% for message in messages %}
+            <div class="p-4 rounded-xl text-sm font-medium border
+                        {% if message.tags == 'error' %}bg-red-50 border-red-200 text-red-700
+                        {% elif message.tags == 'success' %}bg-green-50 border-green-200 text-green-700
+                        {% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+</div>
+</body>
+</html>
