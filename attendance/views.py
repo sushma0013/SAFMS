@@ -978,7 +978,8 @@ def my_classes(request):
         )
         .order_by("-created_at")
     )
-
+# Recent sessions for the recent-sessions table (last 10)
+    recent_sessions = all_sessions[:10]
     total_present_all = sum(s.present_count for s in sessions_today)
     total_absent_all = sum(s.absent_count for s in sessions_today)
 
@@ -1045,8 +1046,8 @@ def my_classes(request):
     return render(request, "attendance/my_classes.html", {
         "sessions_today": sessions_today,
         "all_sessions": all_sessions,
-        "today": today,
         "recent_sessions": recent_sessions,
+        "today": today,
         "total_present_all": total_present_all,
         "total_absent_all": total_absent_all,
         "teacher_schedule": teacher_schedule,
@@ -1059,23 +1060,39 @@ def class_session_detail(request, session_id):
         return redirect('home')
 
     session = get_object_or_404(
-        QRSession.objects.select_related("subject"),
+        QRSession.objects.select_related("subject", "schedule"),
         id=session_id,
-        created_by=request.user
+        created_by=request.user,
     )
 
-    present_records = AttendanceRecord.objects.filter(
-        session=session, status="Present"
-    ).select_related("student")
+    present_records = (
+        AttendanceRecord.objects
+        .filter(session=session, status="Present")
+        .select_related("student", "student__student_profile")
+        .order_by("recorded_at")
+    )
+    absent_records = (
+        AttendanceRecord.objects
+        .filter(session=session, status="Absent")
+        .select_related("student", "student__student_profile")
+        .order_by("student__username")
+    )
 
-    absent_records = AttendanceRecord.objects.filter(
-        session=session, status="Absent"
-    ).select_related("student")
+    total_enrolled = session.subject.students.count()
+    present_count = present_records.count()
+    absent_count = absent_records.count()
+    total_marked = present_count + absent_count
+    attendance_rate = round((present_count / total_marked) * 100, 1) if total_marked else 0
 
     return render(request, "attendance/class_session_detail.html", {
         "session": session,
         "present_records": present_records,
         "absent_records": absent_records,
+        "total_enrolled": total_enrolled,
+        "present_count": present_count,
+        "absent_count": absent_count,
+        "total_marked": total_marked,
+        "attendance_rate": attendance_rate,
     })
 
 
