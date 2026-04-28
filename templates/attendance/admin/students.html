@@ -1,0 +1,61 @@
+{% extends "attendance/admin/base_admin.html" %}
+{% block title %}Student Profiles{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-3xl font-black text-slate-900">Student Profiles</h1>
+    <p class="text-slate-500 mt-1">Edit student details and promote to next semester.</p>
+  </div>
+</div>
+
+<form method="get" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex gap-3">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search by name, ID, username..." class="flex-1 px-4 py-2.5 rounded-lg border border-slate-300">
+  <select name="semester" class="px-4 py-2.5 rounded-lg border border-slate-300">
+    <option value="">All Semesters</option>
+    <option value="1" {% if sem_filter == '1' %}selected{% endif %}>Semester 1</option>
+    <option value="2" {% if sem_filter == '2' %}selected{% endif %}>Semester 2</option>
+    <option value="3" {% if sem_filter == '3' %}selected{% endif %}>Semester 3</option>
+    <option value="4" {% if sem_filter == '4' %}selected{% endif %}>Semester 4</option>
+  </select>
+  <button type="submit" class="px-5 py-2.5 bg-slate-900 text-white rounded-lg font-semibold text-sm">Search</button>
+</form>
+
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-50 border-b">
+      <tr class="text-xs uppercase font-bold text-slate-500">
+        <th class="px-5 py-3 text-left">Student ID</th>
+        <th class="px-5 py-3 text-left">Full Name</th>
+        <th class="px-5 py-3 text-left">Username</th>
+        <th class="px-5 py-3 text-left">Major</th>
+        <th class="px-5 py-3 text-left">Semester</th>
+        <th class="px-5 py-3 text-left">Advisor</th>
+        <th class="px-5 py-3 text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y">
+      {% for p in profiles %}
+      <tr class="hover:bg-slate-50">
+        <td class="px-5 py-3 font-mono font-bold">{{ p.student_id }}</td>
+        <td class="px-5 py-3 font-semibold">{{ p.full_name }}</td>
+        <td class="px-5 py-3">{{ p.user.username|default:"—" }}</td>
+        <td class="px-5 py-3">{{ p.major|default:"—" }}</td>
+        <td class="px-5 py-3"><span class="text-xs font-bold px-2 py-1 rounded-full bg-indigo-100 text-indigo-700">{{ p.semester|default:"—" }}</span></td>
+        <td class="px-5 py-3">{{ p.academic_advisor.username|default:"—" }}</td>
+        <td class="px-5 py-3 text-right">
+          <div class="flex justify-end gap-2">
+            <a href="{% url 'attendance:admin_student_edit' p.id %}" class="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold hover:bg-blue-200">Edit</a>
+            <a href="{% url 'attendance:admin_student_promote' p.id %}"
+               onclick="return confirm('Promote {{ p.full_name }} to next semester?');"
+               class="px-3 py-1.5 rounded-lg bg-green-100 text-green-700 text-xs font-bold hover:bg-green-200">Promote</a>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="px-5 py-8 text-center text-slate-500">No students found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
