@@ -129,8 +129,23 @@
     </aside>
 
     <!-- Main -->
-    <main class="flex-1 min-w-0 flex flex-col overflow-hidden">
-      {% block content %}{% endblock %}
+   <!-- Main -->
+    <main class="flex-1 min-w-0 overflow-y-auto">
+      <div class="p-6 lg:p-8">
+        {% if messages %}
+          <div class="mb-6 space-y-2">
+            {% for message in messages %}
+              <div class="p-4 rounded-xl text-sm font-medium border
+                          {% if message.tags == 'error' %}bg-red-50 border-red-200 text-red-700
+                          {% elif message.tags == 'success' %}bg-green-50 border-green-200 text-green-700
+                          {% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+      </div>
     </main>
 
   </div>

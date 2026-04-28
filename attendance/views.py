@@ -73,6 +73,7 @@ from .models import StudentProfile, Subject, AttendanceRecord, FeeStructure, Pay
 from .models import Subject, QRSession, AttendanceRecord
 
 
+from .utils import parse_student_semester
 from .models import (
     QRSession,
     AttendanceRecord,
@@ -1022,11 +1023,30 @@ def my_classes(request):
             and sch.day_of_week == today_name
             and sch.start_time <= current_time <= sch.end_time
         )
+        # Recent sessions (last 10) for quick review
+    recent_sessions = (
+        QRSession.objects
+        .filter(created_by=request.user)
+        .select_related("subject", "schedule")
+        .annotate(
+            present_count=Count(
+                "attendance_records",
+                filter=Q(attendance_records__status="Present"),
+            ),
+            absent_count=Count(
+                "attendance_records",
+                filter=Q(attendance_records__status="Absent"),
+            ),
+            total_marked=Count("attendance_records"),
+        )
+        .order_by("-created_at")[:10]
+    )
 
     return render(request, "attendance/my_classes.html", {
         "sessions_today": sessions_today,
         "all_sessions": all_sessions,
         "today": today,
+        "recent_sessions": recent_sessions,
         "total_present_all": total_present_all,
         "total_absent_all": total_absent_all,
         "teacher_schedule": teacher_schedule,
@@ -1378,42 +1398,66 @@ def student_class_schedule(request):
 
 @login_required
 def my_fees(request):
-    # ✅ only student can open
     if request.user.profile.role != "student":
         messages.error(request, "Students only.")
         return redirect("home")
 
-    # ✅ get linked StudentProfile (related_name="student_profile")
     try:
         profile = request.user.student_profile
     except StudentProfile.DoesNotExist:
         messages.error(request, "Your student profile is not linked. Contact admin.")
         return redirect("attendance:student_dashboard")
 
-    # ✅ optional semester filter: /attendance/student/my-fees/?semester=2
+    # Student's current enrolled semester — admin-controlled
+    current_enrolled_sem = parse_student_semester(profile)
+
+    # Show ONLY fee structures up to current enrolled semester (hide future ones)
+    all_fees = FeeStructure.objects.filter(
+        student=profile,
+        semester__lte=current_enrolled_sem,
+    ).order_by("semester")
+
+    semester_summary = []
+    for f in all_fees:
+        paid_for_sem = Payment.objects.filter(
+            student=profile, semester=f.semester, status="COMPLETED",
+        ).aggregate(total=Sum("amount"))["total"] or 0
+        remaining_for_sem = f.total_fee - paid_for_sem
+        semester_summary.append({
+            "semester": f.semester,
+            "total_fee": f.total_fee,
+            "paid": paid_for_sem,
+            "remaining": remaining_for_sem,
+            "due_date": f.due_date,
+            "is_paid": remaining_for_sem <= 0,
+            "is_current": f.semester == current_enrolled_sem,
+        })
+
+    # Selected semester: ?semester=N or first unpaid, or current enrolled
     semester_qs = request.GET.get("semester")
-    semester = int(semester_qs) if semester_qs and semester_qs.isdigit() else None
+    selected_semester = None
+    if semester_qs and semester_qs.isdigit():
+        candidate = int(semester_qs)
+        # Only allow viewing semesters student has been promoted to
+        if candidate <= current_enrolled_sem:
+            selected_semester = candidate
 
-    # ✅ get fee structure (latest or selected semester)
-    fee_qs = FeeStructure.objects.filter(student=profile)
-    if semester is not None:
-        fee_qs = fee_qs.filter(semester=semester)
+    if selected_semester is None:
+        unpaid = next((s for s in semester_summary if not s["is_paid"]), None)
+        if unpaid:
+            selected_semester = unpaid["semester"]
+        elif semester_summary:
+            selected_semester = semester_summary[-1]["semester"]
+        else:
+            selected_semester = current_enrolled_sem
 
-    fee = fee_qs.order_by("-semester").first()
+    fee = all_fees.filter(semester=selected_semester).first()
 
-    # ✅ decide which semester to show
-    current_semester = fee.semester if fee else (semester or 1)
-
-    # ✅ payments only for this semester
     payments = Payment.objects.filter(
-    student=profile,
-    semester=current_semester,
-    status="COMPLETED"
-).order_by("-paid_at")
+        student=profile, semester=selected_semester, status="COMPLETED",
+    ).order_by("-paid_at") if fee else Payment.objects.none()
 
     paid_amount = payments.aggregate(total=Sum("amount"))["total"] or 0
-
-    # ✅ totals (keep Decimal, don’t convert to float)
     total_fee = fee.total_fee if fee else 0
     remaining = total_fee - paid_amount if fee else 0
     due_date = fee.due_date if fee else None
@@ -1421,12 +1465,14 @@ def my_fees(request):
     context = {
         "profile": profile,
         "fee": fee,
-        "semester": current_semester,
+        "semester": selected_semester,
+        "current_enrolled_sem": current_enrolled_sem,
         "total_fee": total_fee,
         "paid_amount": paid_amount,
         "remaining": remaining,
         "due_date": due_date,
         "payments": payments,
+        "semester_summary": semester_summary,
     }
     return render(request, "attendance/my_fees.html", context)
 
@@ -1453,12 +1499,17 @@ def bulk_fee_structure(request):
                     ).values_list("student_id", flat=True)
                 ).order_by("full_name")
 
-            count = 0
+            if not students:
+                messages.warning(request, "No students were selected.")
+                return redirect("attendance:bulk_fee_structure")
+
+            created = 0
+            updated = 0
+            skipped = 0
 
             for student in students:
                 existing = FeeStructure.objects.filter(
-                    student=student,
-                    semester=semester
+                    student=student, semester=semester
                 ).first()
 
                 if existing:
@@ -1466,23 +1517,67 @@ def bulk_fee_structure(request):
                         existing.total_fee = total_fee
                         existing.due_date = due_date
                         existing.save()
-                        count += 1
+                        updated += 1
+                    else:
+                        skipped += 1
                 else:
                     FeeStructure.objects.create(
                         student=student,
                         semester=semester,
                         total_fee=total_fee,
-                        due_date=due_date
+                        due_date=due_date,
                     )
-                    count += 1
+                    created += 1
 
-            messages.success(request, f"{count} fee structure(s) processed successfully.")
+            parts = []
+            if created:
+                parts.append(f"{created} created")
+            if updated:
+                parts.append(f"{updated} updated")
+            if skipped:
+                parts.append(f"{skipped} skipped (already exist — tick Overwrite to update)")
+
+            if parts:
+                messages.success(
+                    request,
+                    f"Bulk fee for Semester {semester}: " + ", ".join(parts) + "."
+                )
+            else:
+                messages.warning(request, "Nothing changed.")
+
             return redirect("attendance:fee_structures_page")
     else:
-        form = BulkFeeStructureForm()
+        # GET — optional ?semester=N pre-fills semester and filters student list
+        semester_filter = request.GET.get("semester", "").strip()
+        initial = {}
+        if semester_filter.isdigit():
+            initial["semester"] = int(semester_filter)
+        form = BulkFeeStructureForm(initial=initial)
+
+        # Restrict student checklist to that semester only
+        if semester_filter.isdigit():
+            form.fields["students"].queryset = StudentProfile.objects.filter(
+                user__profile__role="student",
+                semester=semester_filter,
+            ).order_by("full_name")
+        else:
+            # Show all enrolled students with non-empty semester
+            form.fields["students"].queryset = StudentProfile.objects.filter(
+                user__profile__role="student",
+            ).exclude(semester__exact="").order_by("semester", "full_name")
+
+    # Compute counts per semester for the tab badges
+    sem_counts = {}
+    for s in StudentProfile.objects.filter(user__profile__role="student").exclude(semester__exact=""):
+        key = (s.semester or "").strip()
+        if key.isdigit():
+            sem_counts[int(key)] = sem_counts.get(int(key), 0) + 1
+    sem_counts_list = [{"semester": k, "count": v} for k, v in sorted(sem_counts.items())]
 
     return render(request, "attendance/bulk_fee_structure.html", {
-        "form": form
+        "form": form,
+        "selected_semester": semester_filter,
+        "sem_counts_list": sem_counts_list,
     })
 
 @login_required
@@ -1900,24 +1995,45 @@ def khalti_initiate_payment(request):
         return redirect("home")
 
     student = get_object_or_404(StudentProfile, user=request.user)
+    current_enrolled_sem = parse_student_semester(student)
 
-    fee = FeeStructure.objects.filter(student=student).order_by("-semester").first()
+    # Pick semester from query param, else fall back to first unpaid, else latest
+    semester_qs = request.GET.get("semester")
+
+    if semester_qs and semester_qs.isdigit():
+        candidate = int(semester_qs)
+        if candidate > current_enrolled_sem:
+            messages.error(request, f"You are not enrolled in Semester {candidate} yet.")
+            return redirect("attendance:my_fees")
+        fee = FeeStructure.objects.filter(student=student, semester=candidate).first()
+    else:
+        fee = None
+        for f in FeeStructure.objects.filter(
+            student=student, semester__lte=current_enrolled_sem
+        ).order_by("semester"):
+            paid = Payment.objects.filter(
+                student=student, semester=f.semester, status="COMPLETED"
+            ).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+            if (f.total_fee - paid) > 0:
+                fee = f
+                break
+        if fee is None:
+            fee = FeeStructure.objects.filter(
+                student=student, semester__lte=current_enrolled_sem
+            ).order_by("-semester").first()
+
     if not fee:
         messages.error(request, "Fee structure not found.")
         return redirect("attendance:my_fees")
 
     semester = fee.semester
-
     paid_amount = Payment.objects.filter(
-        student=student,
-        semester=semester,
-        status="COMPLETED"
+        student=student, semester=semester, status="COMPLETED"
     ).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
-
     remaining = fee.total_fee - paid_amount
 
     if remaining <= 0:
-        messages.success(request, "No remaining amount to pay.")
+        messages.success(request, f"Semester {semester} fee is already fully paid.")
         return redirect("attendance:my_fees")
 
     purchase_order_id = f"FEE-{student.id}-{semester}-{uuid.uuid4().hex[:8]}"
@@ -1926,28 +2042,18 @@ def khalti_initiate_payment(request):
     payload = {
         "return_url": return_url,
         "website_url": settings.KHALTI_WEBSITE_URL,
-        "amount": int(remaining * 100),  # paisa
+        "amount": int(remaining * 100),
         "purchase_order_id": purchase_order_id,
         "purchase_order_name": f"Semester {semester} Fee Payment",
     }
-
     headers = {
         "Authorization": f"Key {settings.KHALTI_SECRET_KEY}",
         "Content-Type": "application/json",
     }
-
     response = requests.post(
         "https://dev.khalti.com/api/v2/epayment/initiate/",
-        headers=headers,
-        json=payload,
-        timeout=20,
+        headers=headers, json=payload, timeout=20,
     )
-
-    print("KHALTI INITIATE STATUS:", response.status_code)
-    print("KHALTI INITIATE BODY:", response.text)
-    print("RETURN URL:", return_url)
-    print("WEBSITE URL:", settings.KHALTI_WEBSITE_URL)
-
     if response.status_code != 200:
         messages.error(request, f"Khalti initiate failed: {response.text}")
         return redirect("attendance:my_fees")
@@ -1955,7 +2061,6 @@ def khalti_initiate_payment(request):
     data = response.json()
     payment_url = data.get("payment_url")
     pidx = data.get("pidx")
-
     if not payment_url or not pidx:
         messages.error(request, f"Khalti did not return payment_url/pidx: {data}")
         return redirect("attendance:my_fees")
@@ -1969,7 +2074,6 @@ def khalti_initiate_payment(request):
         pidx=pidx,
         status="INITIATED",
     )
-
     return redirect(payment_url)
 
 @login_required
@@ -2023,13 +2127,62 @@ def khalti_verify_payment(request):
                 purchase_order_id=khalti_payment.purchase_order_id,
             )
 
-            Notification.objects.create(
-                student=khalti_payment.student,
-                title="Fee Payment Successful",
-                message=f"Your Khalti payment of Rs {khalti_payment.amount} was successful.",
-                amount=khalti_payment.amount,
-                status="SENT",
-            )
+            # Build a professional notification, auto-detect full clearance
+            student = khalti_payment.student
+            sem = khalti_payment.semester
+            amt = khalti_payment.amount
+            txn = khalti_payment.transaction_id or "N/A"
+
+            # Recompute remaining for this semester
+            fee_struct = FeeStructure.objects.filter(student=student, semester=sem).first()
+            paid_total = Payment.objects.filter(
+                student=student, semester=sem, status="COMPLETED"
+            ).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+            remaining_after = (fee_struct.total_fee - paid_total) if fee_struct else Decimal("0.00")
+
+            student_name = student.full_name or student.user.username
+
+            if fee_struct and remaining_after <= 0:
+                # Full clearance
+                Notification.objects.create(
+                    student=student,
+                    title="Semester Fee Cleared",
+                    message=(
+                        f"Congratulations {student_name}! You have successfully cleared the full "
+                        f"Semester {sem} fee of Rs. {fee_struct.total_fee}. Your account is up to date. "
+                        f"Transaction ID: {txn}. A confirmation receipt is available in your fee history."
+                    ),
+                    amount=fee_struct.total_fee,
+                    status="SENT",
+                    is_read=False,
+                )
+            else:
+                # Partial / regular successful payment
+                Notification.objects.create(
+                    student=student,
+                    title="Fee Payment Successful",
+                    message=(
+                        f"Dear {student_name}, we have received your payment of Rs. {amt} for "
+                        f"Semester {sem}. Transaction ID: {txn}. "
+                        + (f"Remaining balance: Rs. {remaining_after}. " if remaining_after > 0 else "")
+                        + "Thank you for clearing your dues."
+                    ),
+                    amount=amt,
+                    status="SENT",
+                    is_read=False,
+                )
+
+            # Mark older "Fee Payment Reminder" / "Fee Due Reminder" / "Fee Payment Overdue"
+            # notifications as read so the popup doesn't keep nagging after payment.
+            Notification.objects.filter(
+                student=student,
+                is_read=False,
+                title__in=[
+                    "Fee Payment Reminder",
+                    "Fee Due Reminder",
+                    "Fee Payment Overdue",
+                ],
+            ).update(is_read=True, status="READ")
 
         messages.success(request, "Payment completed successfully.")
     else:
@@ -2153,17 +2306,56 @@ def student_dashboard(request):
         fee_paid = Payment.objects.filter(
             student=profile,
             semester=fee.semester,
-            status="COMPLETED"
+            status="COMPLETED",
         ).aggregate(total=Sum("amount"))["total"] or 0
 
         fee_paid = float(fee_paid)
         fee_remaining = max(fee_total - fee_paid, 0)
         fee_percent = int((fee_paid / fee_total) * 100) if fee_total else 0
 
-        if fee_due_date and fee_remaining > 0 and today <= fee_due_date <= due_soon_date:
-            title = "Fee Due Reminder"
-            msg = f"Your remaining fee is Rs. {fee_remaining} and due on {fee_due_date}. Please pay before deadline."
+        student_name = profile.full_name or request.user.username
+        sem = fee.semester
 
+        # ===== Auto-create the right reminder based on state =====
+        if fee_remaining <= 0:
+            # Fully cleared — clear any nagging reminders
+            Notification.objects.filter(
+                student=profile,
+                is_read=False,
+                title__in=[
+                    "Fee Payment Reminder",
+                    "Fee Due Reminder",
+                    "Fee Payment Overdue",
+                ],
+            ).update(is_read=True, status="READ")
+
+        elif fee_due_date and fee_due_date < today:
+            # Overdue
+            title = "Fee Payment Overdue"
+            msg = (
+                f"Dear {student_name}, your Semester {sem} fee of Rs. {fee_remaining:.0f} "
+                f"is now overdue. The deadline was {fee_due_date}. Please clear your dues "
+                f"immediately to avoid further penalties or restricted access to academic services."
+            )
+            Notification.objects.update_or_create(
+                student=profile,
+                title=title,
+                is_read=False,
+                defaults={
+                    "message": msg,
+                    "amount": fee_remaining,
+                    "status": "OVERDUE",
+                },
+            )
+
+        elif fee_due_date and today <= fee_due_date <= due_soon_date:
+            # Due within 7 days
+            title = "Fee Payment Reminder"
+            msg = (
+                f"Dear {student_name}, your Semester {sem} fee of Rs. {fee_remaining:.0f} "
+                f"is due on {fee_due_date}. Please clear your dues before the deadline to "
+                f"avoid late penalties. You can pay securely via Khalti from your fee dashboard."
+            )
             Notification.objects.update_or_create(
                 student=profile,
                 title=title,
@@ -2172,12 +2364,14 @@ def student_dashboard(request):
                     "message": msg,
                     "amount": fee_remaining,
                     "status": "PENDING",
-                }
+                },
             )
 
+        # ===== Pick the popup =====
+        # Priority: most recent unread notification (success → clearance → overdue → reminder)
         popup_notification = Notification.objects.filter(
             student=profile,
-            is_read=False
+            is_read=False,
         ).order_by("-created_at").first()
 
     # =========================
@@ -2241,28 +2435,66 @@ def student_dashboard(request):
 @login_required
 @user_passes_test(fee_manager_only)
 def fee_structures_page(request):
-    query = request.GET.get("q", "")
-    semester = request.GET.get("semester", "")
+    query = request.GET.get("q", "").strip()
+    semester_filter = request.GET.get("semester", "").strip()
 
-    fee_structures = FeeStructure.objects.select_related("student").all().order_by("student__full_name")
+    # Start with ALL students (so even those without fees show up)
+    students = StudentProfile.objects.filter(
+        user__profile__role="student"
+    ).exclude(semester__exact="").select_related("user").order_by("full_name")
 
     if query:
-        fee_structures = fee_structures.filter(
-            Q(student__full_name__icontains=query) |
-            Q(student__student_id__icontains=query)
+        students = students.filter(
+            Q(full_name__icontains=query) | Q(student_id__icontains=query)
         )
 
-    if semester:
-        fee_structures = fee_structures.filter(semester=semester)
+    # Group students by their enrolled semester (StudentProfile.semester)
+    grouped = {}
+    for s in students:
+        raw = (s.semester or "").strip()
+        if not raw.isdigit():
+            continue
+        sem_int = int(raw)
+        if semester_filter and semester_filter.isdigit() and sem_int != int(semester_filter):
+            continue
+        grouped.setdefault(sem_int, []).append(s)
 
-    semesters = FeeStructure.objects.values_list("semester", flat=True).distinct().order_by("semester")
+    # For each student in each group, attach their fee structure for that semester
+    grouped_list = []
+    for sem in sorted(grouped.keys()):
+        rows = []
+        for student in grouped[sem]:
+            fee = FeeStructure.objects.filter(student=student, semester=sem).first()
+            paid = Payment.objects.filter(
+                student=student, semester=sem, status="COMPLETED"
+            ).aggregate(total=Sum("amount"))["total"] or 0
+            rows.append({
+                "student": student,
+                "fee": fee,
+                "total_fee": fee.total_fee if fee else None,
+                "paid": paid,
+                "remaining": (fee.total_fee - paid) if fee else None,
+                "due_date": fee.due_date if fee else None,
+                "has_fee": fee is not None,
+            })
+        grouped_list.append({"semester": sem, "rows": rows})
+
+    # All semesters that exist in StudentProfile (for filter dropdown)
+    all_semesters = set()
+    for s in StudentProfile.objects.filter(user__profile__role="student").exclude(semester__exact=""):
+        raw = (s.semester or "").strip()
+        if raw.isdigit():
+            all_semesters.add(int(raw))
+    all_semesters = sorted(all_semesters)
+
+    total_count = sum(len(g["rows"]) for g in grouped_list)
 
     context = {
-        "fee_structures": fee_structures,
+        "grouped_list": grouped_list,
         "query": query,
-        "semesters": semesters,
-        "selected_semester": semester,
-        "total_count": fee_structures.count(),
+        "semesters": all_semesters,
+        "selected_semester": semester_filter,
+        "total_count": total_count,
     }
     return render(request, "attendance/fee_structures.html", context)
 

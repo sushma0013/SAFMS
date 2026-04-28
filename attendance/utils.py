@@ -84,3 +84,15 @@ def ip_in_allowed_network(ip_str, network_str):
         return ip_address(ip_str) in ip_network(network_str, strict=False)
     except ValueError:
         return False
+
+
+def parse_student_semester(profile):
+    """Return student's current semester as int. Defaults to 1 if missing/invalid."""
+    if not profile:
+        return 1
+    raw = (profile.semester or "").strip()
+    if raw.isdigit():
+        return int(raw)
+    # also handle '1st', '2nd', etc.
+    digits = "".join(ch for ch in raw if ch.isdigit())
+    return int(digits) if digits else 1

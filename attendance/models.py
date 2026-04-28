@@ -169,6 +169,9 @@ class StudentProfile(models.Model):
     )
 
     def __str__(self):
+        sem = (self.semester or "").strip()
+        if sem:
+            return f"{self.student_id} - {self.full_name} (Sem {sem})"
         return f"{self.student_id} - {self.full_name}"
 
 # ------------------------------------------------------------
