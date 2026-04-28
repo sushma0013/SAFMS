@@ -7,14 +7,20 @@
   <p class="text-slate-500 mt-1">Latest 200 records. Edit if a student was wrongly marked.</p>
 </div>
 
-<form method="get" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex gap-3">
-  <input type="text" name="q" value="{{ q }}" placeholder="Search by username or subject code..." class="flex-1 px-4 py-2.5 rounded-lg border border-slate-300">
-  <select name="status" class="px-4 py-2.5 rounded-lg border border-slate-300">
-    <option value="">All</option>
+<form method="get" id="attendanceFilterForm" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex flex-col md:flex-row gap-3">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search by username or subject code..."
+         class="flex-1 px-4 py-2.5 rounded-lg border border-slate-300">
+  <select name="status" onchange="document.getElementById('attendanceFilterForm').submit();"
+          class="px-4 py-2.5 rounded-lg border border-slate-300 min-w-[160px]">
+    <option value="">All Status</option>
     <option value="Present" {% if status_filter == 'Present' %}selected{% endif %}>Present</option>
     <option value="Absent" {% if status_filter == 'Absent' %}selected{% endif %}>Absent</option>
   </select>
   <button type="submit" class="px-5 py-2.5 bg-slate-900 text-white rounded-lg font-semibold text-sm">Search</button>
+  {% if q or status_filter %}
+  <a href="{% url 'attendance:admin_attendance' %}"
+     class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold text-sm flex items-center justify-center">Clear</a>
+  {% endif %}
 </form>
 
 <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">

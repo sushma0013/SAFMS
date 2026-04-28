@@ -2715,12 +2715,40 @@ def admin_dashboard(request):
         "total_attendance": AttendanceRecord.objects.count(),
         "active_sessions": QRSession.objects.filter(is_closed=False).count(),
     }
+
     recent_sessions = QRSession.objects.select_related("subject", "created_by").order_by("-created_at")[:5]
-    recent_users = User.objects.order_by("-date_joined")[:5]
+    recent_users = User.objects.select_related("profile").order_by("-date_joined")[:5]
+
     return render(request, "attendance/admin/dashboard.html", {
         "stats": stats,
         "recent_sessions": recent_sessions,
         "recent_users": recent_users,
+    })
+
+
+@login_required
+@user_passes_test(admin_only)
+def admin_users(request):
+    q = request.GET.get("q", "").strip()
+    role_filter = request.GET.get("role", "").strip()
+
+    users = User.objects.select_related("profile").order_by("-date_joined")
+
+    if q:
+        users = users.filter(
+            Q(username__icontains=q)
+            | Q(email__icontains=q)
+            | Q(first_name__icontains=q)
+            | Q(last_name__icontains=q)
+        )
+
+    if role_filter in ("admin", "teacher", "student"):
+        users = users.filter(profile__role=role_filter)
+
+    return render(request, "attendance/admin/users.html", {
+        "users": users,
+        "q": q,
+        "role_filter": role_filter,
     })
 
 

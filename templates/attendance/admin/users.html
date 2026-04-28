@@ -12,16 +12,21 @@
   </a>
 </div>
 
-<form method="get" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex flex-col md:flex-row gap-3">
+<form method="get" id="usersFilterForm" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex flex-col md:flex-row gap-3">
   <input type="text" name="q" value="{{ q }}" placeholder="Search by username, email, name..."
          class="flex-1 px-4 py-2.5 rounded-lg border border-slate-300">
-  <select name="role" class="px-4 py-2.5 rounded-lg border border-slate-300">
-    <option value="">All roles</option>
+  <select name="role" onchange="document.getElementById('usersFilterForm').submit();"
+          class="px-4 py-2.5 rounded-lg border border-slate-300 min-w-[160px]">
+    <option value="">All Roles</option>
     <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
     <option value="teacher" {% if role_filter == 'teacher' %}selected{% endif %}>Teacher</option>
     <option value="student" {% if role_filter == 'student' %}selected{% endif %}>Student</option>
   </select>
   <button type="submit" class="px-5 py-2.5 bg-slate-900 text-white rounded-lg font-semibold text-sm">Search</button>
+  {% if q or role_filter %}
+  <a href="{% url 'attendance:admin_users' %}"
+     class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold text-sm flex items-center justify-center">Clear</a>
+  {% endif %}
 </form>
 
 <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">

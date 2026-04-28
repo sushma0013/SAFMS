@@ -9,9 +9,11 @@
   </div>
 </div>
 
-<form method="get" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex gap-3">
-  <input type="text" name="q" value="{{ q }}" placeholder="Search by name, ID, username..." class="flex-1 px-4 py-2.5 rounded-lg border border-slate-300">
-  <select name="semester" class="px-4 py-2.5 rounded-lg border border-slate-300">
+<form method="get" id="studFilterForm" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex flex-col md:flex-row gap-3">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search by name, ID, username..."
+         class="flex-1 px-4 py-2.5 rounded-lg border border-slate-300">
+  <select name="semester" onchange="document.getElementById('studFilterForm').submit();"
+          class="px-4 py-2.5 rounded-lg border border-slate-300 min-w-[160px]">
     <option value="">All Semesters</option>
     <option value="1" {% if sem_filter == '1' %}selected{% endif %}>Semester 1</option>
     <option value="2" {% if sem_filter == '2' %}selected{% endif %}>Semester 2</option>
@@ -19,6 +21,10 @@
     <option value="4" {% if sem_filter == '4' %}selected{% endif %}>Semester 4</option>
   </select>
   <button type="submit" class="px-5 py-2.5 bg-slate-900 text-white rounded-lg font-semibold text-sm">Search</button>
+  {% if q or sem_filter %}
+  <a href="{% url 'attendance:admin_students' %}"
+     class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold text-sm flex items-center justify-center">Clear</a>
+  {% endif %}
 </form>
 
 <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
