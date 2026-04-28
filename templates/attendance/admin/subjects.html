@@ -1,0 +1,56 @@
+{% extends "attendance/admin/base_admin.html" %}
+{% block title %}Subjects{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-3xl font-black text-slate-900">Subjects</h1>
+    <p class="text-slate-500 mt-1">All subjects with assigned teacher and enrolled students.</p>
+  </div>
+  <a href="{% url 'attendance:admin_subject_add' %}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm">
+    <span class="material-symbols-outlined text-base">add</span> Add Subject
+  </a>
+</div>
+
+<form method="get" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex gap-3">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search by name or code..."
+         class="flex-1 px-4 py-2.5 rounded-lg border border-slate-300">
+  <button type="submit" class="px-5 py-2.5 bg-slate-900 text-white rounded-lg font-semibold text-sm">Search</button>
+</form>
+
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-50 border-b border-slate-200">
+      <tr class="text-xs uppercase font-bold text-slate-500">
+        <th class="px-5 py-3 text-left">Code</th>
+        <th class="px-5 py-3 text-left">Name</th>
+        <th class="px-5 py-3 text-left">Teacher</th>
+        <th class="px-5 py-3 text-left">Semester</th>
+        <th class="px-5 py-3 text-left">Department</th>
+        <th class="px-5 py-3 text-left">Students</th>
+        <th class="px-5 py-3 text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y">
+      {% for s in subjects %}
+      <tr class="hover:bg-slate-50">
+        <td class="px-5 py-3 font-mono font-bold text-blue-700">{{ s.code }}</td>
+        <td class="px-5 py-3 font-semibold">{{ s.name }}</td>
+        <td class="px-5 py-3">{{ s.teacher.username|default:"—" }}</td>
+        <td class="px-5 py-3">{{ s.semester|default:"—" }}</td>
+        <td class="px-5 py-3">{{ s.department|default:"—" }}</td>
+        <td class="px-5 py-3">{{ s.students.count }}</td>
+        <td class="px-5 py-3 text-right">
+          <div class="flex justify-end gap-2">
+            <a href="{% url 'attendance:admin_subject_edit' s.id %}" class="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold hover:bg-blue-200">Edit</a>
+            <a href="{% url 'attendance:admin_subject_delete' s.id %}" class="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs font-bold hover:bg-red-200">Delete</a>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="px-5 py-8 text-center text-slate-500">No subjects found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

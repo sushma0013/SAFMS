@@ -1,0 +1,67 @@
+{% extends "attendance/admin/base_admin.html" %}
+{% block title %}Class Schedules{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-3xl font-black text-slate-900">Class Schedules</h1>
+    <p class="text-slate-500 mt-1">Day, time, and room for every class.</p>
+  </div>
+  <a href="{% url 'attendance:admin_schedule_add' %}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm">
+    <span class="material-symbols-outlined text-base">add</span> Add Schedule
+  </a>
+</div>
+
+<form method="get" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex gap-3">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search subject or room..." class="flex-1 px-4 py-2.5 rounded-lg border border-slate-300">
+  <select name="semester" class="px-4 py-2.5 rounded-lg border border-slate-300">
+    <option value="">All Semesters</option>
+    <option value="1" {% if sem_filter == '1' %}selected{% endif %}>Semester 1</option>
+    <option value="2" {% if sem_filter == '2' %}selected{% endif %}>Semester 2</option>
+    <option value="3" {% if sem_filter == '3' %}selected{% endif %}>Semester 3</option>
+    <option value="4" {% if sem_filter == '4' %}selected{% endif %}>Semester 4</option>
+  </select>
+  <button type="submit" class="px-5 py-2.5 bg-slate-900 text-white rounded-lg font-semibold text-sm">Search</button>
+</form>
+
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-50 border-b">
+      <tr class="text-xs uppercase font-bold text-slate-500">
+        <th class="px-5 py-3 text-left">Subject</th>
+        <th class="px-5 py-3 text-left">Teacher</th>
+        <th class="px-5 py-3 text-left">Day</th>
+        <th class="px-5 py-3 text-left">Time</th>
+        <th class="px-5 py-3 text-left">Room</th>
+        <th class="px-5 py-3 text-left">Sem</th>
+        <th class="px-5 py-3 text-left">Active</th>
+        <th class="px-5 py-3 text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y">
+      {% for s in schedules %}
+      <tr class="hover:bg-slate-50">
+        <td class="px-5 py-3 font-semibold">{{ s.subject.code }} - {{ s.subject.name }}</td>
+        <td class="px-5 py-3">{{ s.teacher.username }}</td>
+        <td class="px-5 py-3">{{ s.day_of_week }}</td>
+        <td class="px-5 py-3 whitespace-nowrap">{{ s.start_time|time:"h:i A" }} – {{ s.end_time|time:"h:i A" }}</td>
+        <td class="px-5 py-3">{{ s.room_name|default:"—" }}</td>
+        <td class="px-5 py-3">{{ s.semester|default:"—" }}</td>
+        <td class="px-5 py-3">
+          {% if s.is_active %}<span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-bold">Yes</span>
+          {% else %}<span class="text-xs px-2 py-1 rounded-full bg-slate-200 text-slate-600 font-bold">No</span>{% endif %}
+        </td>
+        <td class="px-5 py-3 text-right">
+          <div class="flex justify-end gap-2">
+            <a href="{% url 'attendance:admin_schedule_edit' s.id %}" class="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold hover:bg-blue-200">Edit</a>
+            <a href="{% url 'attendance:admin_schedule_delete' s.id %}" class="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs font-bold hover:bg-red-200">Delete</a>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8" class="px-5 py-8 text-center text-slate-500">No schedules found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
