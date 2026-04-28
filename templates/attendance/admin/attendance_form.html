@@ -1,0 +1,31 @@
+{% extends "attendance/admin/base_admin.html" %}
+{% block title %}Edit Attendance{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+  <h1 class="text-2xl font-black text-slate-900 mb-6">Edit Attendance</h1>
+
+  <form method="post" class="bg-white rounded-xl border border-slate-200 p-6 space-y-5">
+    {% csrf_token %}
+
+    <div class="space-y-2 text-sm pb-4 border-b">
+      <p><span class="text-slate-500">Student:</span> <b>{{ record.student.username }}</b></p>
+      <p><span class="text-slate-500">Subject:</span> <b>{{ record.subject.code }} - {{ record.subject.name }}</b></p>
+      <p><span class="text-slate-500">Date:</span> <b>{{ record.date|date:"M d, Y" }}</b></p>
+    </div>
+
+    <div>
+      <label class="block text-sm font-semibold text-slate-700 mb-1">Status *</label>
+      <select name="status" class="w-full px-4 py-2.5 rounded-lg border border-slate-300">
+        <option value="Present" {% if record.status == 'Present' %}selected{% endif %}>Present</option>
+        <option value="Absent" {% if record.status == 'Absent' %}selected{% endif %}>Absent</option>
+      </select>
+    </div>
+
+    <div class="flex items-center gap-3 pt-4 border-t">
+      <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm">Save</button>
+      <a href="{% url 'attendance:admin_attendance' %}" class="px-5 py-2.5 bg-slate-200 text-slate-700 rounded-lg font-semibold text-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
