@@ -524,19 +524,21 @@ from .models import StudentProfile, AttendanceRecord
 
 @login_required
 def student_profile(request):
-    # Only student can open
     if request.user.profile.role != "student":
         messages.error(request, "Students only.")
         return redirect("home")
 
-    # Get StudentProfile linked to this user
     try:
         profile = StudentProfile.objects.get(user=request.user)
     except StudentProfile.DoesNotExist:
-        messages.error(request, "Student profile not found. Ask admin to create/link it.")
-        return redirect("attendance:student_dashboard")
+        messages.error(request, "Your student profile is not linked. Please link your account.")
+        return redirect("attendance:link_student")
 
-    # Attendance percent
+    # Hard safety: profile must point back to this user
+    if profile.user_id != request.user.id:
+        messages.error(request, "Profile linkage mismatch. Contact admin.")
+        return redirect("home")
+
     total = AttendanceRecord.objects.filter(student=request.user).count()
     present = AttendanceRecord.objects.filter(student=request.user, status="Present").count()
     attendance_percent = round((present / total) * 100, 2) if total else 0
@@ -1103,25 +1105,81 @@ def class_session_detail(request, session_id):
 
 @login_required
 def link_student(request):
+    """Link a Google-signed-in student to their existing StudentProfile.
+    Strict validation prevents identity theft / wrong linkage."""
+
+    # If user already has a student_profile linked, no need to link again
+    if hasattr(request.user, "student_profile") and request.user.student_profile.user_id == request.user.id:
+        return redirect("attendance:student_dashboard")
+
+    # Profile must exist
+    profile = getattr(request.user, "profile", None)
+    if not profile:
+        messages.error(request, "Profile missing. Contact admin.")
+        return redirect("home")
+
+    # Only role=student users may link to a StudentProfile
+    if profile.role != "student":
+        messages.error(request, "Only students can link to a student profile.")
+        return redirect("home")
+
     if request.method == "POST":
-        student_id = request.POST.get("student_id")
+        raw_id = (request.POST.get("student_id") or "").strip()
 
+        if not raw_id:
+            return render(request, "attendance/link_student.html", {
+                "error": "Please enter your Student ID.",
+            })
+
+        # Look up the StudentProfile by student_id
         try:
-            student = StudentProfile.objects.get(student_id=student_id)
-
-            # link Google user to student
-            student.user = request.user
-            student.save()
-            return redirect("accounts:dashboard")
-
-            # return redirect("attendance:student_dashboard")
-
+            student = StudentProfile.objects.get(student_id__iexact=raw_id)
         except StudentProfile.DoesNotExist:
-            return render(
-                request,
-                "attendance/link_student.html",
-                {"error": "Invalid Student ID"}
-            )
+            return render(request, "attendance/link_student.html", {
+                "error": f"No student record found with ID '{raw_id}'. Contact admin.",
+            })
+
+        # If this StudentProfile is already linked to ANOTHER user, refuse
+        if student.user_id and student.user_id != request.user.id:
+            return render(request, "attendance/link_student.html", {
+                "error": (
+                    f"This Student ID is already linked to another account. "
+                    f"If you believe this is your account, contact admin to verify."
+                ),
+            })
+
+        # If StudentProfile's linked user is a TEACHER (or any non-student), refuse hard
+        if student.user_id:
+            other_role = getattr(getattr(student.user, "profile", None), "role", None)
+            if other_role and other_role != "student":
+                return render(request, "attendance/link_student.html", {
+                    "error": "This Student ID belongs to a non-student account. Contact admin.",
+                })
+
+        # Verify name match for extra safety (Google name vs StudentProfile name)
+        google_full_name = (request.user.get_full_name() or "").strip().lower()
+        sp_full_name = (student.full_name or "").strip().lower()
+
+        # If names are both populated and don't match at all, warn
+        if google_full_name and sp_full_name:
+            # very loose check — at least one word in common
+            google_words = set(google_full_name.split())
+            sp_words = set(sp_full_name.split())
+            if not google_words & sp_words:
+                return render(request, "attendance/link_student.html", {
+                    "error": (
+                        f"Your Google account name '{request.user.get_full_name()}' "
+                        f"does not match the Student ID '{raw_id}' "
+                        f"(registered to '{student.full_name}'). "
+                        f"Contact admin if this is wrong."
+                    ),
+                })
+
+        # All good — link
+        student.user = request.user
+        student.save()
+        messages.success(request, f"Welcome {student.full_name}! Your account is linked.")
+        return redirect("attendance:student_dashboard")
 
     return render(request, "attendance/link_student.html")
 
